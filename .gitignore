@@ -1,0 +1,10 @@
+# Project-specific ignores
+.vs/
+build/
+bin/
+
+# Visual Studio Solution files
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
