@@ -1,16 +1,17 @@
-﻿module DGL;
+﻿module;
+
+#include <memory>
+
+module DGL;
 
 inline constexpr auto VERTEX_SOURCE = R"(
 #version 460 core
 
 layout (location = 0) in vec2 a_Position;
-layout (location = 1) in vec2 a_TexCoord;
-
-layout (location = 0) out vec4 v_Color;
+layout (location = 1) in vec2 a_TexCoord; //!< Unused in this one
 
 void main() {
 	gl_Position = vec4(a_Position, 0.0, 1.0);
-	v_Color = vec4(a_TexCoord, 0.0, 1.0);
 }
 )";
 
@@ -18,49 +19,68 @@ inline constexpr auto FRAGMENT_SOURCE = R"(
 #version 460 core
 
 layout (location = 0) out vec4 o_FragColor;
-layout (location = 0) in vec4 v_Color;
 
 uniform vec4 u_Color;
 
 void main() {
-	o_FragColor = v_Color;
+	o_FragColor = u_Color;
 }
 )";
 
 namespace DGL
 {
-	SolidColorBrush::SolidColorBrush(const float red, const float green, const float blue, const float alpha):
-		m_Red(red), m_Green(green), m_Blue(blue), m_Alpha(alpha)
+	std::unique_ptr<SolidColorBrush> SolidColorBrush::Create(const Color color)
 	{
-		Shader vertexShader;
-		if (not vertexShader.LoadFromMemory(VERTEX_SOURCE, Shader::Type::Vertex))
+		const auto vertexShader = Shader::CreateFromSource(VERTEX_SOURCE, Shader::Type::Vertex);
+		if (vertexShader == nullptr)
 		{
-			Error("Failed to load vertex shader for solid color brush.");
+			Error("Failed to create vertex shader for solid color brush");
+			return nullptr;
 		}
 
-		Shader fragmentShader;
-		if (not fragmentShader.LoadFromMemory(FRAGMENT_SOURCE, Shader::Type::Fragment))
+		const auto fragmentShader = Shader::CreateFromSource(FRAGMENT_SOURCE, Shader::Type::Fragment);
+		if (fragmentShader == nullptr)
 		{
-			Error("Failed to load fragment shader for solid color brush.");
+			Error("Failed to create fragment shader for solid color brush");
+			return nullptr;
 		}
 
-		if (not m_Shader.Load(vertexShader, fragmentShader))
+		auto shaderProgram = ShaderProgram::Create(*vertexShader, *fragmentShader);
+		if (shaderProgram == nullptr)
 		{
-			Error("Failed to create shader program for solid color brush.");
+			Error("Failed to create shader program for solid color brush");
+			return nullptr;
 		}
+
+		return std::unique_ptr<SolidColorBrush>(new SolidColorBrush(std::move(shaderProgram), color));
 	}
 
-	void SolidColorBrush::SetColor(const float red, const float green, const float blue, const float alpha)
+	void SolidColorBrush::SetColor(const Color color)
 	{
-		m_Red = red;
-		m_Green = green;
-		m_Blue = blue;
-		m_Alpha = alpha;
+		m_Color = color;
 	}
+
+	Color SolidColorBrush::GetColor() const
+	{
+		return m_Color;
+	}
+
 
 	void SolidColorBrush::Apply()
 	{
-		m_Shader.Bind();
-		m_Shader.UploadFloat4("u_Color", m_Red, m_Green, m_Blue, m_Alpha);
+		const auto r = static_cast<float>(m_Color.R) / 255.0f;
+		const auto g = static_cast<float>(m_Color.G) / 255.0f;
+		const auto b = static_cast<float>(m_Color.B) / 255.0f;
+		const auto a = static_cast<float>(m_Color.A) / 255.0f;
+
+		m_Shader->Bind();
+		m_Shader->UploadFloat4("u_Color", r, g, b, a);
 	}
+
+	SolidColorBrush::SolidColorBrush(std::unique_ptr<ShaderProgram> shaderProgram, const Color color) :
+		m_Shader(std::move(shaderProgram)),
+		m_Color(color)
+	{
+	}
+
 }

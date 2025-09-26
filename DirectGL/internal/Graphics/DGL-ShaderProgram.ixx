@@ -11,6 +11,7 @@ module;
 #include <string>
 #include <cstdint>
 #include <unordered_map>
+#include <memory>
 
 export module DGL:ShaderProgram;
 
@@ -22,7 +23,8 @@ namespace DGL
 	{
 	public:
 
-		ShaderProgram();
+		static std::unique_ptr<ShaderProgram> Create(const Shader& vertexShader, const Shader& fragmentShader);
+
 		~ShaderProgram();
 
 		ShaderProgram(const ShaderProgram&) = delete;
@@ -39,14 +41,16 @@ namespace DGL
 		void UploadFloat4Array(std::string_view name, const float* data, std::size_t count);
 
 		void UploadFloat2(std::string_view name, float x, float y);
+		void UploadFloat3(std::string_view name, float x, float y, float z);
 		void UploadFloat4(std::string_view name, float x, float y, float z, float w);
 
 	private:
 
-		GLint GetUniformLocation(std::string_view name);
+		explicit ShaderProgram(GLuint shaderProgramId);
+		[[nodiscard]] GLint GetUniformLocation(std::string_view name);
 
 		GLuint m_ShaderProgramId;
-		std::unordered_map<std::string, GLint> m_UniformLocationCache;
+		std::unordered_map<std::string_view, GLint> m_UniformLocationCache;
 
 	};
 }

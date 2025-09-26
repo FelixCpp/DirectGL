@@ -12,16 +12,23 @@ namespace DGL
 
 	}
 
-	void RenderTarget::FillRectangle(const float left, const float top, const float width, const float height, Brush& brush)
+	void RenderTarget::FillRectangle(const Math::FloatBoundary& boundary, Brush& brush)
 	{
-		const Geometry geometry = GeometryFactory::CreateFilledRectangle(left, top, width, height);
+		const Geometry geometry = GeometryFactory::CreateFilledRectangle(boundary);
 		brush.Apply();
 		m_Renderer->Submit(geometry);
 	}
 
-	void RenderTarget::FillEllipse(const float centerX, const float centerY, const float radiusX, const float radiusY, Brush& brush)
+	void RenderTarget::FillRoundedRectangle(const Math::FloatBoundary& boundary, const BorderRadius& borderRadius, Brush& brush)
 	{
-		const Geometry geometry = GeometryFactory::CreateFilledEllipse(centerX, centerY, radiusX, radiusY, 64);
+		const Geometry geometry = GeometryFactory::CreateFilledRoundedRectangle(boundary, borderRadius, 16, 16, 16, 16);
+		brush.Apply();
+		m_Renderer->Submit(geometry);
+	}
+
+	void RenderTarget::FillEllipse(const Math::Float2& center, const Radius& radius, Brush& brush)
+	{
+		const Geometry geometry = GeometryFactory::CreateFilledEllipse(center, radius, 64);
 		brush.Apply();
 		m_Renderer->Submit(geometry);
 	}

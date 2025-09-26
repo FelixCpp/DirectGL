@@ -41,19 +41,19 @@ namespace DGL
 			Library.Renderer = std::make_unique<OpenGLRenderer>();
 			Library.RenderTarget = std::make_unique<RenderTarget>(*Library.Renderer);
 
-			RadialGradientBrush brush {
-				{
-					GradientStop {.Progress = 0.0f, .Red = 1.0f, .Green = 0.0f, .Blue = 0.0f, .Alpha = 1.0f },
-					GradientStop {.Progress = 0.3f, .Red = 1.0f, .Green = 1.0f, .Blue = 0.0f, .Alpha = 1.0f },
-					GradientStop {.Progress = 0.5f, .Red = 0.0f, .Green = 0.0f, .Blue = 1.0f, .Alpha = 1.0f },
-					GradientStop {.Progress = 1.0f, .Red = 0.0f, .Green = 1.0f, .Blue = 0.0f, .Alpha = 1.0f },
+			const auto brush = RadialGradientBrush::Create({
+				.GradientStops = {
+					GradientStop {.Position = 0.0f, .Color = Color(255, 0, 0) },
+					GradientStop {.Position = 0.3f, .Color = Color(0, 255, 0) },
+					GradientStop {.Position = 0.5f, .Color = Color(0, 0, 255) },
+					GradientStop {.Position = 1.0f, .Color = Color(255, 255, 0) },
 				},
-				ExtendMode::Mirror,
-				Gamma::Gamma1_0,
-				{ 0.5f, 0.5f, },
-				{ 0.0f, 0.0f, },
-				{ 0.5f, 0.5f, },
-			};
+				.ExtendMode = ExtendMode::Mirror,
+				.GammaMode = GammaMode::Gamma1_0,
+				.Center = { 0.5f, 0.5f, },
+				.Offset = { 0.0f, 0.0f, },
+				.Radius = { 0.5f, 0.25f, },
+			});
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -92,7 +92,18 @@ namespace DGL
 					}
 				}
 
-				Library.RenderTarget->FillRectangle(-0.5f, -0.5f, 1.0f, 1.0f, brush);
+				/*Library.RenderTarget->FillRoundedRectangle(
+					Math::FloatBoundary::FromLTWH(100.0f, 100.0f, 400.0f, 400.0f),
+					BorderRadius::All(Radius::Elliptical(30.0f, 15.0f)),
+					*brush
+				);*/
+
+				Library.RenderTarget->FillEllipse(
+					Math::Float2(100.0f, 100.0f),
+					Radius::Circular(30.0f),
+					*brush
+				);
+
 				Library.Sketch->Draw();
 				Library.WGL->SwapBuffers();
 			}

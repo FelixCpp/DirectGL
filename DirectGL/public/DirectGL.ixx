@@ -67,6 +67,8 @@ export import :Brush;
 export import :RadialGradientBrush;
 export import :SolidColorBrush;
 
+export import :Color;
+
 /// <summary>
 /// Graphics and rendering
 /// </summary>

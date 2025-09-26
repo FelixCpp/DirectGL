@@ -6,12 +6,24 @@
 export module DGL:GeometryFactory;
 
 import :Geometry;
+import :Radius;
+
+import Math;
 
 namespace DGL
 {
 	struct GeometryFactory
 	{
-		static Geometry CreateFilledRectangle(float left, float top, float width, float height);
-		static Geometry CreateFilledEllipse(float centerX, float centerY, float radiusX, float radiusY, uint32_t segments);
+		static Geometry CreateFilledRectangle(const Math::FloatBoundary& boundary);
+		static Geometry CreateFilledRoundedRectangle(
+			const Math::FloatBoundary& boundary,
+			const BorderRadius& borderRadius,
+			uint32_t segmentsTopLeft,
+			uint32_t segmentsTopRight,
+			uint32_t segmentsBottomRight,
+			uint32_t segmentsBottomLeft
+		);
+
+		static Geometry CreateFilledEllipse(const Math::Float2& center, const Radius& radius, uint32_t segments);
 	};
 }

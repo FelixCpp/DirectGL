@@ -8,9 +8,51 @@ module DGL;
 
 namespace DGL
 {
-	ShaderProgram::ShaderProgram():
-		m_ShaderProgramId(0)
+	std::unique_ptr<ShaderProgram> ShaderProgram::Create(const Shader& vertexShader, const Shader& fragmentShader)
 	{
+		Check(vertexShader.GetType() == Shader::Type::Vertex, [] { return "Provided vertex shader is not of type Vertex"; });
+		Check(fragmentShader.GetType() == Shader::Type::Fragment, [] { return "Provided fragment shader is not of type Fragment"; });
+
+		const GLuint shaderProgramId = glCreateProgram();
+		glAttachShader(shaderProgramId, vertexShader.GetShaderId());
+		glAttachShader(shaderProgramId, fragmentShader.GetShaderId());
+		glLinkProgram(shaderProgramId);
+
+		GLint linkStatus = GL_FALSE;
+		glGetProgramiv(shaderProgramId, GL_LINK_STATUS, &linkStatus);
+		if (linkStatus != GL_TRUE)
+		{
+			GLint infoLogLength;
+			glGetProgramiv(shaderProgramId, GL_INFO_LOG_LENGTH, &infoLogLength);
+			std::string infoLog(infoLogLength, '\0');
+			glGetProgramInfoLog(shaderProgramId, infoLogLength, nullptr, infoLog.data());
+			Error("Failed to link shader program: " + infoLog);
+			glDeleteProgram(shaderProgramId);
+			glDetachShader(shaderProgramId, vertexShader.GetShaderId());
+			glDetachShader(shaderProgramId, fragmentShader.GetShaderId());
+			return nullptr;
+		}
+
+		glValidateProgram(shaderProgramId);
+
+		GLint validateStatus = GL_FALSE;
+		glGetProgramiv(shaderProgramId, GL_VALIDATE_STATUS, &validateStatus);
+		if (validateStatus != GL_TRUE)
+		{
+			GLint infoLogLength;
+			glGetProgramiv(shaderProgramId, GL_INFO_LOG_LENGTH, &infoLogLength);
+			std::string infoLog(infoLogLength, '\0');
+			glGetProgramInfoLog(shaderProgramId, infoLogLength, nullptr, infoLog.data());
+			Error("Failed to validate shader program: " + infoLog);
+			glDeleteProgram(shaderProgramId);
+			glDetachShader(shaderProgramId, vertexShader.GetShaderId());
+			glDetachShader(shaderProgramId, fragmentShader.GetShaderId());
+			return nullptr;
+		}
+
+		glDetachShader(shaderProgramId, vertexShader.GetShaderId());
+		glDetachShader(shaderProgramId, fragmentShader.GetShaderId());
+		return std::unique_ptr<ShaderProgram>(new ShaderProgram(shaderProgramId));
 	}
 
 	ShaderProgram::~ShaderProgram()
@@ -32,60 +74,6 @@ namespace DGL
 
 		m_ShaderProgramId = std::exchange(other.m_ShaderProgramId, 0);
 		return *this;
-	}
-
-	bool ShaderProgram::Load(const Shader& vertexShader, const Shader& fragmentShader)
-	{
-		Check(vertexShader.GetType() == Shader::Type::Vertex, [] { return "Provided vertex shader is not of type Vertex"; });
-		Check(fragmentShader.GetType() == Shader::Type::Fragment, [] { return "Provided fragment shader is not of type Fragment"; });
-
-		if (m_ShaderProgramId != 0)
-		{
-			glDeleteProgram(m_ShaderProgramId);
-		}
-
-		m_ShaderProgramId = glCreateProgram();
-		glAttachShader(m_ShaderProgramId, vertexShader.GetShaderId());
-		glAttachShader(m_ShaderProgramId, fragmentShader.GetShaderId());
-		glLinkProgram(m_ShaderProgramId);
-
-		GLint linkStatus = GL_FALSE;
-		glGetProgramiv(m_ShaderProgramId, GL_LINK_STATUS, &linkStatus);
-		if (linkStatus != GL_TRUE)
-		{
-			GLint infoLogLength;
-			glGetProgramiv(m_ShaderProgramId, GL_INFO_LOG_LENGTH, &infoLogLength);
-			std::string infoLog(infoLogLength, '\0');
-			glGetProgramInfoLog(m_ShaderProgramId, infoLogLength, nullptr, infoLog.data());
-			Error("Failed to link shader program: " + infoLog);
-			glDeleteProgram(m_ShaderProgramId);
-			glDetachShader(m_ShaderProgramId, vertexShader.GetShaderId());
-			glDetachShader(m_ShaderProgramId, fragmentShader.GetShaderId());
-			m_ShaderProgramId = 0;
-			return false;
-		}
-
-		glValidateProgram(m_ShaderProgramId);
-
-		GLint validateStatus = GL_FALSE;
-		glGetProgramiv(m_ShaderProgramId, GL_VALIDATE_STATUS, &validateStatus);
-		if (validateStatus != GL_TRUE)
-		{
-			GLint infoLogLength;
-			glGetProgramiv(m_ShaderProgramId, GL_INFO_LOG_LENGTH, &infoLogLength);
-			std::string infoLog(infoLogLength, '\0');
-			glGetProgramInfoLog(m_ShaderProgramId, infoLogLength, nullptr, infoLog.data());
-			Error("Failed to validate shader program: " + infoLog);
-			glDeleteProgram(m_ShaderProgramId);
-			glDetachShader(m_ShaderProgramId, vertexShader.GetShaderId());
-			glDetachShader(m_ShaderProgramId, fragmentShader.GetShaderId());
-			m_ShaderProgramId = 0;
-			return false;
-		}
-
-		glDetachShader(m_ShaderProgramId, vertexShader.GetShaderId());
-		glDetachShader(m_ShaderProgramId, fragmentShader.GetShaderId());
-		return true;
 	}
 
 	void ShaderProgram::Bind()
@@ -125,6 +113,14 @@ namespace DGL
 		}
 	}
 
+	void ShaderProgram::UploadFloat3(const std::string_view name, const float x, const float y, const float z)
+	{
+		if (const GLint location = GetUniformLocation(name); location != -1)
+		{
+			glProgramUniform3f(m_ShaderProgramId, GetUniformLocation(name), x, y, z);
+		}
+	}
+
 	void ShaderProgram::UploadFloat4(const std::string_view name, const float x, const float y, const float z, const float w)
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
@@ -133,21 +129,26 @@ namespace DGL
 		}
 	}
 
+	ShaderProgram::ShaderProgram(const GLuint shaderProgramId) :
+		m_ShaderProgramId(shaderProgramId)
+	{
+	}
+
 	GLint ShaderProgram::GetUniformLocation(std::string_view name)
 	{
-		const auto itr = m_UniformLocationCache.find(std::string(name));
+		const auto itr = m_UniformLocationCache.find(name);
 		if (itr != m_UniformLocationCache.end())
 		{
 			return itr->second;
 		}
 
-		GLint location = glGetUniformLocation(m_ShaderProgramId, std::string(name).c_str());
+		GLint location = glGetUniformLocation(m_ShaderProgramId, name.data());
 		if (location == -1)
 		{
 			Warning(std::format("Uniform '{}' not found in shader program.", name));
 		}
 
-		m_UniformLocationCache.emplace(std::string(name), location);
+		m_UniformLocationCache.emplace(name, location);
 		return location;
 	}
 

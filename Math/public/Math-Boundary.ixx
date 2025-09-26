@@ -4,6 +4,8 @@ module;
 
 export module Math:Boundary;
 
+import :Value2;
+
 namespace Math
 {
 	export template <typename T>
@@ -18,8 +20,14 @@ namespace Math
 		constexpr T Right() const;
 		constexpr T Bottom() const;
 
-		constexpr bool operator == (const Boundary& other) const;
-		constexpr bool operator != (const Boundary& other) const;
+		constexpr bool operator == (const Boundary& other) const = default;
+		constexpr bool operator != (const Boundary& other) const = default;
+
+		[[nodiscard]] constexpr Value2<T> TopLeft() const;
+		[[nodiscard]] constexpr Value2<T> TopRight() const;
+		[[nodiscard]] constexpr Value2<T> BottomLeft() const;
+		[[nodiscard]] constexpr Value2<T> BottomRight() const;
+		[[nodiscard]] constexpr Value2<T> Center() const;
 
 		T Left;
 		T Top;
@@ -71,14 +79,32 @@ namespace Math
 	}
 
 	template <typename T>
-	constexpr bool Boundary<T>::operator==(const Boundary<T>& other) const
+	constexpr Value2<T> Boundary<T>::TopLeft() const
 	{
-		return Left == other.Left and Top == other.Top and Width == other.Width and Height == other.Height;
+		return { Left, Top };
 	}
 
 	template <typename T>
-	constexpr bool Boundary<T>::operator!=(const Boundary<T>& other) const
+	constexpr Value2<T> Boundary<T>::TopRight() const
 	{
-		return Left != other.Left or Top != other.Top or Width != other.Width or Height != other.Height;
+		return { Right(), Top };
+	}
+
+	template <typename T>
+	constexpr Value2<T> Boundary<T>::BottomLeft() const
+	{
+		return { Left, Bottom() };
+	}
+
+	template <typename T>
+	constexpr Value2<T> Boundary<T>::BottomRight() const
+	{
+		return { Right(), Bottom() };
+	}
+
+	template <typename T>
+	constexpr Value2<T> Boundary<T>::Center() const
+	{
+		return { Left + Width / 2, Top + Height / 2 };
 	}
 }

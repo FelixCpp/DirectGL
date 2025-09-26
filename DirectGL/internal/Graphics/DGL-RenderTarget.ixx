@@ -5,8 +5,9 @@
 
 export module DGL:RenderTarget;
 
-import :Renderer;
 import :Brush;
+import :Renderer;
+import :Radius;
 
 namespace DGL
 {
@@ -17,8 +18,13 @@ namespace DGL
 		explicit RenderTarget(Renderer& renderer);
 
 		void Clear();
-		void FillRectangle(float left, float top, float width, float height, Brush& brush);
-		void FillEllipse(float centerX, float centerY, float radiusX, float radiusY, Brush& brush);
+		void FillRectangle(const Math::FloatBoundary& boundary, Brush& brush);
+		void FillRoundedRectangle(
+			const Math::FloatBoundary& boundary,
+			const BorderRadius& borderRadius,
+			Brush& brush
+		);
+		void FillEllipse(const Math::Float2& center, const Radius& radius, Brush& brush);
 
 	private:
 

@@ -2,19 +2,20 @@
 
 #include <cmath>
 #include <numbers>
+#include <algorithm>
 
 module DGL;
 
 namespace DGL
 {
-	Geometry GeometryFactory::CreateFilledRectangle(const float left, const float top, const float width, const float height)
+	Geometry GeometryFactory::CreateFilledRectangle(const Math::FloatBoundary& boundary)
 	{
 		return {
 			.Positions = {
-				{ left, top },
-				{ left + width, top },
-				{ left + width, top + height },
-				{ left, top + height },
+				boundary.TopLeft(),
+				boundary.TopRight(),
+				boundary.BottomRight(),
+				boundary.BottomLeft(),
 			},
 			.TexCoords = {
 				{ 0.0f, 1.0f },
@@ -26,40 +27,92 @@ namespace DGL
 		};
 	}
 
-	Geometry GeometryFactory::CreateFilledEllipse(const float centerX, const float centerY, const float radiusX, const float radiusY, const uint32_t segments)
+	Geometry GeometryFactory::CreateFilledRoundedRectangle(
+		const Math::FloatBoundary& boundary,
+		const BorderRadius& borderRadius,
+		uint32_t segmentsTopLeft,
+		uint32_t segmentsTopRight,
+		uint32_t segmentsBottomRight,
+		uint32_t segmentsBottomLeft
+	) {
+		Geometry geometry;
+
+		const auto addCorner = [&geometry, &boundary](const Math::Float2& cornerCenter, const Radius& cornerRadius, float startAngle, float endAngle, uint32_t segments)
+		{
+			constexpr float DEG_TO_RAD = std::numbers::pi_v<float> / 180.0f;
+
+			for (uint32_t segment = 0; segment <= segments; ++segment)
+			{
+				const float t = static_cast<float>(segment) / static_cast<float>(segments);
+				const float angle = std::lerp(startAngle, endAngle, t) * DEG_TO_RAD;
+
+				const float pointX = cornerCenter.X + std::cos(angle) * cornerRadius.X;
+				const float pointY = cornerCenter.Y + std::sin(angle) * cornerRadius.Y;
+				geometry.Positions.emplace_back(pointX, pointY);
+
+				const float texCoordX = (pointX - boundary.Left) / boundary.Width;
+				const float texCoordY = (pointY - boundary.Top) / boundary.Height;
+				geometry.TexCoords.emplace_back(texCoordX, texCoordY);
+			}
+		};
+
+		// Insert center point for triangle-fan
+		geometry.Positions.emplace_back(boundary.Center());
+		geometry.TexCoords.emplace_back(0.5f, 0.5f);
+
+		addCorner(boundary.TopLeft(), borderRadius.TopLeft, 180.0f, 270.0f, segmentsTopLeft);
+		addCorner(boundary.TopRight(), borderRadius.TopRight, 270.0f, 360.0f, segmentsTopRight);
+		addCorner(boundary.BottomRight(), borderRadius.BottomRight, 0.0f, 90.0f, segmentsBottomRight);
+		addCorner(boundary.BottomLeft(), borderRadius.BottomLeft, 90.0f, 180.0f, segmentsBottomLeft);
+
+		// Insert indices
+		const size_t vertexCount = geometry.Positions.size();
+		for (size_t i = 1; i < vertexCount; ++i)
+		{
+			geometry.Indices.emplace_back(0); //< Center point
+			geometry.Indices.emplace_back(i); //< Current point
+			geometry.Indices.emplace_back(i + 1 == vertexCount ? 1 : i + 1); //< Next point (wrap around)
+		}
+
+		return geometry;
+	}
+
+	Geometry GeometryFactory::CreateFilledEllipse(const Math::Float2& center, const Radius& radius, const uint32_t segments)
 	{
 		if (segments < 3) return {};
 
-		const float minX = centerX - radiusX;
-		const float maxX = centerX + radiusX;
-		const float minY = centerY - radiusY;
-		const float maxY = centerY + radiusY;
-
-		const float width = maxX - minX;
-		const float height = maxY - minY;
+		const float angleStepSize = 2.0f * std::numbers::pi_v<float> / static_cast<float>(segments);
 
 		Geometry geometry;
 
-		float angle = 0.0f;
-		const float angleStepSize = (2.0f * std::numbers::pi_v<float>) / static_cast<float>(segments);
-		for (uint32_t i = 0; i < segments; ++i)
+		// Insert the center point first
+		geometry.Positions.emplace_back(center);
+		geometry.TexCoords.emplace_back(0.5f, 0.5f);
+
+		// Now iterate over the segments and create the ellipse points
+		for (uint32_t segment = 0; segment <= segments; ++segment)
 		{
-			const float x = centerX + std::cos(angle) * radiusX;
-			const float y = centerY + std::sin(angle) * radiusY;
-			geometry.Positions.emplace_back(x, y);
+			// Compute the 2D coordinate on screen
+			const float angle = static_cast<float>(segment) * angleStepSize;
+			const float cosine = std::cos(angle);
+			const float sine = std::sin(angle);
 
-			const float tx = (x - minX) / width;
-			const float ty = 1.0f - (y - minY) / height;
-			geometry.TexCoords.emplace_back(tx, ty);
+			const float pointX = center.X + cosine * radius.X;
+			const float pointY = center.Y + sine * radius.Y;
+			geometry.Positions.emplace_back(pointX, pointY);
 
-			angle += angleStepSize;
+			// Compute the normalized texture coordinate used when fetching colors from a texture
+			const float texCoordX = 0.5f + cosine * 0.5f;
+			const float texCoordY = 0.5f + sine * 0.5f;
+			geometry.TexCoords.emplace_back(texCoordX, texCoordY);
 		}
 
-		for (uint32_t i = 0; i < segments; ++i)
+		// Generate the indices to act like a Triangle-Fan
+		for (size_t i = 1; i <= segments; ++i)
 		{
-			geometry.Indices.push_back(i);
-			geometry.Indices.push_back((i + 1) % segments);
-			geometry.Indices.push_back(segments); // Center vertex
+			geometry.Indices.emplace_back(0); //< Center point
+			geometry.Indices.emplace_back(i); //< Current point
+			geometry.Indices.emplace_back(i + 1); //< Next point
 		}
 
 		return geometry;

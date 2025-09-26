@@ -20,14 +20,16 @@ namespace DGL
 		Require(value, [] { return "Requirement failed."; });
 	}
 
-	constexpr auto RequireNotNull(auto value, auto&& lazyMessage)
+	template <std::convertible_to<bool> T>
+	constexpr T RequireNotNull(T value, auto&& lazyMessage)
 	{
 		return static_cast<bool>(value)
 			? value
 			: throw std::invalid_argument(lazyMessage());
 	}
 
-	constexpr auto RequireNotNull(auto value)
+	template <std::convertible_to<bool> T>
+	constexpr T RequireNotNull(T value)
 	{
 		return RequireNotNull(value, [] { return "Required value was null."; });
 	}
@@ -45,14 +47,16 @@ namespace DGL
 		Check(value, [] { return "Check failed."; });
 	}
 
-	constexpr auto CheckNotNull(auto value, auto&& lazyMessage)
+	template <std::convertible_to<bool> T>
+	constexpr T CheckNotNull(T value, auto&& lazyMessage)
 	{
 		return static_cast<bool>(value)
 			? value
-			: throw std::runtime_error(lazyMessage());;
+			: throw std::runtime_error(lazyMessage());
 	}
 
-	constexpr auto CheckNotNull(auto value)
+	template <std::convertible_to<bool> T>
+	constexpr T CheckNotNull(T value)
 	{
 		return CheckNotNull(value, [] { return "Required value was null."; });
 	}

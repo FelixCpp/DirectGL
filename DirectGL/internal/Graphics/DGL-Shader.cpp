@@ -9,10 +9,45 @@ module DGL;
 
 namespace DGL
 {
-	Shader::Shader():
-		m_ShaderId(0),
-		m_Type()
+	static constexpr GLenum ShaderTypeToGlId(const Shader::Type type)
 	{
+		switch (type)
+		{
+			using enum Shader::Type;
+			case Vertex: return GL_VERTEX_SHADER;
+			case Fragment: return GL_FRAGMENT_SHADER;
+			default: throw std::invalid_argument("Unknown ShaderType");
+		}
+	}
+
+	std::unique_ptr<Shader> Shader::CreateFromSource(const std::string_view source, const Type type)
+	{
+		const GLchar* glSource = source.data();
+
+		// Create and compile the shader
+		const GLuint shaderId = glCreateShader(ShaderTypeToGlId(type));
+		glShaderSource(shaderId, 1, &glSource, nullptr);
+		glCompileShader(shaderId);
+
+		GLint compileStatus = GL_FALSE;
+		glGetShaderiv(shaderId, GL_COMPILE_STATUS, &compileStatus);
+		if (compileStatus != GL_TRUE)
+		{
+			// Get the length of the info log
+			GLint logLength = 0;
+			glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &logLength);
+
+			// Write the info log to a string and log it
+			std::string infoLog(logLength, '\0');
+			glGetShaderInfoLog(shaderId, logLength, nullptr, infoLog.data());
+			Error(std::format("Failed to compile shader: {}", infoLog));
+
+			// Cleanup
+			glDeleteShader(shaderId);
+			return nullptr;
+		}
+
+		return std::unique_ptr<Shader>(new Shader(shaderId, type));
 	}
 
 	Shader::~Shader()
@@ -45,50 +80,6 @@ namespace DGL
 		return *this;
 	}
 
-	bool Shader::LoadFromMemory(const std::string_view source, const Type type)
-	{
-		if (m_ShaderId != 0)
-		{
-			glDeleteShader(m_ShaderId);
-		}
-
-		const GLenum shaderType = [type]
-		{
-			switch (type)
-			{
-				case Type::Vertex: return GL_VERTEX_SHADER;
-				case Type::Fragment: return GL_FRAGMENT_SHADER;
-				default: throw std::invalid_argument("Unknown ShaderType");
-			}
-		}();
-
-		const GLchar* glSource = source.data();
-
-		m_Type = type;
-		m_ShaderId = glCreateShader(shaderType);
-		glShaderSource(m_ShaderId, 1, &glSource, nullptr);
-		glCompileShader(m_ShaderId);
-
-		GLint compileStatus = GL_FALSE;
-		glGetShaderiv(m_ShaderId, GL_COMPILE_STATUS, &compileStatus);
-		if (compileStatus != GL_TRUE)
-		{
-			GLint logLength = 0;
-			glGetShaderiv(m_ShaderId, GL_INFO_LOG_LENGTH, &logLength);
-
-			std::string infoLog(logLength, '\0');
-			glGetShaderInfoLog(m_ShaderId, logLength, nullptr, infoLog.data());
-
-			glDeleteShader(m_ShaderId);
-			m_ShaderId = 0;
-
-			Error(std::format("Failed to compile shader: {}", infoLog));
-			return false;
-		}
-
-		return true;
-	}
-
 	GLuint Shader::GetShaderId() const
 	{
 		return m_ShaderId;
@@ -97,5 +88,11 @@ namespace DGL
 	Shader::Type Shader::GetType() const
 	{
 		return m_Type;
+	}
+
+	Shader::Shader(const GLuint shaderId, const Type type) :
+		m_ShaderId(shaderId),
+		m_Type(type)
+	{
 	}
 }

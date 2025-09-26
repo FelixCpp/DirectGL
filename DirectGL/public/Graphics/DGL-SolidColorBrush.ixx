@@ -3,9 +3,14 @@
 // Author       : Felix Busch
 // Created Date : 2025/09/22
 
+module;
+
+#include <memory>
+
 export module DGL:SolidColorBrush;
 
 import :Brush;
+import :Color;
 import :ShaderProgram;
 
 export namespace DGL
@@ -14,15 +19,18 @@ export namespace DGL
 	{
 	public:
 
-		explicit SolidColorBrush(float red, float green, float blue, float alpha = 1.0f);
+		static std::unique_ptr<SolidColorBrush> Create(Color color);
 
-		void SetColor(float red, float green, float blue, float alpha = 1.0f);
+		void SetColor(Color color);
+		Color GetColor() const;
 		void Apply() override;
 
 	private:
 
-		ShaderProgram m_Shader;
-		float m_Red, m_Green, m_Blue, m_Alpha;
+		explicit SolidColorBrush(std::unique_ptr<ShaderProgram> shaderProgram, Color color);
+
+		std::unique_ptr<ShaderProgram> m_Shader;
+		Color m_Color;
 
 	};
 }

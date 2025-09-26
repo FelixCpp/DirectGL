@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <algorithm>
 #include <stdexcept>
+#include <memory>
+#include <ranges>
 
 module DGL;
 
@@ -13,8 +15,30 @@ layout (location = 0) in vec2 a_Position;
 layout (location = 1) in vec2 a_TexCoord;
 layout (location = 0) out vec2 v_TexCoord;
 
+mat4 getProjectionMatrix(in float left, in float top, in float right, in float bottom) {
+	const float near = -1.0;
+	const float far = 1.0;
+	const float rl = right - left;
+	const float tb = top - bottom;
+	const float fn = far - near;
+
+	/*return mat4(
+		2.0 / rl, 0.0, 0.0, -(right + left) / rl,
+		0.0, 2.0 / tb, 0.0, -(top + bottom) / tb,
+		0.0, 0.0, -2.0 / fn, -(far + near) / fn,
+		0.0, 0.0, 0.0, 1.0
+	);*/
+
+	return mat4(
+		2.0 / rl, 0.0, 0.0, 0.0,
+		0.0, 2.0 / tb, 0.0, 0.0,
+		0.0, 0.0, -2.0 / fn, 0.0,
+		-(right + left) / rl, -(top + bottom) / tb, -(far + near) / fn, 1.0
+	);
+}
+
 void main() {
-	gl_Position = vec4(a_Position, 0.0, 1.0);
+	gl_Position = getProjectionMatrix(0.0, 0.0, 900.0, 900.0) * vec4(a_Position, 0.0, 1.0);
 	v_TexCoord = a_TexCoord;
 }
 )";
@@ -30,27 +54,23 @@ inline static constexpr auto FRAGMENT_SOURCE = R"(
 #define GAMMA_1_0 1
 
 layout (location = 0) out vec4 o_FragColor;
-
 layout (location = 0) in vec2 v_TexCoord;
 
-uniform vec2 u_Center;
-uniform vec2 u_Offset;
-uniform vec2 u_Radius;
+layout (std140, binding = 0) uniform GradientData {
+	vec4 u_CenterOffset;
+	vec4 u_RadiusExtendGamma;
+	vec4 u_Progress[16];
+	vec4 u_Color[16];
+	int u_StopCount;
+};
 
-uniform int u_StopCount;
-uniform float u_Progress[16];
-uniform vec4 u_Color[16];
-
-uniform int u_ExtendMode;
-uniform int u_Gamma;
-
-vec4 gammaMix(vec4 c1, vec4 c2, float t) {
-	if (u_Gamma == GAMMA_1_0) {
+vec4 gammaMix(int gamma, vec4 c1, vec4 c2, float t) {
+	if (gamma == GAMMA_1_0) {
 		// linear mix
 		return mix(c1, c2, t);
 	}
 
-	if (u_Gamma == GAMMA_2_2) {
+	if (gamma == GAMMA_2_2) {
 		// sRGB gamma correction
 		// https://en.wikipedia.org/wiki/SRGB#The_reverse_transformation
 		
@@ -65,39 +85,46 @@ vec4 gammaMix(vec4 c1, vec4 c2, float t) {
 }
 
 void main() {
-	vec2 pos = v_TexCoord - (u_Center + u_Offset);
-	float dist = length(pos) / u_Radius.x;
+	vec2 center = u_CenterOffset.xy;
+	vec2 offset = u_CenterOffset.zw;
+	vec2 radius = u_RadiusExtendGamma.xy;
 
-	if (u_ExtendMode == EXTEND_MODE_CLAMP) {
+	vec2 pos = v_TexCoord - (center + offset);
+	vec2 norm = pos / radius;
+	float dist = length(norm);
+
+	int extendMode = int(u_RadiusExtendGamma.z);
+	int gammaMode = int(u_RadiusExtendGamma.w);
+	if (extendMode == EXTEND_MODE_CLAMP) {
 		dist = clamp(dist, 0.0, 1.0);
-	} else if (u_ExtendMode == EXTEND_MODE_WRAP) {
+	} else if (extendMode == EXTEND_MODE_WRAP) {
 		dist = fract(dist);
-	} else if (u_ExtendMode == EXTEND_MODE_MIRROR) {
+	} else if (extendMode == EXTEND_MODE_MIRROR) {
 		dist = abs(fract(dist * 0.5) * 2.0 - 1.0);
 	}
 
 	// In case the distance is before the first stop, use the first color
-	if (dist <= u_Progress[0]) {
+	if (dist <= u_Progress[0].x) {
 		o_FragColor = u_Color[0];
 		return;
 	}
 
 	// In case the distance is after the last stop, use the last color
-	if (dist >= u_Progress[u_StopCount-1]) {
+	if (dist >= u_Progress[u_StopCount-1].x) {
 		o_FragColor = u_Color[u_StopCount-1];
 		return;
 	}
 
 	// Find the two stops the distance is in between and interpolate the color
 	for (int i = 0; i < u_StopCount - 1; ++i) {
-		if (dist >= u_Progress[i] && dist <= u_Progress[i+1]) {
-			float factor = (dist - u_Progress[i]) / (u_Progress[i+1] - u_Progress[i]);
-			o_FragColor = gammaMix(u_Color[i], u_Color[i+1], factor);
+		if (dist >= u_Progress[i].x && dist <= u_Progress[i+1].x) {
+			float factor = (dist - u_Progress[i].x) / (u_Progress[i+1].x - u_Progress[i].x);
+			o_FragColor = gammaMix(gammaMode, u_Color[i], u_Color[i+1], factor);
 			return;
 		}
 	}
 	
-	o_FragColor = vec4(0.0);
+	o_FragColor = vec4(1.0, 0.0, 1.0, 1.0); // error: magenta
 }
 )";
 
@@ -115,64 +142,87 @@ namespace DGL
 		}
 	}
 
-	static constexpr std::int32_t GetGammaModeId(const Gamma gamma)
+	static constexpr std::int32_t GetGammaModeId(const GammaMode gammaMode)
 	{
-		switch (gamma)
+		switch (gammaMode)
 		{
-			using enum Gamma;
+			using enum GammaMode;
 			case Gamma2_2: return 0;
 			case Gamma1_0: return 1;
-			default: throw std::invalid_argument("Unknown Gamma");
+			default: throw std::invalid_argument("Unknown GammaMode");
 		}
 	}
 
-	RadialGradientBrush::RadialGradientBrush(const std::vector<GradientStop>& stops, const ExtendMode extendMode, const Gamma gamma, const Math::Float2& center, const Math::Float2& offset, const Math::Float2& radius):
-		m_ExtendMode(extendMode),
-		m_Gamma(gamma),
-		m_Center(center),
-		m_Offset(offset),
-		m_Radius(radius)
-	{
-		m_StopCount = std::min(stops.size(), 16uz);
-		for (std::size_t i = 0; i < m_StopCount; ++i)
-		{
-			m_StopProgress[i] = stops[i].Progress;
-			m_StopColor[i * 4 + 0] = stops[i].Red;
-			m_StopColor[i * 4 + 1] = stops[i].Green;
-			m_StopColor[i * 4 + 2] = stops[i].Blue;
-			m_StopColor[i * 4 + 3] = stops[i].Alpha;
-		}
-
-		Shader vertexShader;
-		if (not vertexShader.LoadFromMemory(VERTEX_SOURCE, Shader::Type::Vertex))
+	std::unique_ptr<RadialGradientBrush> RadialGradientBrush::Create(const Properties& properties) {
+		const auto vertexShader = Shader::CreateFromSource(VERTEX_SOURCE, Shader::Type::Vertex);
+		if (vertexShader == nullptr)
 		{
 			Error("Failed to load vertex shader for radial gradient brush.");
+			return nullptr;
 		}
 
-		Shader fragmentShader;
-		if (not fragmentShader.LoadFromMemory(FRAGMENT_SOURCE, Shader::Type::Fragment))
+		const auto fragmentShader = Shader::CreateFromSource(FRAGMENT_SOURCE, Shader::Type::Fragment);
+		if (fragmentShader == nullptr)
 		{
 			Error("Failed to load fragment shader for radial gradient brush.");
+			return nullptr;
 		}
 
-		if (not m_ShaderProgram.Load(vertexShader, fragmentShader))
+		auto shaderProgram = ShaderProgram::Create(*vertexShader, *fragmentShader);
+		if (shaderProgram == nullptr)
 		{
 			Error("Failed to create shader program for radial gradient brush.");
+			return nullptr;
 		}
+
+		return std::unique_ptr<RadialGradientBrush>(new RadialGradientBrush(std::move(shaderProgram), properties));
 	}
 
 	void RadialGradientBrush::Apply()
 	{
-		m_ShaderProgram.Bind();
-		m_ShaderProgram.UploadFloat2("u_Center", m_Center.X, m_Center.Y);
-		m_ShaderProgram.UploadFloat2("u_Offset", m_Offset.X, m_Offset.Y);
-		m_ShaderProgram.UploadFloat2("u_Radius", m_Radius.X, m_Radius.Y);
-
-		m_ShaderProgram.UploadInt1("u_StopCount", m_StopCount);
-		m_ShaderProgram.UploadFloat1Array("u_Progress", m_StopProgress.data(), m_StopCount);
-		m_ShaderProgram.UploadFloat4Array("u_Color", m_StopColor.data(), m_StopCount);
-
-		m_ShaderProgram.UploadInt1("u_ExtendMode", GetExtendModeId(m_ExtendMode));
-		m_ShaderProgram.UploadInt1("u_Gamma", GetGammaModeId(m_Gamma));
+		m_ShaderProgram->Bind();
+		m_UniformBuffer->Bind();
+		m_UniformBuffer->Upload(&m_Properties, sizeof(Std140Properties));
 	}
+
+	RadialGradientBrush::RadialGradientBrush(
+		std::unique_ptr<ShaderProgram> shaderProgram,
+		const Properties& properties
+	) : m_ShaderProgram(std::move(shaderProgram)),
+		m_UniformBuffer(std::make_unique<UniformBuffer>(nullptr, sizeof(Std140Properties))),
+		m_Properties(PropertiesToStd140(properties))
+	{
+	}
+
+	RadialGradientBrush::Std140Properties RadialGradientBrush::PropertiesToStd140(const Properties& properties)
+	{
+		const auto stopCount = static_cast<int>(std::min(properties.GradientStops.size(), 16uz));
+		std::array<Math::Float4, 16> positions;
+		std::array<Math::Float4, 16> colors;
+		for (int i = 0; i < stopCount; ++i)
+		{
+			const auto& stop = properties.GradientStops[i];
+			positions[i] = { stop.Position, 0.0f, 0.0f, 0.0f };
+			colors[i] = { stop.Color.R / 255.0f, stop.Color.G / 255.0f, stop.Color.B / 255.0f, stop.Color.A / 255.0f };
+		}
+
+		return {
+			.CenterOffset = {
+				properties.Center.X,
+				properties.Center.Y,
+				properties.Offset.X,
+				properties.Offset.Y
+			},
+			.RadiusExtendGamma = {
+				properties.Radius.X,
+				properties.Radius.Y,
+				static_cast<float>(GetExtendModeId(properties.ExtendMode)),
+				static_cast<float>(GetGammaModeId(properties.GammaMode))
+			},
+			.Positions = positions,
+			.Colors = colors,
+			.StopCount = stopCount,
+		};
+	}
+
 }

@@ -78,7 +78,11 @@ namespace DGL
 		glNamedBufferSubData(m_Ebo, 0, indexCount * sizeof(GLuint), geometry.Indices.data());
 
 		glBindVertexArray(m_Vao);
-		//glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(geometry.Positions.size()));
+#if 0
+		glDrawArrays(GL_TRIANGLE_FAN, 0, static_cast<GLsizei>(geometry.Positions.size()));
+		//glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(geometry.Positions.size()));
+#else
 		glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, nullptr);
+#endif
 	}
 }

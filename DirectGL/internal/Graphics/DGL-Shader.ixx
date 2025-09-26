@@ -8,6 +8,7 @@ module;
 #include <glad/gl.h>
 
 #include <string_view>
+#include <memory>
 
 export module DGL:Shader;
 
@@ -23,7 +24,7 @@ namespace DGL
 			Fragment,
 		};
 
-		Shader();
+		static std::unique_ptr<Shader> CreateFromSource(std::string_view source, Type type);
 		~Shader();
 
 		Shader(const Shader&) = delete;
@@ -31,12 +32,12 @@ namespace DGL
 		Shader(Shader&&) noexcept;
 		Shader& operator=(Shader&&) noexcept;
 
-		[[nodiscard]] bool LoadFromMemory(std::string_view source, Type type);
-
 		GLuint GetShaderId() const;
 		Type GetType() const;
 
 	private:
+
+		explicit Shader(GLuint shaderId, Type type);
 
 		GLuint m_ShaderId;
 		Type m_Type;
