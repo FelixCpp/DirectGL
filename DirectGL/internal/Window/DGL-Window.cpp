@@ -108,7 +108,6 @@ namespace DGL
 		return { width, height };
 	}
 
-
 	void Window::SetPosition(const int x, const int y)
 	{
 		SetWindowPos(m_WindowHandle, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
@@ -215,6 +214,79 @@ namespace DGL
 				}
 			} break;
 
+			case WM_MOUSEMOVE:
+			{
+				const int32_t mouseX = GET_X_LPARAM(lParam);
+				const int32_t mouseY = GET_Y_LPARAM(lParam);
+
+				RECT area = {};
+				Check(GetClientRect(m_WindowHandle, &area), [] { return "Couldn't retrieve window client area."; });
+
+				// Capture the mouse in case the user drags outside the window
+				if ((wParam & (MK_LBUTTON | MK_MBUTTON | MK_RBUTTON | MK_XBUTTON1 | MK_XBUTTON2)) == 0)
+				{
+					if (GetCapture() == m_WindowHandle)
+					{
+						ReleaseCapture();
+					}
+				} else if (GetCapture() != m_WindowHandle)
+				{
+					// Set the capture to continue receiving mouse events
+					SetCapture(m_WindowHandle);
+				}
+
+				// If the cursor is outside the client area...
+				if (mouseX < area.left or mouseX > area.right or mouseY < area.top or mouseY > area.bottom)
+				{
+					// and it used to be inside the client area, it just exited
+					if (m_IsMouseInside)
+					{
+						m_IsMouseInside = false;
+
+						// No longer care for mouse events outside the window
+						TRACKMOUSEEVENT trackMouseEvent = {
+							.cbSize = sizeof(TRACKMOUSEEVENT),
+							.dwFlags = TME_CANCEL,
+							.hwndTrack = m_WindowHandle,
+							.dwHoverTime = HOVER_DEFAULT
+						};
+
+						Check(TrackMouseEvent(&trackMouseEvent), [] { return "Couldn't cancel mouse tracking."; });
+
+						m_EventQueue.emplace(WindowEvent::MouseLeft{});
+					}
+				} else
+				{
+					// and it used to be outside the client area, it just entered
+					if (not m_IsMouseInside)
+					{
+						m_IsMouseInside = true;
+
+						// Care for mouse leave events
+						TRACKMOUSEEVENT trackMouseEvent = {
+							.cbSize = sizeof(TRACKMOUSEEVENT),
+							.dwFlags = TME_LEAVE,
+							.hwndTrack = m_WindowHandle,
+							.dwHoverTime = HOVER_DEFAULT
+						};
+
+						Check(TrackMouseEvent(&trackMouseEvent), [] { return "Couldn't start mouse tracking."; });
+						m_EventQueue.emplace(WindowEvent::MouseEntered{});
+					}
+				}
+
+				m_EventQueue.emplace(WindowEvent::MouseMoved{ .MouseX = mouseX, .MouseY = mouseY });
+			} break;
+
+			case WM_MOUSELEAVE:
+			{
+				if (m_IsMouseInside)
+				{
+					m_IsMouseInside = false;
+					m_EventQueue.emplace(WindowEvent::MouseLeft{});
+				}
+			} break;
+
 			case WM_LBUTTONDOWN:
 			{
 				const int32_t mouseX = GET_X_LPARAM(lParam);
@@ -223,7 +295,7 @@ namespace DGL
 			} break;
 
 			default:
-				return DefWindowProcA(m_WindowHandle, uMsg, wParam, lParam);
+				return DefWindowProcW(m_WindowHandle, uMsg, wParam, lParam);
 		}
 
 		return 0;

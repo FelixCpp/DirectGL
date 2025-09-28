@@ -64,10 +64,19 @@ export namespace DGL
 }
 
 export import :Brush;
-export import :RadialGradientBrush;
 export import :SolidColorBrush;
+export import :TextureBrush;
 
+export import :BorderRadius;
 export import :Color;
+export import :ExtendMode;
+export import :GammaMode;
+export import :GradientStop;
+export import :Radius;
+export import :Shader;
+export import :ShaderProgram;
+export import :Texture;
+export import :TextureSampler;
 
 /// <summary>
 /// Graphics and rendering
@@ -92,17 +101,30 @@ import :ConfigureGladStartupTask;
 import :ConfigureWGLStartupTask;
 import :PrepareWGLStartupTask;
 
+import :OpenGLSolidColorBrush;
+import :OpenGLTextureBrush;
+
+import :OpenGLRenderer;
+import :OpenGLShader;
+import :OpenGLShaderProgram;
+import :OpenGLTexture;
+import :OpenGLTextureSampler;
+
 import :Geometry;
 import :GeometryFactory;
-
-import :Shader;
-import :ShaderProgram;
+import :ResourceFactory;
 
 import :Renderer;
-import :OpenGLRenderer;
 import :RenderTarget;
 
 import :UniformBuffer;
+
+import :Camera;
+import :OpenGLTexture;
+import :OpenGLTextureSampler;
+
+import :ResourceFactory;
+import :OpenGLResourceFactory;
 
 // Logging
 import :LoggingChannel;
@@ -124,6 +146,8 @@ struct SpikyLibrary
 
 	std::unique_ptr<DGL::Renderer> 					Renderer;			//!< The renderer to use
 	std::unique_ptr<DGL::RenderTarget>				RenderTarget;		//!< The render target to use
+
+	std::unique_ptr<DGL::ResourceFactory>			ResourceFactory;	//!< The resource factory to use
 };
 
 module :private;

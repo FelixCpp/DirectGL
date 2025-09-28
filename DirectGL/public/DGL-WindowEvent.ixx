@@ -29,14 +29,25 @@ export namespace DGL
 			uint32_t Width;
 			uint32_t Height;
 		};
+
 		struct MousePressed
 		{
 			int32_t MouseX;
 			int32_t MouseY;
 		};
+
+		struct MouseMoved
+		{
+			int32_t MouseX;
+			int32_t MouseY;
+		};
+
+		struct MouseLeft {};
+		struct MouseEntered {};
+
 	public:
 
-		using EventType = std::variant<Closed, Resized, MousePressed>;
+		using EventType = std::variant<Closed, Resized, MousePressed, MouseMoved, MouseLeft, MouseEntered>;
 
 	public:
 

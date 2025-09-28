@@ -3,15 +3,14 @@
 // Author       : Felix Busch
 // Created Date : 2025/09/22
 
-module;
-
-#include <glad/gl.h>
-
 export module DGL:Renderer;
 
 import :Geometry;
+import :ShaderProgram;
+import :Texture;
+import :TextureSampler;
 
-namespace DGL
+export namespace DGL
 {
 	struct Renderer
 	{

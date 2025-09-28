@@ -29,10 +29,22 @@ struct SpikesGame : DGL::Sketch
 			{
 				points.push_back(Math::Float2(press.MouseX, press.MouseY));
 			},
-			[](const auto&)
+			[](const DGL::WindowEvent::MouseMoved& move)
 			{
-				DGL::Info("An unknown event has been received");
+				DGL::Info(std::format("Mouse moved to: {}, {}", move.MouseX, move.MouseY));
+			},
+			[](const DGL::WindowEvent::MouseEntered&)
+			{
+				DGL::Info("Mouse entered the window");
+			},
+			[](const DGL::WindowEvent::MouseLeft&)
+			{
+				DGL::Info("Mouse left the window");
 			}
+			//[](const auto& )
+			//{
+			//	DGL::Info("An unknown event has been received");
+			//}
 		);
 	}
 

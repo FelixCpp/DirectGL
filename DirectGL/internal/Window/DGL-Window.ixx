@@ -63,6 +63,7 @@ namespace DGL
 
 		Math::Uint2 m_LastSize;
 		bool m_IsResizing = false;
+		bool m_IsMouseInside = false;
 
 	};
 }

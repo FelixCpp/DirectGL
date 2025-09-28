@@ -13,8 +13,13 @@ namespace Math
 		constexpr Value2(T x, T y);
 		constexpr explicit Value2(T scalar);
 
-		constexpr bool operator == (const Value2& other) const;
-		constexpr bool operator != (const Value2& other) const;
+		constexpr Value2 operator + (const Value2& other) const;
+		constexpr Value2 operator - (const Value2& other) const;
+		constexpr Value2 operator / (const Value2& other) const;
+		constexpr Value2 operator * (const Value2& other) const;
+
+		constexpr bool operator == (const Value2& other) const = default;
+		constexpr bool operator != (const Value2& other) const = default;
 
 		T X;
 		T Y;
@@ -48,15 +53,9 @@ namespace Math
 	{
 	}
 
-	template <typename T>
-	constexpr bool Value2<T>::operator==(const Value2<T>& other) const
-	{
-		return X == other.X and Y == other.Y;
-	}
+	template <typename T> constexpr Value2<T> Value2<T>::operator+(const Value2& other) const { return { X + other.X, Y + other.Y }; }
+	template <typename T> constexpr Value2<T> Value2<T>::operator-(const Value2& other) const { return { X - other.X, Y - other.Y }; }
+	template <typename T> constexpr Value2<T> Value2<T>::operator/(const Value2& other) const { return { X / other.X, Y / other.Y }; }
+	template <typename T> constexpr Value2<T> Value2<T>::operator*(const Value2& other) const { return { X * other.X, Y * other.Y }; }
 
-	template <typename T>
-	constexpr bool Value2<T>::operator!=(const Value2& other) const
-	{
-		return X != other.X or Y != other.Y;
-	}
 }

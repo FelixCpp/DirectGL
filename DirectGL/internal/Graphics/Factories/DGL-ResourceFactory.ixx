@@ -1,0 +1,39 @@
+﻿// Project Name : DirectGL
+// File Name    : DGL-ResourceFactory.ixx
+// Author       : Felix Busch
+// Created Date : 2025/09/27
+
+module;
+
+#include <memory>
+#include <filesystem>
+
+export module DGL:ResourceFactory;
+
+import :Shader;
+import :ShaderProgram;
+import :Renderer;
+import :UniformBuffer;
+import :Texture;
+import :TextureSampler;
+
+import :SolidColorBrush;
+import :TextureBrush;
+
+namespace DGL
+{
+	struct ResourceFactory
+	{
+		virtual ~ResourceFactory() = default;
+
+		virtual std::unique_ptr<Renderer> CreateRenderer(uint32_t maxVertices) = 0;
+		virtual std::unique_ptr<Shader> CreateShader(std::string_view source, ShaderType type) = 0;
+		virtual std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader) = 0;
+		virtual std::unique_ptr<UniformBuffer> CreateUniformBuffer(const void* data, uint32_t size) = 0;
+		virtual std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath) = 0;
+		virtual std::unique_ptr<TextureSampler> CreateTextureSampler() = 0;
+
+		virtual std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(const Color color) = 0;
+		virtual std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler) = 0;
+	};
+}

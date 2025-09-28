@@ -5,11 +5,13 @@
 
 export module DGL:Brush;
 
+import :Camera;
+
 export namespace DGL
 {
 	struct Brush
 	{
 		virtual ~Brush() = default;
-		virtual void Apply() = 0;
+		virtual void Apply(const Camera& camera) = 0;
 	};
 }

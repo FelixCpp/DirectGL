@@ -30,15 +30,27 @@ namespace DGL
 	Geometry GeometryFactory::CreateFilledRoundedRectangle(
 		const Math::FloatBoundary& boundary,
 		const BorderRadius& borderRadius,
-		uint32_t segmentsTopLeft,
-		uint32_t segmentsTopRight,
-		uint32_t segmentsBottomRight,
-		uint32_t segmentsBottomLeft
+		const uint32_t segmentsTopLeft,
+		const uint32_t segmentsTopRight,
+		const uint32_t segmentsBottomRight,
+		const uint32_t segmentsBottomLeft
 	) {
 		Geometry geometry;
 
 		const auto addCorner = [&geometry, &boundary](const Math::Float2& cornerCenter, const Radius& cornerRadius, float startAngle, float endAngle, uint32_t segments)
 		{
+			if (segments <= 1 or (cornerRadius.X <= 0.0f and cornerRadius.Y <= 0.0f))
+			{
+				// No rounded corner, just add the corner point
+				geometry.Positions.emplace_back(cornerCenter);
+
+				const float texCoordX = (cornerCenter.X - boundary.Left) / boundary.Width;
+				const float texCoordY = (cornerCenter.Y - boundary.Top) / boundary.Height;
+				geometry.TexCoords.emplace_back(texCoordX, texCoordY);
+
+				return;
+			}
+
 			constexpr float DEG_TO_RAD = std::numbers::pi_v<float> / 180.0f;
 
 			for (uint32_t segment = 0; segment <= segments; ++segment)
@@ -60,18 +72,26 @@ namespace DGL
 		geometry.Positions.emplace_back(boundary.Center());
 		geometry.TexCoords.emplace_back(0.5f, 0.5f);
 
-		addCorner(boundary.TopLeft(), borderRadius.TopLeft, 180.0f, 270.0f, segmentsTopLeft);
-		addCorner(boundary.TopRight(), borderRadius.TopRight, 270.0f, 360.0f, segmentsTopRight);
-		addCorner(boundary.BottomRight(), borderRadius.BottomRight, 0.0f, 90.0f, segmentsBottomRight);
-		addCorner(boundary.BottomLeft(), borderRadius.BottomLeft, 90.0f, 180.0f, segmentsBottomLeft);
+		const Math::Float2 topLeft = boundary.TopLeft() + Math::Float2{ borderRadius.TopLeft.X, borderRadius.TopLeft.Y };
+		const Math::Float2 topRight = boundary.TopRight() + Math::Float2{ -borderRadius.TopRight.X, borderRadius.TopRight.Y };
+		const Math::Float2 bottomRight = boundary.BottomRight() + Math::Float2{ -borderRadius.BottomRight.X, -borderRadius.BottomRight.Y };
+		const Math::Float2 bottomLeft = boundary.BottomLeft() + Math::Float2{ borderRadius.BottomLeft.X, -borderRadius.BottomLeft.Y };
+
+		addCorner(topLeft, borderRadius.TopLeft, 180.0f, 270.0f, segmentsTopLeft);
+		addCorner(topRight, borderRadius.TopRight, 270.0f, 360.0f, segmentsTopRight);
+		addCorner(bottomRight, borderRadius.BottomRight, 0.0f, 90.0f, segmentsBottomRight);
+		addCorner(bottomLeft, borderRadius.BottomLeft, 90.0f, 180.0f, segmentsBottomLeft);
 
 		// Insert indices
 		const size_t vertexCount = geometry.Positions.size();
 		for (size_t i = 1; i < vertexCount; ++i)
 		{
+			size_t nextIndex = i + 1;
+			if (nextIndex == vertexCount) nextIndex = 1; // Wrap around to the first corner point
+
 			geometry.Indices.emplace_back(0); //< Center point
 			geometry.Indices.emplace_back(i); //< Current point
-			geometry.Indices.emplace_back(i + 1 == vertexCount ? 1 : i + 1); //< Next point (wrap around)
+			geometry.Indices.emplace_back(nextIndex); //< Next point (wrap around)
 		}
 
 		return geometry;

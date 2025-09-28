@@ -38,22 +38,13 @@ namespace DGL
 
 		startup.Run([&]
 		{
-			Library.Renderer = std::make_unique<OpenGLRenderer>();
-			Library.RenderTarget = std::make_unique<RenderTarget>(*Library.Renderer);
+			Camera camera({ 900.0f, 900.0f });
 
-			const auto brush = RadialGradientBrush::Create({
-				.GradientStops = {
-					GradientStop {.Position = 0.0f, .Color = Color(255, 0, 0) },
-					GradientStop {.Position = 0.3f, .Color = Color(0, 255, 0) },
-					GradientStop {.Position = 0.5f, .Color = Color(0, 0, 255) },
-					GradientStop {.Position = 1.0f, .Color = Color(255, 255, 0) },
-				},
-				.ExtendMode = ExtendMode::Mirror,
-				.GammaMode = GammaMode::Gamma1_0,
-				.Center = { 0.5f, 0.5f, },
-				.Offset = { 0.0f, 0.0f, },
-				.Radius = { 0.5f, 0.25f, },
-			});
+			Library.ResourceFactory = std::make_unique<OpenGLResourceFactory>();
+			Library.Renderer = Library.ResourceFactory->CreateRenderer(10'000);
+			Library.RenderTarget = std::make_unique<RenderTarget>(*Library.Renderer, &camera);
+
+			const auto brush = Library.ResourceFactory->CreateSolidColorBrush(Color(255, 0, 0, 255));
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -75,9 +66,13 @@ namespace DGL
 							running = false;
 							return true;
 						},
-						[](const WindowEvent::Resized& resized)
+						[&camera](const WindowEvent::Resized& resized)
 						{
-							
+							camera.SetSize({ static_cast<float>(resized.Width), static_cast<float>(resized.Height) });
+							return true;
+						},
+						[](const WindowEvent::MouseMoved& move)
+						{
 							return true;
 						},
 						[](const auto&)
@@ -92,15 +87,9 @@ namespace DGL
 					}
 				}
 
-				/*Library.RenderTarget->FillRoundedRectangle(
-					Math::FloatBoundary::FromLTWH(100.0f, 100.0f, 400.0f, 400.0f),
-					BorderRadius::All(Radius::Elliptical(30.0f, 15.0f)),
-					*brush
-				);*/
-
-				Library.RenderTarget->FillEllipse(
-					Math::Float2(100.0f, 100.0f),
-					Radius::Circular(30.0f),
+				Library.RenderTarget->FillRoundedRectangle(
+					Math::FloatBoundary::FromLTRB(100.0f, 100.0f, 300.0f, 300.0f),
+					BorderRadius::All(Radius::Elliptical(60.0f, 60.0f)),
 					*brush
 				);
 

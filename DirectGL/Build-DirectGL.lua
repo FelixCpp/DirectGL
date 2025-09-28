@@ -18,11 +18,13 @@ project("DirectGL")
         "Startup",
         "Math",
         "Monitor",
-        "Glad"
+        "Glad",
+        "Stb"
     })
 
     includedirs({
-        "%{wks.location}/Glad/include"
+        "%{wks.location}/Glad/include",
+        "%{wks.location}/Stb/include"
     })
 
     filter("files:**.ixx")

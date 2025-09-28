@@ -7,9 +7,12 @@ module;
 
 #include <glad/gl.h>
 
+#include <memory>
+
 export module DGL:OpenGLRenderer;
 
 import :Renderer;
+import :ShaderProgram;
 
 namespace DGL
 {
@@ -17,15 +20,20 @@ namespace DGL
 	{
 	public:
 
-		OpenGLRenderer();
+		static std::unique_ptr<OpenGLRenderer> Create(uint32_t maxVertices);
 		~OpenGLRenderer() override;
 
-		OpenGLRenderer(const OpenGLRenderer&) = delete;
-		OpenGLRenderer& operator=(const OpenGLRenderer&) = delete;
-		OpenGLRenderer(OpenGLRenderer&& other) noexcept;
-		OpenGLRenderer& operator=(OpenGLRenderer&& other) noexcept;
-
 		void Submit(const Geometry& geometry) override;
+
+	private:
+
+		explicit OpenGLRenderer(
+			uint32_t maxVertices,
+			GLuint vao,
+			GLuint positionVbo,
+			GLuint textureVbo,
+			GLuint ebo
+		);
 
 	private:
 
@@ -33,6 +41,8 @@ namespace DGL
 		GLuint m_PositionVbo;
 		GLuint m_TextureVbo;
 		GLuint m_Ebo;
+
+		uint32_t m_MaxVertices;
 
 	};
 }

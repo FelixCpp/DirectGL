@@ -20,12 +20,13 @@ workspace("DirectGL")
         include("Logging/Build-Logging.lua")
         include("Startup/Build-Startup.lua")
         include("Math/Build-Math.lua")
-    
+
     group("Build-Tools")
         include("Premake/Build-Premake.lua")
 
     group("Graphics")
         include("Glad/Build-Glad.lua")
+        include("Stb/Build-Stb.lua")
 
     group("") -- Root group
         include("DirectGL/Build-DirectGL.lua")

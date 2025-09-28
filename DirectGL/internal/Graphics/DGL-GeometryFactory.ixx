@@ -6,6 +6,8 @@
 export module DGL:GeometryFactory;
 
 import :Geometry;
+
+import :BorderRadius;
 import :Radius;
 
 import Math;
