@@ -34,10 +34,7 @@ export import :FramebufferRenderTarget;
 
 export import :BorderRadius;
 export import :Color;
-export import :ExtendMode;
-export import :GammaMode;
 export import :Geometry;
-export import :GradientStop;
 export import :GraphicsAPI;
 export import :Radius;
 export import :Renderer;
