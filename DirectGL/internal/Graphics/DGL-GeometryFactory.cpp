@@ -27,6 +27,63 @@ namespace DGL
 		};
 	}
 
+	Geometry GeometryFactory::CreateOutlinedRectangle(const Math::FloatBoundary& boundary, float thickness)
+	{
+		if (thickness <= 0.0f) return {};
+
+		Geometry geometry;
+
+		// Outer rectangle
+		geometry.Positions.emplace_back(boundary.TopLeft());
+		geometry.Positions.emplace_back(boundary.TopRight());
+		geometry.Positions.emplace_back(boundary.BottomRight());
+		geometry.Positions.emplace_back(boundary.BottomLeft());
+
+		// Inner rectangle
+		geometry.Positions.emplace_back(boundary.TopLeft() + Math::Float2{ thickness, thickness });
+		geometry.Positions.emplace_back(boundary.TopRight() + Math::Float2{ -thickness, thickness });
+		geometry.Positions.emplace_back(boundary.BottomRight() + Math::Float2{ -thickness, -thickness });
+		geometry.Positions.emplace_back(boundary.BottomLeft() + Math::Float2{ thickness, -thickness });
+
+		// Texture coordinates for outer rectangle
+		geometry.TexCoords.emplace_back(0.0f, 0.0f);
+		geometry.TexCoords.emplace_back(1.0f, 0.0f);
+		geometry.TexCoords.emplace_back(1.0f, 1.0f);
+		geometry.TexCoords.emplace_back(0.0f, 1.0f);
+
+		// Texture coordinates for inner rectangle
+		const float innerLeft = thickness / boundary.Width;
+		const float innerTop = thickness / boundary.Height;
+		const float innerRight = 1.0f - innerLeft;
+		const float innerBottom = 1.0f - innerTop;
+		geometry.TexCoords.emplace_back(innerLeft, innerTop);
+		geometry.TexCoords.emplace_back(innerRight, innerTop);
+		geometry.TexCoords.emplace_back(innerRight, innerBottom);
+		geometry.TexCoords.emplace_back(innerLeft, innerBottom);
+
+		// Indices for the outline (two triangles per side)
+		for (uint32_t i = 0; i < 4; ++i)
+		{
+			const uint32_t nextI = (i + 1) % 4;
+
+			constexpr uint32_t outerStartIndex = 0;
+			constexpr uint32_t innerStartIndex = 4;
+
+			// First triangle of the side
+			geometry.Indices.emplace_back(outerStartIndex + i);
+			geometry.Indices.emplace_back(outerStartIndex + nextI);
+			geometry.Indices.emplace_back(innerStartIndex + nextI);
+
+			// Second triangle of the side
+			geometry.Indices.emplace_back(innerStartIndex + nextI);
+			geometry.Indices.emplace_back(innerStartIndex + i);
+			geometry.Indices.emplace_back(outerStartIndex + i);
+		}
+
+		return geometry;
+	}
+
+
 	Geometry GeometryFactory::CreateFilledRoundedRectangle(
 		const Math::FloatBoundary& boundary,
 		const BorderRadius& borderRadius,
@@ -140,51 +197,50 @@ namespace DGL
 
 	Geometry GeometryFactory::CreateOutlinedEllipse(const Math::Float2& center, const Radius& radius, const uint32_t segments, const float thickness)
 	{
-		const float angleStepSize = 2.0f * std::numbers::pi_v<float> / static_cast<float>(segments);
-		const float halfThickness = thickness * 0.5f;
+		if (segments < 3 || thickness <= 0.0f) return {};
 
 		Geometry geometry;
 
+		const float angleStepSize = 2.0f * std::numbers::pi_v<float> / static_cast<float>(segments);
+
+		// Erzeuge äußeren und inneren Rand
 		for (uint32_t segment = 0; segment <= segments; ++segment)
 		{
-			// Compute the 2D coordinate on screen
 			const float angle = static_cast<float>(segment) * angleStepSize;
 			const float cosine = std::cos(angle);
 			const float sine = std::sin(angle);
 
-			// Inner point
-			{
-				const float pointX = center.X + cosine * (radius.X - halfThickness);
-				const float pointY = center.Y + sine * (radius.Y - halfThickness);
-				geometry.Positions.emplace_back(pointX, pointY);
+			// Äußerer Punkt
+			const float outerX = center.X + cosine * radius.X;
+			const float outerY = center.Y + sine * radius.Y;
+			geometry.Positions.emplace_back(outerX, outerY);
+			geometry.TexCoords.emplace_back(0.5f + cosine * 0.5f, 0.5f + sine * 0.5f);
 
-				const float texCoordX = 0.5f + cosine * 0.5f;
-				const float texCoordY = 0.5f + sine * 0.5f;
-				geometry.TexCoords.emplace_back(texCoordX, texCoordY);
-			}
-
-			// Outer point
-			{
-				const float pointX = center.X + cosine * (radius.X + halfThickness);
-				const float pointY = center.Y + sine * (radius.Y + halfThickness);
-				geometry.Positions.emplace_back(pointX, pointY);
-
-				const float texCoordX = 0.5f + cosine * 0.5f;
-				const float texCoordY = 0.5f + sine * 0.5f;
-				geometry.TexCoords.emplace_back(texCoordX, texCoordY);
-			}
+			// Innerer Punkt
+			const float innerX = center.X + cosine * (radius.X - thickness);
+			const float innerY = center.Y + sine * (radius.Y - thickness);
+			geometry.Positions.emplace_back(innerX, innerY);
+			geometry.TexCoords.emplace_back(
+				0.5f + cosine * 0.5f * ((radius.X - thickness) / radius.X),
+				0.5f + sine * 0.5f * ((radius.Y - thickness) / radius.Y)
+			);
 		}
 
-		// Generate the indices to act like a Triangle-Strip
-		const size_t vertexCount = geometry.Positions.size();
-		for (size_t i = 0; i < vertexCount - 2; i += 2)
+		// Indizes für das Triangle Strip
+		for (uint32_t i = 0; i < segments; ++i)
 		{
-			geometry.Indices.emplace_back(static_cast<uint32_t>(i));       //< Outer current point
-			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 1));   //< Inner current point
-			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 2));   //< Outer next point
-			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 2));   //< Outer next point
-			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 1));   //< Inner current point
-			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 3));   //< Inner next point
+			uint32_t outer0 = i * 2;
+			uint32_t inner0 = i * 2 + 1;
+			uint32_t outer1 = (i + 1) * 2;
+			uint32_t inner1 = (i + 1) * 2 + 1;
+
+			geometry.Indices.emplace_back(outer0);
+			geometry.Indices.emplace_back(inner0);
+			geometry.Indices.emplace_back(outer1);
+
+			geometry.Indices.emplace_back(outer1);
+			geometry.Indices.emplace_back(inner0);
+			geometry.Indices.emplace_back(inner1);
 		}
 
 		return geometry;

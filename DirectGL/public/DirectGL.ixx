@@ -27,6 +27,11 @@ export import :WindowEvent;
 export import :Brush;
 export import :SolidColorBrush;
 export import :TextureBrush;
+
+export import :RenderTarget;
+export import :WindowRenderTarget;
+export import :FramebufferRenderTarget;
+
 export import :BorderRadius;
 export import :Color;
 export import :ExtendMode;
@@ -139,6 +144,7 @@ import :PrepareWGLStartupTask;
 import :OpenGLSolidColorBrush;
 import :OpenGLTextureBrush;
 
+import :OpenGLFramebuffer;
 import :OpenGLRenderer;
 import :OpenGLShader;
 import :OpenGLShaderProgram;

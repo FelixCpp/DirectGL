@@ -19,6 +19,13 @@ namespace DGL
 		m_Renderer->Submit(geometry);
 	}
 
+	void RenderTarget::DrawRectangle(const Math::FloatBoundary& boundary, const float thickness, Brush& brush)
+	{
+		const Geometry geometry = GeometryFactory::CreateOutlinedRectangle(boundary, thickness);
+		brush.Apply(*m_Camera);
+		m_Renderer->Submit(geometry);
+	}
+
 	void RenderTarget::FillRoundedRectangle(const Math::FloatBoundary& boundary, const BorderRadius& borderRadius, Brush& brush)
 	{
 		const Geometry geometry = GeometryFactory::CreateFilledRoundedRectangle(boundary, borderRadius, 16, 16, 16, 16);

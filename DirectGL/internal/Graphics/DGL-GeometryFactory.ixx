@@ -17,6 +17,8 @@ namespace DGL
 	struct GeometryFactory
 	{
 		static Geometry CreateFilledRectangle(const Math::FloatBoundary& boundary);
+		static Geometry CreateOutlinedRectangle(const Math::FloatBoundary& boundary, float thickness);
+
 		static Geometry CreateFilledRoundedRectangle(
 			const Math::FloatBoundary& boundary,
 			const BorderRadius& borderRadius,

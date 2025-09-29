@@ -3,7 +3,7 @@
 // Author       : Felix Busch
 // Created Date : 2025/09/22
 
-export module DGL:RenderTarget;
+export module DGL:RenderTarget123;
 
 import :Brush;
 import :Camera;
@@ -22,6 +22,7 @@ export namespace DGL
 
 		void Clear();
 		void FillRectangle(const Math::FloatBoundary& boundary, Brush& brush);
+		void DrawRectangle(const Math::FloatBoundary& boundary, float thickness, Brush& brush);
 		void FillRoundedRectangle(const Math::FloatBoundary& boundary, const BorderRadius& borderRadius, Brush& brush);
 		void FillEllipse(const Math::Float2& center, const Radius& radius, Brush& brush);
 		void DrawEllipse(const Math::Float2& center, const Radius& radius, float thickness, Brush& brush);

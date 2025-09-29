@@ -84,10 +84,6 @@ namespace DGL
 							camera.SetSize({ static_cast<float>(resized.Width), static_cast<float>(resized.Height) });
 							return true;
 						},
-						[](const WindowEvent::MouseMoved& move)
-						{
-							return true;
-						},
 						[](const auto&)
 						{
 							return true;

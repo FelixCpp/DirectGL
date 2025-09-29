@@ -15,8 +15,6 @@ struct SpikesGame : DGL::Sketch
 
 	bool Setup() override
 	{
-		textureBrush->SetSourceRect(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, 4000.0f, 6000.0f));
-		//textureBrush->SetSourceRect(Math::FloatBoundary::FromLTWH(1619.0f, 3144.0f, 401.0f, 478.0f));
 		return true;
 	}
 
@@ -58,7 +56,7 @@ struct SpikesGame : DGL::Sketch
 	{
 		for (const auto& point : points)
 		{
-			DGL::GetRenderTarget().FillRectangle(Math::FloatBoundary::FromLTWH(point.X, point.Y, 300.0f, 300.0f), *textureBrush);
+			DGL::GetRenderTarget().DrawRectangle(Math::FloatBoundary::FromLTWH(point.X, point.Y, 100.0f, 100.0f), 30.0f, *textureBrush);
 		}
 	}
 
