@@ -5,12 +5,13 @@
 
 module;
 
+#include <glad/gl.h>
+
 #include <memory>
 
 export module DGL:OpenGLSolidColorBrush;
 
 import :SolidColorBrush;
-import :OpenGLShaderProgram;
 
 import :Color;
 
@@ -22,6 +23,8 @@ namespace DGL
 
 		[[nodiscard]] static std::unique_ptr<OpenGLSolidColorBrush> Create(Color color);
 
+		~OpenGLSolidColorBrush() override;
+
 		void SetColor(Color color) override;
 		[[nodiscard]] Color GetColor() const override;
 
@@ -29,10 +32,17 @@ namespace DGL
 
 	private:
 
-		explicit OpenGLSolidColorBrush(std::unique_ptr<OpenGLShaderProgram> shaderProgram, Color color);
+		explicit OpenGLSolidColorBrush(
+			Color color,
+			GLuint shaderProgramId,
+			GLint colorUniformLocation,
+			GLint viewProjectionUniformLocation
+		);
 
-		Color m_Color;
-		std::unique_ptr<OpenGLShaderProgram> m_ShaderProgram;
+		Color	m_Color;
+		GLuint	m_ShaderProgramId;
+		GLint	m_ColorUniformLocation;
+		GLint	m_ViewProjectionUniformLocation;
 
 	};
 }
