@@ -31,6 +31,12 @@ namespace DGL
 	{
 		GLuint textureId = 0;
 		glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
+		if (textureId == 0)
+		{
+			Error("Could not create OpenGL texture.");
+			return nullptr;
+		}
+
 		glTextureStorage2D(textureId, 1, channels == 4 ? GL_RGBA8 : GL_RGB8, width, height);
 		glTextureSubImage2D(textureId, 0, 0, 0, width, height, channels == 4 ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, data);
 
@@ -48,6 +54,11 @@ namespace DGL
 	Math::Uint2 OpenGLTexture::GetSize() const
 	{
 		return m_Size;
+	}
+
+	GLuint OpenGLTexture::GetTextureId() const
+	{
+		return m_TextureId;
 	}
 
 	void OpenGLTexture::Bind(const uint32_t slot) const

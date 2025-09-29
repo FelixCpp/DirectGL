@@ -30,7 +30,7 @@ export import :TextureBrush;
 
 export import :RenderTarget;
 export import :WindowRenderTarget;
-export import :FramebufferRenderTarget;
+export import :OffscreenRenderTarget;
 
 export import :BorderRadius;
 export import :Color;
@@ -107,14 +107,14 @@ export namespace DGL
 /// </summary>
 export namespace DGL
 {
-	[[nodiscard]] std::unique_ptr<Shader> CreateShader(std::string_view shaderSource, ShaderType type);
-	[[nodiscard]] std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader);
-	[[nodiscard]] std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath);
-	[[nodiscard]] std::unique_ptr<TextureSampler> CreateTextureSampler();
-	[[nodiscard]] std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color);
-	[[nodiscard]] std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler);
+	std::unique_ptr<OffscreenRenderTarget> CreateOffscreenRenderTarget(uint32_t width, uint32_t height);
+	std::unique_ptr<Shader> CreateShader(std::string_view shaderSource, ShaderType type);
+	std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader);
+	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath);
+	std::unique_ptr<TextureSampler> CreateTextureSampler(TextureWrapMode wrapMode, TextureFilterMode filterMode);
+	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color);
+	std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler);
 }
-
 
 /// Retrieve internal DirectGL state
 export namespace DGL
@@ -141,7 +141,9 @@ import :PrepareWGLStartupTask;
 import :OpenGLSolidColorBrush;
 import :OpenGLTextureBrush;
 
-import :OpenGLFramebuffer;
+import :OpenGLOffscreenRenderTarget;
+import :OpenGLWindowRenderTarget;
+
 import :OpenGLRenderer;
 import :OpenGLShader;
 import :OpenGLShaderProgram;
@@ -150,8 +152,6 @@ import :OpenGLTextureSampler;
 
 import :GeometryFactory;
 import :ResourceFactory;
-
-import :UniformBuffer;
 
 import :Camera;
 import :OpenGLTexture;
@@ -179,7 +179,7 @@ struct SpikyLibrary
 	std::shared_ptr<System::MonitorProvider>		MonitorProvider;	//!< The monitor provider to use
 
 	std::unique_ptr<DGL::Renderer> 					Renderer;			//!< The renderer to use
-	std::unique_ptr<DGL::RenderTarget>				RenderTarget;		//!< The render target to use
+	std::unique_ptr<DGL::WindowRenderTarget>		RenderTarget;		//!< The render target to use
 
 	std::unique_ptr<DGL::ResourceFactory>			ResourceFactory;	//!< The resource factory to use
 };

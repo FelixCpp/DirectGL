@@ -16,6 +16,8 @@ export namespace DGL
 		explicit Camera(const Math::Float2& size);
 
 		void SetSize(const Math::Float2& size);
+		[[nodiscard]] const Math::Float2& GetSize() const;
+
 		void SetPosition(const Math::Float2& position);
 		void SetZoom(float zoomFactor);
 

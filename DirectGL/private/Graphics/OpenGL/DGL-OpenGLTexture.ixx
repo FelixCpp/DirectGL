@@ -26,6 +26,7 @@ namespace DGL
 		~OpenGLTexture() override;
 		Math::Uint2 GetSize() const override;
 
+		GLuint GetTextureId() const;
 		void Bind(uint32_t slot) const;
 
 	private:

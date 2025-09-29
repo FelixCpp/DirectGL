@@ -15,6 +15,11 @@ namespace DGL
 		RecalculateProjectionMatrix();
 	}
 
+	const Math::Float2& Camera::GetSize() const
+	{
+		return m_Size;
+	}
+
 	void Camera::SetPosition(const Math::Float2& position)
 	{
 		m_Position = position;

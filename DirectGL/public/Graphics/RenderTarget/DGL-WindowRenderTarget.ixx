@@ -6,15 +6,14 @@
 export module DGL:WindowRenderTarget;
 
 import :RenderTarget;
+import :Window;
 
 export namespace DGL
 {
-	class WindowRenderTarget : public RenderTarget
+	struct WindowRenderTarget : RenderTarget
 	{
-	public:
-
-		void BeginDraw() override;
-		void EndDraw() override;
-
+		virtual void Resize(uint32_t width, uint32_t height) = 0;
+		virtual Math::Uint2 GetSize() const = 0;
+		virtual Window& GetTarget() const = 0;
 	};
 }

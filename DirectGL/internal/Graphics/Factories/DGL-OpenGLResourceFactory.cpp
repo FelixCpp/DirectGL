@@ -11,6 +11,16 @@ import :OpenGLShader;
 
 namespace DGL
 {
+	std::unique_ptr<WindowRenderTarget> OpenGLResourceFactory::CreateWindowRenderTarget(Window& window, Renderer& renderer)
+	{
+		return OpenGLWindowRenderTarget::Create(window, renderer);
+	}
+
+	std::unique_ptr<OffscreenRenderTarget> OpenGLResourceFactory::CreateFramebuffer(const uint32_t width, const uint32_t height, Renderer& renderer)
+	{
+		return OpenGLOffscreenRenderTarget::Create(width, height, renderer);
+	}
+
 	std::unique_ptr<Renderer> OpenGLResourceFactory::CreateRenderer(const uint32_t maxVertices)
 	{
 		return OpenGLRenderer::Create(maxVertices);
@@ -31,14 +41,9 @@ namespace DGL
 		return OpenGLTexture::Create(filepath);
 	}
 
-	std::unique_ptr<TextureSampler> OpenGLResourceFactory::CreateTextureSampler()
+	std::unique_ptr<TextureSampler> OpenGLResourceFactory::CreateTextureSampler(const TextureWrapMode wrapMode, const TextureFilterMode filterMode)
 	{
-		return OpenGLTextureSampler::Create();
-	}
-
-	std::unique_ptr<UniformBuffer> OpenGLResourceFactory::CreateUniformBuffer(const void* data, uint32_t size)
-	{
-		return std::make_unique<UniformBuffer>(data, size);
+		return OpenGLTextureSampler::Create(wrapMode, filterMode);
 	}
 
 	std::unique_ptr<SolidColorBrush> OpenGLResourceFactory::CreateSolidColorBrush(const Color color)

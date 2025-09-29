@@ -1,6 +1,7 @@
 module;
 
 #include <cstdint>
+#include <concepts>
 
 export module Math:Value2;
 
@@ -12,6 +13,13 @@ namespace Math
 		constexpr Value2();
 		constexpr Value2(T x, T y);
 		constexpr explicit Value2(T scalar);
+
+		template <std::convertible_to<T> U>
+		constexpr explicit Value2(const Value2<U>& other)
+			: X(static_cast<T>(other.X))
+			, Y(static_cast<T>(other.Y))
+		{
+		}
 
 		constexpr Value2 operator + (const Value2& other) const;
 		constexpr Value2 operator - (const Value2& other) const;

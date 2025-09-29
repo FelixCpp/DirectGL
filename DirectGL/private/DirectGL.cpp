@@ -49,15 +49,9 @@ namespace DGL
 
 		startup.Run([api, &factory]
 		{
-			Camera camera({ 900.0f, 900.0f });
-
 			Library.ResourceFactory = CreateResourceFactory(api);
 			Library.Renderer = Library.ResourceFactory->CreateRenderer(10'000);
-			Library.RenderTarget = std::make_unique<RenderTarget>(*Library.Renderer, &camera);
-
-			const auto sampler = CreateTextureSampler();
-			const auto texture = CreateTexture("test.jpg");
-			const auto brush = CreateTextureBrush(*texture, *sampler);
+			Library.RenderTarget = Library.ResourceFactory->CreateWindowRenderTarget(*Library.Window, *Library.Renderer);
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -79,9 +73,9 @@ namespace DGL
 							running = false;
 							return true;
 						},
-						[&camera](const WindowEvent::Resized& resized)
+						[&](const WindowEvent::Resized& resized)
 						{
-							camera.SetSize({ static_cast<float>(resized.Width), static_cast<float>(resized.Height) });
+							Library.RenderTarget->Resize(resized.Width, resized.Height);
 							return true;
 						},
 						[](const auto&)
@@ -96,13 +90,9 @@ namespace DGL
 					}
 				}
 
-				Library.RenderTarget->FillRoundedRectangle(
-					Math::FloatBoundary::FromLTRB(100.0f, 100.0f, 300.0f, 300.0f),
-					BorderRadius::All(Radius::Elliptical(60.0f, 60.0f)),
-					*brush
-				);
-
+				Library.RenderTarget->Begin();
 				Library.Sketch->Draw();
+				Library.RenderTarget->End();
 				Library.WGL->SwapBuffers();
 			}
 
@@ -162,11 +152,12 @@ namespace DGL
 /// </summary>
 namespace DGL
 {
+	std::unique_ptr<OffscreenRenderTarget> CreateOffscreenRenderTarget(const uint32_t width, const uint32_t height) { return Library.ResourceFactory->CreateFramebuffer(width, height, *Library.Renderer); }
 	std::unique_ptr<Shader> CreateShader(const std::string_view shaderSource, const ShaderType type) { return Library.ResourceFactory->CreateShader(shaderSource, type); }
 	std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader) { return Library.ResourceFactory->CreateShaderProgram(vertexShader, fragmentShader); }
 	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath) { return Library.ResourceFactory->CreateTexture(filepath); }
-	std::unique_ptr<TextureSampler> CreateTextureSampler() { return Library.ResourceFactory->CreateTextureSampler(); }
-	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(const Color& color) { return Library.ResourceFactory->CreateSolidColorBrush(color); }
+	std::unique_ptr<TextureSampler> CreateTextureSampler(const TextureWrapMode wrapMode, const TextureFilterMode filterMode) { return Library.ResourceFactory->CreateTextureSampler(wrapMode, filterMode); }
+	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(const Color color) { return Library.ResourceFactory->CreateSolidColorBrush(color); }
 	std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler) { return Library.ResourceFactory->CreateTextureBrush(texture, sampler); }
 }
 

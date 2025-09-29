@@ -18,10 +18,10 @@ namespace DGL
 				boundary.BottomLeft(),
 			},
 			.TexCoords = {
-				{ 0.0f, 0.0f },
-				{ 1.0f, 0.0f },
-				{ 1.0f, 1.0f },
 				{ 0.0f, 1.0f },
+				{ 1.0f, 1.0f },
+				{ 1.0f, 0.0f },
+				{ 0.0f, 0.0f },
 			},
 			.Indices = { 0, 1, 2, 2, 3, 0 },
 		};
