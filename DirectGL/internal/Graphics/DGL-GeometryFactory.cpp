@@ -18,10 +18,10 @@ namespace DGL
 				boundary.BottomLeft(),
 			},
 			.TexCoords = {
-				{ 0.0f, 1.0f },
-				{ 1.0f, 1.0f },
-				{ 1.0f, 0.0f },
 				{ 0.0f, 0.0f },
+				{ 1.0f, 0.0f },
+				{ 1.0f, 1.0f },
+				{ 0.0f, 1.0f },
 			},
 			.Indices = { 0, 1, 2, 2, 3, 0 },
 		};
@@ -133,6 +133,58 @@ namespace DGL
 			geometry.Indices.emplace_back(0); //< Center point
 			geometry.Indices.emplace_back(i); //< Current point
 			geometry.Indices.emplace_back(i + 1); //< Next point
+		}
+
+		return geometry;
+	}
+
+	Geometry GeometryFactory::CreateOutlinedEllipse(const Math::Float2& center, const Radius& radius, const uint32_t segments, const float thickness)
+	{
+		const float angleStepSize = 2.0f * std::numbers::pi_v<float> / static_cast<float>(segments);
+		const float halfThickness = thickness * 0.5f;
+
+		Geometry geometry;
+
+		for (uint32_t segment = 0; segment <= segments; ++segment)
+		{
+			// Compute the 2D coordinate on screen
+			const float angle = static_cast<float>(segment) * angleStepSize;
+			const float cosine = std::cos(angle);
+			const float sine = std::sin(angle);
+
+			// Inner point
+			{
+				const float pointX = center.X + cosine * (radius.X - halfThickness);
+				const float pointY = center.Y + sine * (radius.Y - halfThickness);
+				geometry.Positions.emplace_back(pointX, pointY);
+
+				const float texCoordX = 0.5f + cosine * 0.5f;
+				const float texCoordY = 0.5f + sine * 0.5f;
+				geometry.TexCoords.emplace_back(texCoordX, texCoordY);
+			}
+
+			// Outer point
+			{
+				const float pointX = center.X + cosine * (radius.X + halfThickness);
+				const float pointY = center.Y + sine * (radius.Y + halfThickness);
+				geometry.Positions.emplace_back(pointX, pointY);
+
+				const float texCoordX = 0.5f + cosine * 0.5f;
+				const float texCoordY = 0.5f + sine * 0.5f;
+				geometry.TexCoords.emplace_back(texCoordX, texCoordY);
+			}
+		}
+
+		// Generate the indices to act like a Triangle-Strip
+		const size_t vertexCount = geometry.Positions.size();
+		for (size_t i = 0; i < vertexCount - 2; i += 2)
+		{
+			geometry.Indices.emplace_back(static_cast<uint32_t>(i));       //< Outer current point
+			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 1));   //< Inner current point
+			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 2));   //< Outer next point
+			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 2));   //< Outer next point
+			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 1));   //< Inner current point
+			geometry.Indices.emplace_back(static_cast<uint32_t>(i + 3));   //< Inner next point
 		}
 
 		return geometry;

@@ -203,7 +203,20 @@ namespace DGL
 
 	GLint OpenGLShaderProgram::GetUniformLocation(const std::string_view name)
 	{
-		return glGetProgramResourceLocation(m_ShaderProgramId, GL_UNIFORM, name.data());
+		const auto itr = m_UniformLocationCache.find(name);
+		if (itr != m_UniformLocationCache.end())
+		{
+			return itr->second;
+		}
+
+		const GLint location = glGetUniformLocation(m_ShaderProgramId, name.data());
+		if (location == -1)
+		{
+			Warning(std::format("Could not find uniform '{}' in shader program.", name));
+		}
+
+		m_UniformLocationCache.emplace(std::make_pair(name, location));
+		return location;
 	}
 
 }

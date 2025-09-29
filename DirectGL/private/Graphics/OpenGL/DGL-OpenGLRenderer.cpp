@@ -103,7 +103,14 @@ namespace DGL
 
 	void OpenGLRenderer::Submit(const Geometry& geometry)
 	{
+		glNamedBufferSubData(m_PositionVbo, 0, geometry.Positions.size() * sizeof(GLfloat) * 2, geometry.Positions.data());
+		glNamedBufferSubData(m_TextureVbo, 0, geometry.TexCoords.size() * sizeof(GLfloat) * 2, geometry.TexCoords.data());
+		glNamedBufferSubData(m_Ebo, 0, geometry.Indices.size() * sizeof(GLuint), geometry.Indices.data());
+
 		glBindVertexArray(m_Vao);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(geometry.Indices.size()), GL_UNSIGNED_INT, nullptr);
+
+		/*glBindVertexArray(m_Vao);
 
 		size_t remainingBatches = geometry.Indices.size();
 		while (remainingBatches > 0)
@@ -117,7 +124,7 @@ namespace DGL
 			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(batchSize), GL_UNSIGNED_INT, nullptr);
 
 			remainingBatches -= batchSize;
-		}
+		}*/
 	}
 
 	OpenGLRenderer::OpenGLRenderer(const uint32_t maxVertices, const GLuint vao, const GLuint positionVbo, const GLuint textureVbo, const GLuint ebo):

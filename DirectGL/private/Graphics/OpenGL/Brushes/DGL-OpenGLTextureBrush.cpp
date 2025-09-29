@@ -25,14 +25,31 @@ inline static constexpr auto FragmentSource = R"(
 #version 460 core
 
 layout (location = 0) out vec4 o_FragColor;
-
 layout (location = 0) in vec2 v_TexCoord;
-
 layout(binding = 0) uniform sampler2D u_Texture;
 
-void main()
-{
-	o_FragColor = texture(u_Texture, v_TexCoord);
+uniform vec4 u_SourceRect; // x, y, width, height
+
+void main() {
+	// Extract the source rectangle components
+	const float sourceLeft = u_SourceRect.x;
+	const float sourceTop = u_SourceRect.y;
+	const float sourceWidth = u_SourceRect.z;
+	const float sourceHeight = u_SourceRect.w;
+
+	const vec2 texSize = textureSize(u_Texture, 0);
+
+	// All source components are in pixels, so we need to convert them to [0, 1] range
+	const float texLeft = sourceLeft / texSize.x;
+	const float texTop = sourceTop / texSize.y;
+	const float texWidth = sourceWidth / texSize.x;
+	const float texHeight = sourceHeight / texSize.y;
+
+	// Calculate the final texture coordinates
+	const float u = texLeft + v_TexCoord.x * texWidth;
+	const float v = texTop + v_TexCoord.y * texHeight;
+
+	o_FragColor = texture(u_Texture, vec2(u, v));
 }
 )";
 
@@ -88,6 +105,16 @@ namespace DGL
 		return m_Sampler;
 	}
 
+	void OpenGLTextureBrush::SetSourceRect(const Math::FloatBoundary& boundary)
+	{
+		m_SourceRect = boundary;
+	}
+
+	const Math::FloatBoundary& OpenGLTextureBrush::GetSourceRect() const
+	{
+		return m_SourceRect;
+	}
+
 	void OpenGLTextureBrush::Apply(const Camera& camera)
 	{
 		// Activate texture & sampler for the use inside the shader.
@@ -98,12 +125,14 @@ namespace DGL
 		// Activate shader and upload uniforms.
 		m_ShaderProgram->Bind();
 		m_ShaderProgram->UploadInt1("u_Texture", 0);
+		m_ShaderProgram->UploadFloat4("u_SourceRect", m_SourceRect.Left, m_SourceRect.Top, m_SourceRect.Width, m_SourceRect.Height);
 		m_ShaderProgram->UploadMatrix4x4("u_ViewProjection", std::span<const float, 16>(camera.GetViewProjectionMatrix().GetData(), 16));
 	}
 
 	OpenGLTextureBrush::OpenGLTextureBrush(std::unique_ptr<OpenGLShaderProgram> shaderProgram, const OpenGLTexture* texture, const OpenGLTextureSampler* sampler):
 		m_Texture(texture),
 		m_Sampler(sampler),
+		m_SourceRect(0.0f, 0.0f, static_cast<float>(m_Texture->GetSize().X), static_cast<float>(m_Texture->GetSize().Y)),
 		m_ShaderProgram(std::move(shaderProgram))
 	{
 	}

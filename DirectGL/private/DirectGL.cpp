@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <filesystem>
 
 module DGL;
 
@@ -17,7 +18,17 @@ using namespace System;
 /// </summary>
 namespace DGL
 {
-	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory)
+	[[nodiscard]] std::unique_ptr<ResourceFactory> CreateResourceFactory(const GraphicsAPI api)
+	{
+		switch (api)
+		{
+			using enum GraphicsAPI;
+			case OpenGL: return std::make_unique<OpenGLResourceFactory>();
+			default: throw std::invalid_argument("Couldn't create ResourceFactory for unknown GraphicsAPI.");
+		}
+	}
+
+	int Launch(GraphicsAPI api, const std::function<std::unique_ptr<Sketch>()>& factory)
 	{
 		Library.LoggingChannel = std::make_unique<LoggingChannel>(std::make_unique<Logger>(
 			std::make_unique<DevelopmentLogFilter>(),
@@ -36,15 +47,17 @@ namespace DGL
 		startup.AddStartupTask(Library.WGL);
 		startup.AddStartupTask(std::make_shared<ConfigureGladStartupTask>());
 
-		startup.Run([&]
+		startup.Run([api, &factory]
 		{
 			Camera camera({ 900.0f, 900.0f });
 
-			Library.ResourceFactory = std::make_unique<OpenGLResourceFactory>();
+			Library.ResourceFactory = CreateResourceFactory(api);
 			Library.Renderer = Library.ResourceFactory->CreateRenderer(10'000);
 			Library.RenderTarget = std::make_unique<RenderTarget>(*Library.Renderer, &camera);
 
-			const auto brush = Library.ResourceFactory->CreateSolidColorBrush(Color(255, 0, 0, 255));
+			const auto sampler = CreateTextureSampler();
+			const auto texture = CreateTexture("test.jpg");
+			const auto brush = CreateTextureBrush(*texture, *sampler);
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -153,5 +166,16 @@ namespace DGL
 /// </summary>
 namespace DGL
 {
-	
+	std::unique_ptr<Shader> CreateShader(const std::string_view shaderSource, const ShaderType type) { return Library.ResourceFactory->CreateShader(shaderSource, type); }
+	std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader) { return Library.ResourceFactory->CreateShaderProgram(vertexShader, fragmentShader); }
+	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath) { return Library.ResourceFactory->CreateTexture(filepath); }
+	std::unique_ptr<TextureSampler> CreateTextureSampler() { return Library.ResourceFactory->CreateTextureSampler(); }
+	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(const Color& color) { return Library.ResourceFactory->CreateSolidColorBrush(color); }
+	std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler) { return Library.ResourceFactory->CreateTextureBrush(texture, sampler); }
+}
+
+namespace DGL
+{
+	Renderer& GetRenderer() { return *Library.Renderer; }
+	RenderTarget& GetRenderTarget() { return *Library.RenderTarget; }
 }

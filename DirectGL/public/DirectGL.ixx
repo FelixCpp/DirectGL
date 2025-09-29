@@ -5,15 +5,49 @@ module;
 #include <string>
 #include <string_view>
 #include <chrono>
+#include <filesystem>
 
 export module DGL;
 
-/// Export the window event to the user
+/////////////////////////////// - IMPORTS - ///////////////////////////////
+///																		///
+/// This Section contains all imports that are part of the public API	///
+/// of the library.														///
+///																		///
+///////////////////////////////////////////////////////////////////////////
+
+/// First we export external libraries that are required by the public API
+/// of the library.
+export import Math;
+
+/// Public API of the Window module
 export import :WindowEvent;
 
-/// Export math utilities since it is used quite often
-/// in graphics programming.
-export import Math;
+/// Public API of the Graphics module
+export import :Brush;
+export import :SolidColorBrush;
+export import :TextureBrush;
+export import :BorderRadius;
+export import :Color;
+export import :ExtendMode;
+export import :GammaMode;
+export import :Geometry;
+export import :GradientStop;
+export import :GraphicsAPI;
+export import :Radius;
+export import :Renderer;
+export import :RenderTarget;
+export import :Shader;
+export import :ShaderProgram;
+export import :Texture;
+export import :TextureSampler;
+
+/////////////////////////////// - IMPORTS - ///////////////////////////////
+///																		///
+/// This Section contains all imports that are part of the public API	///
+/// of the library.														///
+///																		///
+///////////////////////////////////////////////////////////////////////////
 
 import Logging;
 
@@ -31,7 +65,10 @@ export namespace DGL
 		virtual void Destroy() = 0;
 	};
 
-	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory);
+	int Launch(
+		GraphicsAPI api,
+		const std::function<std::unique_ptr<Sketch>()>& factory
+	);
 }
 
 /// <summary>
@@ -63,27 +100,25 @@ export namespace DGL
 	std::string GetWindowTitle();									  //!< Get the window title
 }
 
-export import :Brush;
-export import :SolidColorBrush;
-export import :TextureBrush;
-
-export import :BorderRadius;
-export import :Color;
-export import :ExtendMode;
-export import :GammaMode;
-export import :GradientStop;
-export import :Radius;
-export import :Shader;
-export import :ShaderProgram;
-export import :Texture;
-export import :TextureSampler;
-
 /// <summary>
-/// Graphics and rendering
+/// Factory methods to create graphics resources
 /// </summary>
 export namespace DGL
 {
+	[[nodiscard]] std::unique_ptr<Shader> CreateShader(std::string_view shaderSource, ShaderType type);
+	[[nodiscard]] std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader);
+	[[nodiscard]] std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath);
+	[[nodiscard]] std::unique_ptr<TextureSampler> CreateTextureSampler();
+	[[nodiscard]] std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color);
+	[[nodiscard]] std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler);
+}
 
+
+/// Retrieve internal DirectGL state
+export namespace DGL
+{
+	Renderer& GetRenderer();
+	RenderTarget& GetRenderTarget();
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -110,12 +145,8 @@ import :OpenGLShaderProgram;
 import :OpenGLTexture;
 import :OpenGLTextureSampler;
 
-import :Geometry;
 import :GeometryFactory;
 import :ResourceFactory;
-
-import :Renderer;
-import :RenderTarget;
 
 import :UniformBuffer;
 

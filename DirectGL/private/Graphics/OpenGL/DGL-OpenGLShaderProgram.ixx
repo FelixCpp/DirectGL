@@ -9,6 +9,7 @@ module;
 
 #include <memory>
 #include <string_view>
+#include <unordered_map>
 
 export module DGL:OpenGLShaderProgram;
 
@@ -48,6 +49,7 @@ namespace DGL
 
 		[[nodiscard]] GLint GetUniformLocation(std::string_view name);
 
+		std::unordered_map<std::string_view, GLint> m_UniformLocationCache;
 		GLuint m_ShaderProgramId;
 
 	};

@@ -27,5 +27,6 @@ namespace DGL
 		);
 
 		static Geometry CreateFilledEllipse(const Math::Float2& center, const Radius& radius, uint32_t segments);
+		static Geometry CreateOutlinedEllipse(const Math::Float2& center, const Radius& radius, uint32_t segments, float thickness);
 	};
 }

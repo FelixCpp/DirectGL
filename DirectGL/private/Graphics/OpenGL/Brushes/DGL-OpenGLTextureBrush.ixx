@@ -29,6 +29,9 @@ namespace DGL
 		void SetTextureSampler(const TextureSampler* textureSampler) override;
 		[[nodiscard]] const TextureSampler* GetTextureSampler() const override;
 
+		void SetSourceRect(const Math::FloatBoundary& boundary) override;
+		[[nodiscard]] const Math::FloatBoundary& GetSourceRect() const override;
+
 		void Apply(const Camera& camera) override;
 
 	private:
@@ -41,6 +44,7 @@ namespace DGL
 
 		const OpenGLTexture* m_Texture;
 		const OpenGLTextureSampler* m_Sampler;
+		Math::FloatBoundary m_SourceRect;
 		std::unique_ptr<OpenGLShaderProgram> m_ShaderProgram;
 
 	};

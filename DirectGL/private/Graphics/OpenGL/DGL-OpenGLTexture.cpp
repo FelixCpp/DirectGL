@@ -45,14 +45,14 @@ namespace DGL
 		}
 	}
 
-	void OpenGLTexture::Bind(const uint32_t slot) const
-	{
-		glBindTextureUnit(slot, m_TextureId);
-	}
-
 	Math::Uint2 OpenGLTexture::GetSize() const
 	{
 		return m_Size;
+	}
+
+	void OpenGLTexture::Bind(const uint32_t slot) const
+	{
+		glBindTextureUnit(slot, m_TextureId);
 	}
 
 	OpenGLTexture::OpenGLTexture(const GLuint textureId, const Math::Uint2& size, const uint32_t channels)

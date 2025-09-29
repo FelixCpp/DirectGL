@@ -1,16 +1,22 @@
 #include <memory>
 #include <format>
 #include <vector>
+#include <filesystem>
 
 import DGL;
 
 struct SpikesGame : DGL::Sketch
 {
+	std::unique_ptr<DGL::TextureSampler> sampler = DGL::CreateTextureSampler();
+	std::unique_ptr<DGL::Texture> texture = DGL::CreateTexture("test.jpg");
+	std::unique_ptr<DGL::TextureBrush> textureBrush = DGL::CreateTextureBrush(*texture, *sampler);
+
 	std::vector<Math::Float2> points;
-	//DGL::SolidColorBrush solidColorBrush = DGL::SolidColorBrush(0.2f, 0.3f, 0.8f);
 
 	bool Setup() override
 	{
+		textureBrush->SetSourceRect(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, 4000.0f, 6000.0f));
+		//textureBrush->SetSourceRect(Math::FloatBoundary::FromLTWH(1619.0f, 3144.0f, 401.0f, 478.0f));
 		return true;
 	}
 
@@ -50,18 +56,20 @@ struct SpikesGame : DGL::Sketch
 
 	void Draw() override
 	{
-
+		for (const auto& point : points)
+		{
+			DGL::GetRenderTarget().FillRectangle(Math::FloatBoundary::FromLTWH(point.X, point.Y, 300.0f, 300.0f), *textureBrush);
+		}
 	}
 
 	void Destroy() override
 	{
-
 	}
 };
 
 int main() {
-	return DGL::Launch([]
-	{
-		return std::make_unique<SpikesGame>();
-	});
+	return DGL::Launch(
+		DGL::GraphicsAPI::OpenGL,
+		[] { return std::make_unique<SpikesGame>(); }
+	);
 }

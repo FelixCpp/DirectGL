@@ -12,7 +12,7 @@ import :BorderRadius;
 import :Renderer;
 import :Radius;
 
-namespace DGL
+export namespace DGL
 {
 	class RenderTarget
 	{
@@ -24,6 +24,7 @@ namespace DGL
 		void FillRectangle(const Math::FloatBoundary& boundary, Brush& brush);
 		void FillRoundedRectangle(const Math::FloatBoundary& boundary, const BorderRadius& borderRadius, Brush& brush);
 		void FillEllipse(const Math::Float2& center, const Radius& radius, Brush& brush);
+		void DrawEllipse(const Math::Float2& center, const Radius& radius, float thickness, Brush& brush);
 
 	private:
 

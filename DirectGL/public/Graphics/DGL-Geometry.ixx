@@ -12,7 +12,7 @@ export module DGL:Geometry;
 
 import Math;
 
-namespace DGL
+export namespace DGL
 {
 	struct Geometry
 	{

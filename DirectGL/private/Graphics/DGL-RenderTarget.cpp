@@ -33,4 +33,11 @@ namespace DGL
 		m_Renderer->Submit(geometry);
 	}
 
+	void RenderTarget::DrawEllipse(const Math::Float2& center, const Radius& radius, const float thickness, Brush& brush)
+	{
+		const Geometry geometry = GeometryFactory::CreateOutlinedEllipse(center, radius, 64, thickness);
+		brush.Apply(*m_Camera);
+		m_Renderer->Submit(geometry);
+	}
+
 }
