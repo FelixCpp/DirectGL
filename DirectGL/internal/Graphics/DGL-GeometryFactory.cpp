@@ -3,6 +3,7 @@
 #include <cmath>
 #include <numbers>
 #include <algorithm>
+#include <format>
 
 module DGL;
 
@@ -245,4 +246,147 @@ namespace DGL
 
 		return geometry;
 	}
+
+	Geometry GeometryFactory::CreateLine(const Math::Float2& start, const Math::Float2& end, const float thickness, const LineCap startCap, const LineCap endCap)
+	{
+		Geometry geometry;
+
+		// Compute the direction vector of the line and its perpendicular to form a rectangle
+		const Math::Float2 difference = end - start;
+		const Math::Float2 direction = difference.Normalized();
+		const Math::Float2 perpendicular = direction.Perpendicular();
+		const Math::Float2 offset = perpendicular * (thickness * 0.5f);
+
+		std::vector<Math::Float2> startPoints;
+		std::vector<Math::Float2> startTexCoords;
+		switch (startCap)
+		{
+			case LineCap::Butt:
+			{
+				// Add two points for the start of the line
+				startPoints.emplace_back(start - offset);
+				startPoints.emplace_back(start + offset);
+
+				// Insert texture coordinates for the start points
+				startTexCoords.emplace_back(0.0f, 0.0f);
+				startTexCoords.emplace_back(0.0f, 1.0f);
+			} break;
+
+			case LineCap::Round:
+			{
+				// Generate a half-circle around the start point pointing backwards along the line direction
+				constexpr size_t segments = 4;
+				constexpr float angleStepSize = std::numbers::pi_v<float> / static_cast<float>(segments - 1);
+				const float startAngle = std::atan2(offset.Y, offset.X) + std::numbers::pi_v<float>;
+				const float radius = thickness * 0.5f;
+				for (size_t i = 0; i < segments; ++i)
+				{
+					const float angle = startAngle - static_cast<float>(i) * angleStepSize;
+					//Trace(std::format("Angle[{}] = {:.2f} deg", i, angle * 180.0f / 3.141592f));
+					const float px = start.X + std::cos(angle) * radius;
+					const float py = start.Y + std::sin(angle) * radius;
+					startPoints.emplace_back(px, py);
+
+					// Insert texture coordinates for the start points
+					const float texCoordX = 0.5f + (std::cos(angle) * 0.5f);
+					const float texCoordY = 0.5f + (std::sin(angle) * 0.5f);
+					startTexCoords.emplace_back(texCoordX, texCoordY);
+				}
+			} break;
+
+			case LineCap::Square:
+			{
+				// Add two points at the start of the line, offset by half the thickness in the opposite line direction
+				const Math::Float2 squareOffset = direction * (thickness * 0.5f);
+				startPoints.emplace_back(start - offset - squareOffset);
+				startPoints.emplace_back(start + offset - squareOffset);
+			} break;
+		}
+
+		std::vector<Math::Float2> endPoints;
+		std::vector<Math::Float2> endTexCoords;
+		switch (endCap)
+		{
+			case LineCap::Butt:
+			{
+				// Add two points for the end of the line
+				endPoints.emplace_back(end - offset);
+				endPoints.emplace_back(end + offset);
+
+				// Insert texture coordinates for the end points
+				endTexCoords.emplace_back(1.0f, 0.0f);
+				endTexCoords.emplace_back(1.0f, 1.0f);
+			} break;
+
+			case LineCap::Round:
+			{
+				// Generate a half-circle around the end point pointing forwards along the line direction
+				constexpr size_t segments = 4;
+				constexpr float angleStepSize = std::numbers::pi_v<float> / static_cast<float>(segments - 1);
+				const float startAngle = std::atan2(offset.Y, offset.X) + std::numbers::pi_v<float>;
+				const float radius = thickness * 0.5f;
+				for (size_t i = 0; i < segments; ++i)
+				{
+					const float angle = startAngle + static_cast<float>(i) * angleStepSize;
+					//Trace(std::format("Angle[{}] = {:.2f} deg", i, angle * 180.0f / 3.141592f));
+					const float px = end.X + std::cos(angle) * radius;
+					const float py = end.Y + std::sin(angle) * radius;
+					endPoints.emplace_back(px, py);
+
+					// Insert texture coordinates for the end points
+					const float texCoordX = 0.5f + (std::cos(angle) * 0.5f);
+					const float texCoordY = 0.5f + (std::sin(angle) * 0.5f);
+					endTexCoords.emplace_back(texCoordX, texCoordY);
+				}
+			} break;
+
+			case LineCap::Square:
+			{
+				// Add two points at the end of the line, offset by half the thickness in the line direction
+				const Math::Float2 squareOffset = direction * (thickness * 0.5f);
+				endPoints.emplace_back(end - offset + squareOffset);
+				endPoints.emplace_back(end + offset + squareOffset);
+			} break;
+		}
+
+		geometry.Positions.append_range(startPoints);
+		geometry.Positions.append_range(endPoints);
+
+		geometry.TexCoords.append_range(std::move(startTexCoords));
+		geometry.TexCoords.append_range(std::move(endTexCoords));
+		
+		// Generate the indices for the triangle strip
+		std::vector<uint32_t> triangleStripIndices;
+		const size_t startCount = startPoints.size();
+		const size_t endCount = endPoints.size();
+		const size_t higherPointCount = std::max(startCount, endCount);
+		for (size_t i = 0; i < higherPointCount; ++i)
+		{
+			const size_t startIdx = std::min(i, startCount - 1);
+			const size_t endIdx = std::min(i, endCount - 1);
+		
+			triangleStripIndices.emplace_back(static_cast<uint32_t>(startIdx));
+			triangleStripIndices.emplace_back(static_cast<uint32_t>(startCount + endIdx));
+		}
+		
+		// Convert triangle strip indices to triangle list indices
+		for (size_t i = 0; i < triangleStripIndices.size() - 2; ++i)
+		{
+			if (i % 2 == 0)
+			{
+				geometry.Indices.emplace_back(triangleStripIndices[i]);
+				geometry.Indices.emplace_back(triangleStripIndices[i + 1]);
+				geometry.Indices.emplace_back(triangleStripIndices[i + 2]);
+			}
+			else
+			{
+				geometry.Indices.emplace_back(triangleStripIndices[i + 1]);
+				geometry.Indices.emplace_back(triangleStripIndices[i]);
+				geometry.Indices.emplace_back(triangleStripIndices[i + 2]);
+			}
+		}
+
+		return geometry;
+	}
+
 }

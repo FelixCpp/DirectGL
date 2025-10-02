@@ -18,6 +18,8 @@ project("DirectGL")
         "Startup",
         "Math",
         "Monitor",
+        "Window",
+        "Context",
         "Glad",
         "Stb"
     })

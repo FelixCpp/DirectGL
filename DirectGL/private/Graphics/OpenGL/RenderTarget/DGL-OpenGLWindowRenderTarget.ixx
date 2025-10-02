@@ -19,12 +19,12 @@ namespace DGL
 	{
 	public:
 
-		static std::unique_ptr<OpenGLWindowRenderTarget> Create(Window& window, Renderer& renderer);
+		static std::unique_ptr<OpenGLWindowRenderTarget> Create(System::Window& window, Renderer& renderer);
 
 		void Resize(uint32_t width, uint32_t height) override;
 		[[nodiscard]] Math::Uint2 GetSize() const override;
 
-		Window& GetTarget() const override;
+		System::Window& GetTarget() const override;
 
 		void Begin() override;
 		void End() override;
@@ -35,11 +35,13 @@ namespace DGL
 		void DrawEllipse(const Math::Float2& center, Radius radius, float thickness, Brush& brush) override;
 		void FillEllipse(const Math::Float2& center, Radius radius, Brush& brush) override;
 
+		void Line(const Math::Float2& start, const Math::Float2& end, float thickness, Brush& brush, LineCap startCap, LineCap endCap) override;
+
 	private:
 
-		explicit OpenGLWindowRenderTarget(Window& window, Renderer& renderer);
+		explicit OpenGLWindowRenderTarget(System::Window& window, Renderer& renderer);
 
-		Window* m_Window;
+		System::Window* m_Window;
 		Renderer* m_Renderer;
 		Camera m_Camera;
 

@@ -11,7 +11,7 @@ import :OpenGLShader;
 
 namespace DGL
 {
-	std::unique_ptr<WindowRenderTarget> OpenGLResourceFactory::CreateWindowRenderTarget(Window& window, Renderer& renderer)
+	std::unique_ptr<WindowRenderTarget> OpenGLResourceFactory::CreateWindowRenderTarget(System::Window& window, Renderer& renderer)
 	{
 		return OpenGLWindowRenderTarget::Create(window, renderer);
 	}
@@ -55,6 +55,4 @@ namespace DGL
 	{
 		return OpenGLTextureBrush::Create(&texture, &sampler);
 	}
-
-
 }

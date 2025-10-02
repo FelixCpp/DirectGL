@@ -2,6 +2,7 @@ module;
 
 #include <cstdint>
 #include <concepts>
+#include <cmath>
 
 export module Math:Value2;
 
@@ -21,13 +22,26 @@ namespace Math
 		{
 		}
 
+		T Length() const;
+		constexpr T LengthSquared() const;
+
+		Value2 Normalized() const;
+		Value2 Perpendicular() const;
+
 		constexpr Value2 operator + (const Value2& other) const;
 		constexpr Value2 operator - (const Value2& other) const;
 		constexpr Value2 operator / (const Value2& other) const;
 		constexpr Value2 operator * (const Value2& other) const;
 
+		constexpr Value2 operator + (T value) const;
+		constexpr Value2 operator - (T value) const;
+		constexpr Value2 operator / (T value) const;
+		constexpr Value2 operator * (T value) const;
+
 		constexpr bool operator == (const Value2& other) const = default;
 		constexpr bool operator != (const Value2& other) const = default;
+
+		static const Value2 Zero;
 
 		T X;
 		T Y;
@@ -61,9 +75,31 @@ namespace Math
 	{
 	}
 
+	template <typename T> T Value2<T>::Length() const { return static_cast<T>(std::sqrt(LengthSquared())); }
+	template <typename T> constexpr T Value2<T>::LengthSquared() const { return X * X + Y * Y; }
+
+	template <typename T> Value2<T> Value2<T>::Normalized() const
+	{
+		const T length = Length();
+		if (length == T{})
+		{
+			return Value2{};
+		}
+
+		return Value2{ X / length, Y / length };
+	}
+
+	template <typename T> Value2<T> Value2<T>::Perpendicular() const { return Value2{ -Y, X }; }
+
 	template <typename T> constexpr Value2<T> Value2<T>::operator+(const Value2& other) const { return { X + other.X, Y + other.Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator-(const Value2& other) const { return { X - other.X, Y - other.Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator/(const Value2& other) const { return { X / other.X, Y / other.Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator*(const Value2& other) const { return { X * other.X, Y * other.Y }; }
 
+	template <typename T> constexpr Value2<T> Value2<T>::operator+(T value) const { return { X + value, Y + value }; }
+	template <typename T> constexpr Value2<T> Value2<T>::operator-(T value) const { return { X - value, Y - value }; }
+	template <typename T> constexpr Value2<T> Value2<T>::operator/(T value) const { return { X / value, Y / value }; }
+	template <typename T> constexpr Value2<T> Value2<T>::operator*(T value) const { return { X * value, Y * value }; }
+
+	template <typename T> inline constexpr Value2<T> Value2<T>::Zero = Value2{ T{}, T{} };
 }

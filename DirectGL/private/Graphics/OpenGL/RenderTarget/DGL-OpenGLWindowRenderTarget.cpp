@@ -6,7 +6,7 @@ module DGL;
 
 namespace DGL
 {
-	std::unique_ptr<OpenGLWindowRenderTarget> OpenGLWindowRenderTarget::Create(Window& window, Renderer& renderer)
+	std::unique_ptr<OpenGLWindowRenderTarget> OpenGLWindowRenderTarget::Create(System::Window& window, Renderer& renderer)
 	{
 		return std::unique_ptr<OpenGLWindowRenderTarget>(new OpenGLWindowRenderTarget(window, renderer));
 	}
@@ -21,7 +21,7 @@ namespace DGL
 		return static_cast<Math::Uint2>(m_Camera.GetSize());
 	}
 
-	Window& OpenGLWindowRenderTarget::GetTarget() const
+	System::Window& OpenGLWindowRenderTarget::GetTarget() const
 	{
 		return *m_Window;
 	}
@@ -32,6 +32,7 @@ namespace DGL
 
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	void OpenGLWindowRenderTarget::End()
@@ -67,7 +68,14 @@ namespace DGL
 		m_Renderer->Submit(geometry);
 	}
 
-	OpenGLWindowRenderTarget::OpenGLWindowRenderTarget(Window& window, Renderer& renderer) :
+	void OpenGLWindowRenderTarget::Line(const Math::Float2& start, const Math::Float2& end, const float thickness, Brush& brush, const LineCap startCap, const LineCap endCap)
+	{
+		const Geometry geometry = GeometryFactory::CreateLine(start, end, thickness, startCap, endCap);
+		brush.Apply(m_Camera);
+		m_Renderer->Submit(geometry);
+	}
+
+	OpenGLWindowRenderTarget::OpenGLWindowRenderTarget(System::Window& window, Renderer& renderer) :
 		m_Window(&window),
 		m_Renderer(&renderer),
 		m_Camera(static_cast<Math::Float2>(window.GetSize()))

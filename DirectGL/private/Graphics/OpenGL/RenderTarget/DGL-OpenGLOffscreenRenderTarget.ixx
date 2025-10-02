@@ -35,6 +35,8 @@ namespace DGL
 		void DrawEllipse(const Math::Float2& center, Radius radius, float thickness, Brush& brush) override;
 		void FillEllipse(const Math::Float2& center, Radius radius, Brush& brush) override;
 
+		void Line(const Math::Float2& start, const Math::Float2& end, float thickness, Brush& brush, LineCap startCap, LineCap endCap) override;
+
 	private:
 
 		explicit OpenGLOffscreenRenderTarget(

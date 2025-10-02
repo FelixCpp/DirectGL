@@ -5,6 +5,8 @@
 #include <string_view>
 #include <filesystem>
 
+#include <variant>
+
 module DGL;
 
 import System.Monitor;
@@ -22,8 +24,7 @@ namespace DGL
 	{
 		switch (api)
 		{
-			using enum GraphicsAPI;
-			case OpenGL: return std::make_unique<OpenGLResourceFactory>();
+			case GraphicsAPI::OpenGL: return std::make_unique<OpenGLResourceFactory>();
 			default: throw std::invalid_argument("Couldn't create ResourceFactory for unknown GraphicsAPI.");
 		}
 	}
@@ -36,15 +37,15 @@ namespace DGL
 			std::make_unique<ConsoleLogOutput>()
 		));
 
-		Library.WGL = std::make_shared<ConfigureWGLStartupTask>([] { return Library.Window.get(); });
 		Library.MonitorProvider = std::make_shared<MonitorProviderCache>(std::make_shared<Win32MonitorProvider>());
-		
+		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
+		Library.Window = std::make_unique<WindowWrapper>(Library.MonitorProvider);
+
 		Startup::AppStartup startup;
 		startup.AddStartupTask(Library.LoggingChannel->GetStartupTask());
 		startup.AddStartupTask(std::make_shared<ConfigureDPIStartupTask>());
-		startup.AddStartupTask(std::make_shared<PrepareWGLStartupTask>());
-		startup.AddStartupTask(std::make_shared<WindowStartupTask>(Library.Window, Library.MonitorProvider));
-		startup.AddStartupTask(Library.WGL);
+		startup.AddStartupTask(Library.Window);
+		startup.AddStartupTask(Library.Context);
 		startup.AddStartupTask(std::make_shared<ConfigureGladStartupTask>());
 
 		startup.Run([api, &factory]
@@ -70,11 +71,13 @@ namespace DGL
 					const bool forwardToUser = event->Visit(
 						[&running](const WindowEvent::Closed&)
 						{
+							Info("Window close event received");
 							running = false;
 							return true;
 						},
 						[&](const WindowEvent::Resized& resized)
 						{
+							Info(std::format("Window has been resized: {}, {}", resized.Width, resized.Height));
 							Library.RenderTarget->Resize(resized.Width, resized.Height);
 							return true;
 						},
@@ -93,7 +96,7 @@ namespace DGL
 				Library.RenderTarget->Begin();
 				Library.Sketch->Draw();
 				Library.RenderTarget->End();
-				Library.WGL->SwapBuffers();
+				Library.Context->Flush();
 			}
 
 			Library.Sketch->Destroy();
@@ -127,7 +130,7 @@ namespace DGL
 
 	void SetWindowSize(const int width, const int height, const bool recenter)
 	{
-		Library.Window->SetSize(width, height);
+		Library.Window->SetSize({ static_cast<uint32_t>(width), static_cast<uint32_t>(height) });
 
 		if (recenter)
 		{
@@ -141,7 +144,7 @@ namespace DGL
 	}
 
 	Math::Uint2 GetWindowSize()	{ return Library.Window->GetSize(); }
-	void SetWindowPosition(const int x, const int y) { Library.Window->SetPosition(x, y); }
+	void SetWindowPosition(const int x, const int y) { Library.Window->SetPosition({ x, y }); }
 	Math::Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
 	void SetWindowTitle(const std::string_view title) { Library.Window->SetTitle(title); }
 	std::string GetWindowTitle() { return Library.Window->GetTitle(); }

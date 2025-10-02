@@ -9,6 +9,7 @@ import :Geometry;
 
 import :BorderRadius;
 import :Radius;
+import :LineCap;
 
 import Math;
 
@@ -30,5 +31,7 @@ namespace DGL
 
 		static Geometry CreateFilledEllipse(const Math::Float2& center, const Radius& radius, uint32_t segments);
 		static Geometry CreateOutlinedEllipse(const Math::Float2& center, const Radius& radius, uint32_t segments, float thickness);
+
+		static Geometry CreateLine(const Math::Float2& start, const Math::Float2& end, float thickness, LineCap startCap, LineCap endCap);
 	};
 }

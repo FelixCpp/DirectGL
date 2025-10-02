@@ -108,15 +108,25 @@ namespace DGL
 		glNamedBufferSubData(m_Ebo, 0, geometry.Indices.size() * sizeof(GLuint), geometry.Indices.data());
 
 		glBindVertexArray(m_Vao);
+
+		// Print all positions in order (for debugging)
+		//for (size_t i = 0; i < geometry.Indices.size(); ++i)
+		//{
+		//	std::printf("Pos[%zu] = (%.2f, %.2f)\n", i, geometry.Positions[geometry.Indices[i]].X, geometry.Positions[geometry.Indices[i]].Y);
+		//}
+		//std::printf("\n");
+
+		//glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(geometry.Positions.size()));
+		//glDrawElements(GL_LINE_STRIP, static_cast<GLsizei>(geometry.Indices.size()), GL_UNSIGNED_INT, nullptr);
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(geometry.Indices.size()), GL_UNSIGNED_INT, nullptr);
 	}
 
 	OpenGLRenderer::OpenGLRenderer(const uint32_t maxVertices, const GLuint vao, const GLuint positionVbo, const GLuint textureVbo, const GLuint ebo):
-		m_MaxVertices(maxVertices),
 		m_Vao(vao),
 		m_PositionVbo(positionVbo),
 		m_TextureVbo(textureVbo),
-		m_Ebo(ebo)
+		m_Ebo(ebo),
+		m_MaxVertices(maxVertices)
 	{
 	}
 }

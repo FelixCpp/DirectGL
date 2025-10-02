@@ -17,7 +17,7 @@ namespace DGL
 {
 	struct OpenGLResourceFactory : ResourceFactory
 	{
-		std::unique_ptr<WindowRenderTarget> CreateWindowRenderTarget(Window& window, Renderer& renderer) override;
+		std::unique_ptr<WindowRenderTarget> CreateWindowRenderTarget(System::Window& window, Renderer& renderer) override;
 		std::unique_ptr<OffscreenRenderTarget> CreateFramebuffer(uint32_t width, uint32_t height, Renderer& renderer) override;
 
 		std::unique_ptr<Renderer> CreateRenderer(uint32_t maxVertices) override;

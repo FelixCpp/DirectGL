@@ -19,9 +19,7 @@ export module DGL;
 /// First we export external libraries that are required by the public API
 /// of the library.
 export import Math;
-
-/// Public API of the Window module
-export import :WindowEvent;
+export import System.Window;
 
 /// Public API of the Graphics module
 export import :Brush;
@@ -36,6 +34,7 @@ export import :BorderRadius;
 export import :Color;
 export import :Geometry;
 export import :GraphicsAPI;
+export import :LineCap;
 export import :Radius;
 export import :Renderer;
 export import :RenderTarget;
@@ -62,7 +61,7 @@ export namespace DGL
 	{
 		virtual ~Sketch() = default;
 		virtual bool Setup() = 0;
-		virtual void Event(const WindowEvent& event) = 0;
+		virtual void Event(const System::WindowEvent& event) = 0;
 		virtual void Draw() = 0;
 		virtual void Destroy() = 0;
 	};
@@ -135,8 +134,7 @@ import :ConfigureDPIStartupTask;
 
 // Graphics
 import :ConfigureGladStartupTask;
-import :ConfigureWGLStartupTask;
-import :PrepareWGLStartupTask;
+import :ContextWrapper;
 
 import :OpenGLSolidColorBrush;
 import :OpenGLTextureBrush;
@@ -164,19 +162,17 @@ import :OpenGLResourceFactory;
 import :LoggingChannel;
 import :LoggingStartupTask;
 
-// Window
-import :Window;
-
 import :WindowStartupTask;
 import :Preconditions;
 
 struct SpikyLibrary
 {
-	std::unique_ptr<DGL::Window>					Window;				//!< The Core window of the sketch
+	std::shared_ptr<System::MonitorProvider>		MonitorProvider;	//!< The monitor provider to use
+	std::shared_ptr<DGL::ContextWrapper>			Context;			//!< The WGL configuration task
+	std::shared_ptr<DGL::WindowWrapper>				Window;				//!< The Core window of the sketch
+
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
 	std::unique_ptr<DGL::LoggingChannel>			LoggingChannel;		//!< The logging channel to use
-	std::shared_ptr<DGL::ConfigureWGLStartupTask>	WGL;				//!< The WGL configuration task
-	std::shared_ptr<System::MonitorProvider>		MonitorProvider;	//!< The monitor provider to use
 
 	std::unique_ptr<DGL::Renderer> 					Renderer;			//!< The renderer to use
 	std::unique_ptr<DGL::WindowRenderTarget>		RenderTarget;		//!< The render target to use

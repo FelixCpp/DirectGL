@@ -89,6 +89,13 @@ namespace DGL
 		m_Renderer->Submit(geometry);
 	}
 
+	void OpenGLOffscreenRenderTarget::Line(const Math::Float2& start, const Math::Float2& end, const float thickness, Brush& brush, const LineCap startCap, const LineCap endCap)
+	{
+		const Geometry geometry = GeometryFactory::CreateLine(start, end, thickness, startCap, endCap);
+		brush.Apply(m_Camera);
+		m_Renderer->Submit(geometry);
+	}
+
 	OpenGLOffscreenRenderTarget::OpenGLOffscreenRenderTarget(const GLuint framebufferId, const GLuint renderbufferId, std::unique_ptr<Texture> texture, Renderer& renderer):
 		m_FramebufferId(framebufferId),
 		m_RenderbufferId(renderbufferId),

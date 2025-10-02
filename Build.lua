@@ -15,6 +15,8 @@ workspace("DirectGL")
 
     group("System")
         include("System/Monitor/Build-Monitor.lua")
+        include("System/Window/Build-Window.lua")
+        include("System/Context/Build-Context.lua")
 
     group("Utilities")
         include("Logging/Build-Logging.lua")

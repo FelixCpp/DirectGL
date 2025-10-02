@@ -9,6 +9,7 @@ import Math;
 
 import :Brush;
 import :Radius;
+import :LineCap;
 
 export namespace DGL
 {
@@ -24,5 +25,7 @@ export namespace DGL
 
 		virtual void DrawEllipse(const Math::Float2& center, Radius radius, float thickness, Brush& brush) = 0;
 		virtual void FillEllipse(const Math::Float2& center, Radius radius, Brush& brush) = 0;
+
+		virtual void Line(const Math::Float2& start, const Math::Float2& end, float thickness, Brush& brush, LineCap startCap, LineCap endCap) = 0;
 	};
 }
