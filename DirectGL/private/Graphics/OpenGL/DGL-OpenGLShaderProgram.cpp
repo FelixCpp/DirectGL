@@ -8,15 +8,17 @@ module DGL;
 
 inline static constexpr auto INVALID_ID = 0;
 
+import Preconditions;
+
 namespace DGL
 {
 	std::unique_ptr<OpenGLShaderProgram> OpenGLShaderProgram::Create(const Shader& vertexShader, const Shader& fragmentShader)
 	{
-		const auto glVsShader = CheckNotNull(dynamic_cast<const OpenGLShader*>(&vertexShader), [] { return "Tried to create an OpenGLShaderProgram using a non OpenGL vertex shader"; });
-		const auto glFsShader = CheckNotNull(dynamic_cast<const OpenGLShader*>(&fragmentShader), [] { return "Tried to create an OpenGLShaderProgram using a non OpenGL fragment shader"; });
+		const auto glVsShader = System::CheckNotNull(dynamic_cast<const OpenGLShader*>(&vertexShader), [] { return "Tried to create an OpenGLShaderProgram using a non OpenGL vertex shader"; });
+		const auto glFsShader = System::CheckNotNull(dynamic_cast<const OpenGLShader*>(&fragmentShader), [] { return "Tried to create an OpenGLShaderProgram using a non OpenGL fragment shader"; });
 
-		Check(glVsShader->GetShaderType() == ShaderType::Vertex, [] { return "Provided vertex shader is not of type Vertex"; });
-		Check(glFsShader->GetShaderType() == ShaderType::Fragment, [] { return "Provided fragment shader is not of type Fragment"; });
+		System::Check(glVsShader->GetShaderType() == ShaderType::Vertex, [] { return "Provided vertex shader is not of type Vertex"; });
+		System::Check(glFsShader->GetShaderType() == ShaderType::Fragment, [] { return "Provided fragment shader is not of type Fragment"; });
 
 		// Request OpenGL to create the shader program
 		const GLuint shaderProgramId = glCreateProgram();
@@ -198,7 +200,7 @@ namespace DGL
 	OpenGLShaderProgram::OpenGLShaderProgram(const GLuint shaderProgramId):
 		m_ShaderProgramId(shaderProgramId)
 	{
-		Require(m_ShaderProgramId != INVALID_ID, [] { return std::format("Could not create shaderprogram with resource-id {}.", INVALID_ID); });
+		System::Require(m_ShaderProgramId != INVALID_ID, [] { return std::format("Could not create shaderprogram with resource-id {}.", INVALID_ID); });
 	}
 
 	GLint OpenGLShaderProgram::GetUniformLocation(const std::string_view name)

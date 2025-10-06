@@ -33,15 +33,26 @@ namespace Math
 		constexpr Value2 operator / (const Value2& other) const;
 		constexpr Value2 operator * (const Value2& other) const;
 
+		Value2& operator += (const Value2& other);
+		Value2& operator -= (const Value2& other);
+		Value2& operator /= (const Value2& other);
+		Value2& operator *= (const Value2& other);
+
 		constexpr Value2 operator + (T value) const;
 		constexpr Value2 operator - (T value) const;
 		constexpr Value2 operator / (T value) const;
 		constexpr Value2 operator * (T value) const;
 
+		Value2& operator += (T value);
+		Value2& operator -= (T value);
+		Value2& operator /= (T value);
+		Value2& operator *= (T value);
+
 		constexpr bool operator == (const Value2& other) const = default;
 		constexpr bool operator != (const Value2& other) const = default;
 
 		static const Value2 Zero;
+		static const Value2 One;
 
 		T X;
 		T Y;
@@ -96,10 +107,22 @@ namespace Math
 	template <typename T> constexpr Value2<T> Value2<T>::operator/(const Value2& other) const { return { X / other.X, Y / other.Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator*(const Value2& other) const { return { X * other.X, Y * other.Y }; }
 
+	template <typename T> Value2<T>& Value2<T>::operator+=(const Value2& other) { X += other.X; Y += other.Y; return *this; }
+	template <typename T> Value2<T>& Value2<T>::operator-=(const Value2& other) { X -= other.X; Y -= other.Y; return *this; }
+	template <typename T> Value2<T>& Value2<T>::operator/=(const Value2& other) { X /= other.X; Y /= other.Y; return *this; }
+	template <typename T> Value2<T>& Value2<T>::operator*=(const Value2& other) { X *= other.X; Y *= other.Y; return *this; }
+
 	template <typename T> constexpr Value2<T> Value2<T>::operator+(T value) const { return { X + value, Y + value }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator-(T value) const { return { X - value, Y - value }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator/(T value) const { return { X / value, Y / value }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator*(T value) const { return { X * value, Y * value }; }
 
+	template <typename T> Value2<T>& Value2<T>::operator+=(const T value) { X += value; Y += value; return *this; }
+	template <typename T> Value2<T>& Value2<T>::operator-=(const T value) { X -= value; Y -= value; return *this; }
+	template <typename T> Value2<T>& Value2<T>::operator/=(const T value) { X /= value; Y /= value; return *this; }
+	template <typename T> Value2<T>& Value2<T>::operator*=(const T value) { X *= value; Y *= value; return *this; }
+
 	template <typename T> inline constexpr Value2<T> Value2<T>::Zero = Value2{ T{}, T{} };
+	template <typename T> inline constexpr Value2<T> Value2<T>::One = Value2{ T{1}, T{1} };
+	
 }

@@ -27,6 +27,5 @@ namespace DGL
 		std::unique_ptr<TextureSampler> CreateTextureSampler(TextureWrapMode wrapMode, TextureFilterMode filterMode) override;
 
 		std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color) override;
-		std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler) override;
 	};
 }

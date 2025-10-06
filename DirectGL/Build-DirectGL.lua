@@ -14,19 +14,25 @@ project("DirectGL")
     })
 
     links({
+        -- Utilities
         "Logging",
         "Startup",
         "Math",
+        "Preconditions",
+
+        -- System
+        "Context",
         "Monitor",
         "Window",
-        "Context",
+
+        -- Third-Party
         "Glad",
         "Stb"
     })
 
     includedirs({
-        "%{wks.location}/Glad/include",
-        "%{wks.location}/Stb/include"
+        "%{wks.location}/Libraries/Glad/include",
+        "%{wks.location}/Libraries/Stb/include"
     })
 
     filter("files:**.ixx")

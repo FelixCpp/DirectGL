@@ -161,7 +161,6 @@ namespace DGL
 	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath) { return Library.ResourceFactory->CreateTexture(filepath); }
 	std::unique_ptr<TextureSampler> CreateTextureSampler(const TextureWrapMode wrapMode, const TextureFilterMode filterMode) { return Library.ResourceFactory->CreateTextureSampler(wrapMode, filterMode); }
 	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(const Color color) { return Library.ResourceFactory->CreateSolidColorBrush(color); }
-	std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler) { return Library.ResourceFactory->CreateTextureBrush(texture, sampler); }
 }
 
 namespace DGL

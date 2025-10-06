@@ -14,21 +14,20 @@ workspace("DirectGL")
     OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
     group("System")
+        include("System/Context/Build-Context.lua")
         include("System/Monitor/Build-Monitor.lua")
         include("System/Window/Build-Window.lua")
-        include("System/Context/Build-Context.lua")
 
     group("Utilities")
-        include("Logging/Build-Logging.lua")
-        include("Startup/Build-Startup.lua")
-        include("Math/Build-Math.lua")
+        include("Utilities/Logging/Build-Logging.lua")
+        include("Utilities/Math/Build-Math.lua")
+        include("Utilities/Preconditions/Build-Preconditions.lua")
+        include("Utilities/Premake/Build-Premake.lua")
+        include("Utilities/Startup/Build-Startup.lua")
 
-    group("Build-Tools")
-        include("Premake/Build-Premake.lua")
-
-    group("Graphics")
-        include("Glad/Build-Glad.lua")
-        include("Stb/Build-Stb.lua")
+    group("Libraries")
+        include("Libraries/Glad/Build-Glad.lua")
+        include("Libraries/Stb/Build-Stb.lua")
 
     group("") -- Root group
         include("DirectGL/Build-DirectGL.lua")

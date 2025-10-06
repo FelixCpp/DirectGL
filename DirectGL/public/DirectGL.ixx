@@ -112,7 +112,6 @@ export namespace DGL
 	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath);
 	std::unique_ptr<TextureSampler> CreateTextureSampler(TextureWrapMode wrapMode, TextureFilterMode filterMode);
 	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color);
-	std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler);
 }
 
 /// Retrieve internal DirectGL state
@@ -137,7 +136,6 @@ import :ConfigureGladStartupTask;
 import :ContextWrapper;
 
 import :OpenGLSolidColorBrush;
-import :OpenGLTextureBrush;
 
 import :OpenGLOffscreenRenderTarget;
 import :OpenGLWindowRenderTarget;
@@ -163,7 +161,6 @@ import :LoggingChannel;
 import :LoggingStartupTask;
 
 import :WindowStartupTask;
-import :Preconditions;
 
 struct SpikyLibrary
 {

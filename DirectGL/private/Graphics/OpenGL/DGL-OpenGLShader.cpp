@@ -6,6 +6,8 @@
 
 module DGL;
 
+import Preconditions;
+
 namespace DGL
 {
 	std::unique_ptr<OpenGLShader> OpenGLShader::Create(const std::string_view source, const ShaderType type)
@@ -81,6 +83,6 @@ namespace DGL
 		m_ShaderId(shaderId),
 		m_Type(type)
 	{
-		Require(shaderId != 0, [] { return std::format("Cannot create opengl shader using an invalid resource-id of {}.", 0); });
+		System::Require(shaderId != 0, [] { return std::format("Cannot create opengl shader using an invalid resource-id of {}.", 0); });
 	}
 }

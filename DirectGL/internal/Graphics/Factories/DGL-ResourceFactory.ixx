@@ -38,6 +38,5 @@ namespace DGL
 		virtual std::unique_ptr<TextureSampler> CreateTextureSampler(TextureWrapMode wrapMode, TextureFilterMode filterMode) = 0;
 
 		virtual std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color) = 0;
-		virtual std::unique_ptr<TextureBrush> CreateTextureBrush(const Texture& texture, const TextureSampler& sampler) = 0;
 	};
 }

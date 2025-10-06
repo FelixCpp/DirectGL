@@ -50,9 +50,4 @@ namespace DGL
 	{
 		return OpenGLSolidColorBrush::Create(color);
 	}
-
-	std::unique_ptr<TextureBrush> OpenGLResourceFactory::CreateTextureBrush(const Texture& texture, const TextureSampler& sampler)
-	{
-		return OpenGLTextureBrush::Create(&texture, &sampler);
-	}
 }
