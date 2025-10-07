@@ -29,6 +29,12 @@ workspace("DirectGL")
         include("Libraries/Glad/Build-Glad.lua")
         include("Libraries/Stb/Build-Stb.lua")
 
+    group("DirectGL")
+        include("DirectGL/DirectGL-Core/Build-Core.lua")
+        include("DirectGL/DirectGL-Renderer/Build-Renderer.lua")
+        include("DirectGL/DirectGL-RendererAdapter/Build-RendererAdapter.lua")
+        include("DirectGL/DirectGL-RendererOpenGL/Build-RendererOpenGL.lua")
+        include("DirectGL/DirectGL-LibraryLogger/Build-LibraryLogger.lua")
+
     group("") -- Root group
-        include("DirectGL/Build-DirectGL.lua")
         include("App/Build-App.lua")

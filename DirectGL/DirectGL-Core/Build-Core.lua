@@ -1,4 +1,4 @@
-project("DirectGL")
+project("DirectGL-Core")
     kind("StaticLib")
     language("C++")
     cppdialect("C++23")
