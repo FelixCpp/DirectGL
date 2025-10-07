@@ -1,26 +1,27 @@
-﻿// Project Name : DGL
-// File Name    : DGL-LoggingStartupTask.ixx
+﻿// Project Name : DirectGL-Logging
+// File Name    : Logging-AsyncLogger.ixx
 // Author       : Felix Busch
-// Created Date : 2025/09/17
+// Created Date : 2025/10/07
 
 module;
 
-#include <thread>
+#include <string>
+#include <chrono>
 #include <queue>
+#include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <chrono>
 
-export module DGL:LoggingStartupTask;
+export module DirectGL.Logging:AsyncLogger;
 
-import Startup;
 import LogForge;
+import Startup;
 
-namespace DGL
+export namespace DGL::Logging
 {
-	class LoggingStartupTask : public Startup::StartupTask
+	class AsyncLogger : public LogForge::Logger, public Startup::StartupTask
 	{
-	public:
+	private:
 
 		struct LogEntry
 		{
@@ -31,8 +32,8 @@ namespace DGL
 
 	public:
 
-		explicit LoggingStartupTask(std::unique_ptr<LogForge::Logger> logger);
-		void Submit(const LogEntry& entry);
+		explicit AsyncLogger(std::unique_ptr<Logger> logger);
+		void Log(LogForge::LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& timepoint) override;
 		Continuation Setup() override;
 		void Teardown() override;
 

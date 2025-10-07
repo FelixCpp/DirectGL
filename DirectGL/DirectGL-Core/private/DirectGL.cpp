@@ -23,18 +23,20 @@ namespace DGL
 {
 	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory)
 	{
-		Library.LoggingChannel = std::make_unique<LoggingChannel>(std::make_unique<LogForge::DefaultLogger>(
+		Library.Logger = std::make_unique<Logging::AsyncLogger>(std::make_unique<LogForge::DefaultLogger>(
 			std::make_unique<LogForge::DevelopmentLogFilter>(),
 			std::make_unique<LogForge::FmtLogPrinter>(),
 			std::make_unique<LogForge::ConsoleLogOutput>()
 		));
+
+		Renderer::SetLogger(Library.Logger);
 
 		Library.MonitorProvider = std::make_shared<MonitorProviderCache>(std::make_shared<Win32MonitorProvider>());
 		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
 		Library.Window = std::make_unique<WindowWrapper>(Library.MonitorProvider);
 
 		Startup::AppStartup startup;
-		startup.AddStartupTask(Library.LoggingChannel->GetStartupTask());
+		startup.AddStartupTask(Library.Logger);
 		startup.AddStartupTask(std::make_shared<ConfigureDPIStartupTask>());
 		startup.AddStartupTask(Library.Window);
 		startup.AddStartupTask(Library.Context);
@@ -120,7 +122,7 @@ namespace DGL
 /// </summary>
 namespace DGL
 {
-	void Log(const LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& time) { Library.LoggingChannel->Submit(level, message, time); }
+	void Log(const LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& time) { Library.Logger->Log(level, message, time); }
 	void Trace(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Trace, message, time); }
 	void Debug(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Debug, message, time); }
 	void Info(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Info, message, time); }

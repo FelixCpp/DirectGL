@@ -18,7 +18,8 @@ project("DirectGL-Renderer")
 	links({
 		"Glad",
 		"Math",
-		"LogForge"
+		"LogForge",
+		"Preconditions",
 	})
 
 	filter("system:windows")

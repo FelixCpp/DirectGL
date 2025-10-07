@@ -1,28 +1,28 @@
 ﻿module;
 
-#include <print>
 #include <mutex>
 #include <vector>
 
-module DGL;
+module DirectGL.Logging;
 
-namespace DGL
+namespace DGL::Logging
 {
-	LoggingStartupTask::LoggingStartupTask(std::unique_ptr<LogForge::Logger> logger) :
+	AsyncLogger::AsyncLogger(std::unique_ptr<Logger> logger) :
 		m_Logger(std::move(logger))
-	{}
+	{
+	}
 
-	void LoggingStartupTask::Submit(const LogEntry& entry)
+	void AsyncLogger::Log(const LogForge::LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& timepoint)
 	{
 		{
 			std::lock_guard lock(m_SubmitMutex);
-			m_SubmittedEntries.push(entry);
+			m_SubmittedEntries.emplace(level, message, timepoint);
 		}
 
 		m_SubmitCondition.notify_one();
 	}
 
-	Startup::StartupTask::Continuation LoggingStartupTask::Setup()
+	Startup::StartupTask::Continuation AsyncLogger::Setup()
 	{
 		m_LoggingThread = std::jthread([this](const std::stop_token& token)
 		{
@@ -45,7 +45,7 @@ namespace DGL
 						m_SubmittedEntries.pop();
 					}
 				}
-				
+
 				for (const auto& entry : batch)
 				{
 					m_Logger->Log(entry.Level, entry.Message, entry.Timestamp);
@@ -53,13 +53,13 @@ namespace DGL
 			}
 		});
 
-		Info("Logging system initialized");
+		//Info("Logging system initialized");
 		return Continue;
 	}
 
-	void LoggingStartupTask::Teardown()
+	void AsyncLogger::Teardown()
 	{
-		Info("Logging system deinitialized");
+		//Info("Logging system deinitialized");
 
 		if (m_LoggingThread.joinable())
 		{

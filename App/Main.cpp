@@ -16,6 +16,7 @@ struct SpikesGame : DGL::Sketch
 
 	void Draw() override
 	{
+		DGL::Color color(255, 0, 0);
 	}
 
 	void Destroy() override

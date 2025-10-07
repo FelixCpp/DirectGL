@@ -1,21 +1,28 @@
-project("Preconditions")
+project("DirectGL-Logging")
 	kind("StaticLib")
 	language("C++")
 	cppdialect("C++23")
 	targetdir("%{wks.location}/build/bin/" .. OutputDir .. "/%{prj.name}")
 	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
-	
+
 	files({
-		"public/Preconditions.ixx",
-		"public/Preconditions-FinalAction.ixx",
-		"public/Preconditions-Preconditions.ixx",
-		"public/Preconditions-Standard.ixx",
+		"public/**.ixx",
+		"internal/**.ixx",
+		"private/**.cpp",
 	})
-	
+
+	links({
+		"LogForge",
+		"Startup",
+	})
+
+	filter("system:windows")
+		systemversion("latest")
+
 	filter("configurations:Debug")
 		runtime("Debug")
-		symbols("on")
+		symbols("On")
 
 	filter("configurations:Release")
 		runtime("Release")
-		optimize("on")
+		optimize("On")

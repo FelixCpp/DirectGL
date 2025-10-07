@@ -5,5 +5,6 @@
 
 export module Preconditions;
 
+export import :FinalAction;
 export import :Preconditions;
 export import :Standard;

@@ -16,6 +16,7 @@ project("DirectGL-Core")
     links({
         -- DirectGL
         "DirectGL-Renderer",
+        "DirectGL-Logging",
 
         -- Utilities
         "LogForge",

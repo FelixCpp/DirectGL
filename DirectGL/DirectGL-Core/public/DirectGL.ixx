@@ -23,6 +23,7 @@ export import System.Window;
 
 import LogForge;
 import DirectGL.Renderer;
+import DirectGL.Logging;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -91,16 +92,13 @@ export namespace DGL
 ///																		///
 ///////////////////////////////////////////////////////////////////////////
 
+
 // DPI
 import :ConfigureDPIStartupTask;
 
 // Graphics
 import :ConfigureGladStartupTask;
 import :ContextWrapper;
-
-// Logging
-import :LoggingChannel;
-import :LoggingStartupTask;
 
 import :WindowStartupTask;
 
@@ -111,7 +109,7 @@ struct SpikyLibrary
 	std::shared_ptr<DGL::WindowWrapper>				Window;				//!< The Core window of the sketch
 
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
-	std::unique_ptr<DGL::LoggingChannel>			LoggingChannel;		//!< The logging channel to use
+	std::shared_ptr<DGL::Logging::AsyncLogger>		Logger;				//!< The logging channel to use
 };
 
 module :private;
