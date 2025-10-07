@@ -10,7 +10,7 @@ project("App")
 	})
 
 	links({
-		"DirectGL",
+		"DirectGL-Core",
 	})
 
 	filter("system:windows")

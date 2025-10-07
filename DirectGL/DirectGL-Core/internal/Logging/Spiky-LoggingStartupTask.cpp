@@ -8,7 +8,7 @@ module DGL;
 
 namespace DGL
 {
-	LoggingStartupTask::LoggingStartupTask(std::unique_ptr<Logger> logger) :
+	LoggingStartupTask::LoggingStartupTask(std::unique_ptr<LogForge::Logger> logger) :
 		m_Logger(std::move(logger))
 	{}
 

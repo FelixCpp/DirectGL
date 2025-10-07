@@ -11,7 +11,7 @@ module;
 
 export module DGL:LoggingChannel;
 
-import Logging;
+import LogForge;
 
 import :LoggingStartupTask;
 
@@ -21,8 +21,8 @@ namespace DGL
 	{
 	public:
 
-		explicit LoggingChannel(std::unique_ptr<Logger> logger);
-		void Submit(LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& timestamp);
+		explicit LoggingChannel(std::unique_ptr<LogForge::Logger> logger);
+		void Submit(LogForge::LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& timestamp);
 		const std::shared_ptr<LoggingStartupTask>& GetStartupTask() const;
 
 	private:

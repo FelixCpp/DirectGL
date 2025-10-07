@@ -12,7 +12,7 @@ project("Context")
 	})
 
 	includedirs({
-		"%{wks.location}/Glad/include"
+		"%{wks.location}/Libraries/Glad/include"
 	})
 
 	links({

@@ -5,7 +5,21 @@ project("DirectGL-Renderer")
 	targetdir("%{wks.location}/build/bin/" .. OutputDir .. "/%{prj.name}")
 	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
 
-	files({ "public/**.ixx" })
+	files({
+		"public/**.ixx",
+		"internal/**.ixx",
+		"private/**.cpp",
+	})
+
+	includedirs({
+		"%{wks.location}/Libraries/Glad/include",
+	})
+
+	links({
+		"Glad",
+		"Math",
+		"LogForge"
+	})
 
 	filter("system:windows")
 		systemversion("latest")

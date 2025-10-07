@@ -21,27 +21,8 @@ export module DGL;
 export import Math;
 export import System.Window;
 
-/// Public API of the Graphics module
-export import :Brush;
-export import :SolidColorBrush;
-export import :TextureBrush;
-
-export import :RenderTarget;
-export import :WindowRenderTarget;
-export import :OffscreenRenderTarget;
-
-export import :BorderRadius;
-export import :Color;
-export import :Geometry;
-export import :GraphicsAPI;
-export import :LineCap;
-export import :Radius;
-export import :Renderer;
-export import :RenderTarget;
-export import :Shader;
-export import :ShaderProgram;
-export import :Texture;
-export import :TextureSampler;
+import LogForge;
+import DirectGL.Renderer;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -49,8 +30,6 @@ export import :TextureSampler;
 /// of the library.														///
 ///																		///
 ///////////////////////////////////////////////////////////////////////////
-
-import Logging;
 
 /// <summary>
 /// Sketch interface to be implemented by the user
@@ -66,10 +45,7 @@ export namespace DGL
 		virtual void Destroy() = 0;
 	};
 
-	int Launch(
-		GraphicsAPI api,
-		const std::function<std::unique_ptr<Sketch>()>& factory
-	);
+	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory);
 }
 
 /// <summary>
@@ -77,6 +53,8 @@ export namespace DGL
 /// </summary>
 export namespace DGL
 {
+	using LogLevel = LogForge::LogLevel;
+
 	void Log(LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& time = std::chrono::system_clock::now());
 	void Trace(const std::string& message, const std::chrono::system_clock::time_point& time = std::chrono::system_clock::now());
 	void Debug(const std::string& message, const std::chrono::system_clock::time_point& time = std::chrono::system_clock::now());
@@ -101,24 +79,9 @@ export namespace DGL
 	std::string GetWindowTitle();									  //!< Get the window title
 }
 
-/// <summary>
-/// Factory methods to create graphics resources
-/// </summary>
 export namespace DGL
 {
-	std::unique_ptr<OffscreenRenderTarget> CreateOffscreenRenderTarget(uint32_t width, uint32_t height);
-	std::unique_ptr<Shader> CreateShader(std::string_view shaderSource, ShaderType type);
-	std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader);
-	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath);
-	std::unique_ptr<TextureSampler> CreateTextureSampler(TextureWrapMode wrapMode, TextureFilterMode filterMode);
-	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(Color color);
-}
-
-/// Retrieve internal DirectGL state
-export namespace DGL
-{
-	Renderer& GetRenderer();
-	RenderTarget& GetRenderTarget();
+	using Color = Renderer::Color;
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -135,27 +98,6 @@ import :ConfigureDPIStartupTask;
 import :ConfigureGladStartupTask;
 import :ContextWrapper;
 
-import :OpenGLSolidColorBrush;
-
-import :OpenGLOffscreenRenderTarget;
-import :OpenGLWindowRenderTarget;
-
-import :OpenGLRenderer;
-import :OpenGLShader;
-import :OpenGLShaderProgram;
-import :OpenGLTexture;
-import :OpenGLTextureSampler;
-
-import :GeometryFactory;
-import :ResourceFactory;
-
-import :Camera;
-import :OpenGLTexture;
-import :OpenGLTextureSampler;
-
-import :ResourceFactory;
-import :OpenGLResourceFactory;
-
 // Logging
 import :LoggingChannel;
 import :LoggingStartupTask;
@@ -170,11 +112,6 @@ struct SpikyLibrary
 
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
 	std::unique_ptr<DGL::LoggingChannel>			LoggingChannel;		//!< The logging channel to use
-
-	std::unique_ptr<DGL::Renderer> 					Renderer;			//!< The renderer to use
-	std::unique_ptr<DGL::WindowRenderTarget>		RenderTarget;		//!< The render target to use
-
-	std::unique_ptr<DGL::ResourceFactory>			ResourceFactory;	//!< The resource factory to use
 };
 
 module :private;

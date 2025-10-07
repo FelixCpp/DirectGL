@@ -8,12 +8,12 @@ module DGL;
 
 namespace DGL
 {
-	LoggingChannel::LoggingChannel(std::unique_ptr<Logger> logger):
+	LoggingChannel::LoggingChannel(std::unique_ptr<LogForge::Logger> logger):
 		m_LoggingTask(std::make_shared<LoggingStartupTask>(std::move(logger)))
 	{
 	}
 
-	void LoggingChannel::Submit(const LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& timestamp)
+	void LoggingChannel::Submit(const LogForge::LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& timestamp)
 	{
 		m_LoggingTask->Submit({
 			.Level = level,

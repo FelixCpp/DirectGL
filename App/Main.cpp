@@ -24,8 +24,5 @@ struct SpikesGame : DGL::Sketch
 };
 
 int main() {
-	return DGL::Launch(
-		DGL::GraphicsAPI::OpenGL,
-		[] { return std::make_unique<SpikesGame>(); }
-	);
+	return DGL::Launch([] { return std::make_unique<SpikesGame>(); });
 }

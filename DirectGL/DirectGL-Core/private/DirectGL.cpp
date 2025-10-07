@@ -5,13 +5,14 @@
 #include <string_view>
 #include <filesystem>
 
-#include <variant>
-
 module DGL;
 
 import System.Monitor;
 
 import Startup;
+import LogForge;
+
+import DirectGL.Renderer;
 
 using namespace System;
 
@@ -20,21 +21,12 @@ using namespace System;
 /// </summary>
 namespace DGL
 {
-	[[nodiscard]] std::unique_ptr<ResourceFactory> CreateResourceFactory(const GraphicsAPI api)
+	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory)
 	{
-		switch (api)
-		{
-			case GraphicsAPI::OpenGL: return std::make_unique<OpenGLResourceFactory>();
-			default: throw std::invalid_argument("Couldn't create ResourceFactory for unknown GraphicsAPI.");
-		}
-	}
-
-	int Launch(GraphicsAPI api, const std::function<std::unique_ptr<Sketch>()>& factory)
-	{
-		Library.LoggingChannel = std::make_unique<LoggingChannel>(std::make_unique<Logger>(
-			std::make_unique<DevelopmentLogFilter>(),
-			std::make_unique<FmtLogPrinter>(),
-			std::make_unique<ConsoleLogOutput>()
+		Library.LoggingChannel = std::make_unique<LoggingChannel>(std::make_unique<LogForge::DefaultLogger>(
+			std::make_unique<LogForge::DevelopmentLogFilter>(),
+			std::make_unique<LogForge::FmtLogPrinter>(),
+			std::make_unique<LogForge::ConsoleLogOutput>()
 		));
 
 		Library.MonitorProvider = std::make_shared<MonitorProviderCache>(std::make_shared<Win32MonitorProvider>());
@@ -48,12 +40,8 @@ namespace DGL
 		startup.AddStartupTask(Library.Context);
 		startup.AddStartupTask(std::make_shared<ConfigureGladStartupTask>());
 
-		startup.Run([api, &factory]
+		startup.Run([&factory]
 		{
-			Library.ResourceFactory = CreateResourceFactory(api);
-			Library.Renderer = Library.ResourceFactory->CreateRenderer(10'000);
-			Library.RenderTarget = Library.ResourceFactory->CreateWindowRenderTarget(*Library.Window, *Library.Renderer);
-
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
 			{
@@ -62,6 +50,27 @@ namespace DGL
 			}
 
 			Library.Window->SetVisible(true);
+
+			const auto brush = Renderer::SolidColorBrush::Create(Color(255, 0, 0));
+			const auto renderer = Renderer::VertexRenderer::Create(10'000);
+
+			const Math::Matrix4x4 projection = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(Library.Window->GetSize().X), static_cast<float>(Library.Window->GetSize().Y)), -1.0f, 1.0f);
+			const Renderer::Vertices vertices = {
+				// Positions
+				{
+					{ 100.0f, 100.0f, },
+					{ 200.0f, 100.0f, },
+					{ 200.0f, 200.0f, },
+					{ 200.0f, 200.0f, },
+					{ 100.0f, 200.0f, },
+					{ 100.0f, 100.0f, },
+				},
+				// Indices
+				{
+					0, 1, 2,
+					3, 4, 5,
+				}
+			};
 
 			bool running = true;
 			while (running)
@@ -78,7 +87,6 @@ namespace DGL
 						[&](const WindowEvent::Resized& resized)
 						{
 							Info(std::format("Window has been resized: {}, {}", resized.Width, resized.Height));
-							Library.RenderTarget->Resize(resized.Width, resized.Height);
 							return true;
 						},
 						[](const auto&)
@@ -93,9 +101,10 @@ namespace DGL
 					}
 				}
 
-				Library.RenderTarget->Begin();
+				brush->UploadUniforms(projection);
+				renderer->Render(vertices);
+
 				Library.Sketch->Draw();
-				Library.RenderTarget->End();
 				Library.Context->Flush();
 			}
 
@@ -148,23 +157,4 @@ namespace DGL
 	Math::Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
 	void SetWindowTitle(const std::string_view title) { Library.Window->SetTitle(title); }
 	std::string GetWindowTitle() { return Library.Window->GetTitle(); }
-}
-
-/// <summary>
-/// Graphics and rendering
-/// </summary>
-namespace DGL
-{
-	std::unique_ptr<OffscreenRenderTarget> CreateOffscreenRenderTarget(const uint32_t width, const uint32_t height) { return Library.ResourceFactory->CreateFramebuffer(width, height, *Library.Renderer); }
-	std::unique_ptr<Shader> CreateShader(const std::string_view shaderSource, const ShaderType type) { return Library.ResourceFactory->CreateShader(shaderSource, type); }
-	std::unique_ptr<ShaderProgram> CreateShaderProgram(const Shader& vertexShader, const Shader& fragmentShader) { return Library.ResourceFactory->CreateShaderProgram(vertexShader, fragmentShader); }
-	std::unique_ptr<Texture> CreateTexture(const std::filesystem::path& filepath) { return Library.ResourceFactory->CreateTexture(filepath); }
-	std::unique_ptr<TextureSampler> CreateTextureSampler(const TextureWrapMode wrapMode, const TextureFilterMode filterMode) { return Library.ResourceFactory->CreateTextureSampler(wrapMode, filterMode); }
-	std::unique_ptr<SolidColorBrush> CreateSolidColorBrush(const Color color) { return Library.ResourceFactory->CreateSolidColorBrush(color); }
-}
-
-namespace DGL
-{
-	Renderer& GetRenderer() { return *Library.Renderer; }
-	RenderTarget& GetRenderTarget() { return *Library.RenderTarget; }
 }

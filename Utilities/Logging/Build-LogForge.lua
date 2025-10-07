@@ -1,4 +1,4 @@
-project("Math")
+project("LogForge")
 	kind("StaticLib")
 	language("C++")
 	cppdialect("C++23")
@@ -6,13 +6,8 @@ project("Math")
 	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
 
 	files({
-		"public/Math.ixx",
-		"public/Math-BorderRadius.ixx",
-		"public/Math-Boundary.ixx",
-		"public/Math-Matrix4x4.ixx",
-		"public/Math-Radius.ixx",
-		"public/Math-Value2.ixx",
-		"public/Math-Value4.ixx",
+		"public/**.ixx",
+		"private/**.cpp"
 	})
 
 	filter("configurations:Debug")

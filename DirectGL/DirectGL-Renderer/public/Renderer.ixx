@@ -5,7 +5,9 @@
 
 export module DirectGL.Renderer;
 
-export import :ShaderProgram;
+export import :Color;
+export import :SolidColorBrush;
 export import :TextureWrapMode;
-export import :TextureSampler;
 export import :TextureFilterMode;
+export import :VertexRenderer;
+export import :Vertices;

@@ -14,7 +14,7 @@ module;
 export module DGL:LoggingStartupTask;
 
 import Startup;
-import Logging;
+import LogForge;
 
 namespace DGL
 {
@@ -24,14 +24,14 @@ namespace DGL
 
 		struct LogEntry
 		{
-			LogLevel Level;
+			LogForge::LogLevel Level;
 			std::string Message;
 			std::chrono::system_clock::time_point Timestamp;
 		};
 
 	public:
 
-		explicit LoggingStartupTask(std::unique_ptr<Logger> logger);
+		explicit LoggingStartupTask(std::unique_ptr<LogForge::Logger> logger);
 		void Submit(const LogEntry& entry);
 		Continuation Setup() override;
 		void Teardown() override;
@@ -43,7 +43,7 @@ namespace DGL
 		std::condition_variable m_SubmitCondition;
 
 		std::queue<LogEntry> m_SubmittedEntries;
-		std::unique_ptr<Logger> m_Logger;
+		std::unique_ptr<LogForge::Logger> m_Logger;
 
 	};
 }
