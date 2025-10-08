@@ -61,49 +61,48 @@ namespace DGL
 
 			while (not Library.CloseRequested)
 			{
+				// Before we process events, we need to update the input listener
+				Library.InputListener.Update();
+
+				// Poll all events from the window
 				while (const auto event = Library.Window->PollEvent())
 				{
-					const bool forwardToUser = event->Visit(
+					event->Visit(
 						[](const WindowEvent::Closed&)
 						{
 							Info("Window close event received");
 							Quit();
-							return true;
 						},
-						[&](const WindowEvent::Resized& resized)
+						[&](const WindowEvent::Resized& resizeEvent)
 						{
-							glViewport(0, 0, static_cast<GLsizei>(resized.Width), static_cast<GLsizei>(resized.Height));
-							Info(std::format("Window has been resized: {}, {}", resized.Width, resized.Height));
-							return true;
+							glViewport(0, 0, static_cast<GLsizei>(resizeEvent.Width), static_cast<GLsizei>(resizeEvent.Height));
+							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
 						},
-						[&](const WindowEvent::KeyReleased& keyPressed)
+						[&](const WindowEvent::KeyReleased& keyEvent)
 						{
-							if (keyPressed.Key == KeyboardKey::R and keyPressed.IsControlDown)
+							if (keyEvent.Key == KeyboardKey::R and keyEvent.IsControlDown)
 							{
 								Info("Restart requested via Ctrl+R");
 								Restart();
 							}
-							else if (keyPressed.Key == KeyboardKey::Q and keyPressed.IsControlDown)
+							else if (keyEvent.Key == KeyboardKey::Q and keyEvent.IsControlDown or keyEvent.Key == KeyboardKey::Escape)
 							{
-								Info("Quit requested via Ctrl+Q");
+								Info("Quit requested via Ctrl+Q or Escape");
 								Quit();
 							}
-
-							return true;
 						},
-						[](const auto&)
-						{
-							return true;
-						}
+						[](const auto&) {}
 					);
 
-					if (forwardToUser)
-					{
-						Library.Sketch->Event(*event);
-					}
+					// Forward the event to the input listener as well as the sketch
+					Library.InputListener.Process(*event);
+					Library.Sketch->Event(*event);
 				}
 
+				// Let the user render the next frame
 				Library.Sketch->Draw();
+
+				// Present the rendered frame on screen
 				Library.Context->Flush();
 			}
 
@@ -152,6 +151,13 @@ namespace DGL
 	void Quit() { Library.ExitType = ExitType::Quit; Library.CloseRequested = true; }
 	void Quit(const int exitCode) { SetExitCode(exitCode); Quit(); }
 	void SetExitCode(const int exitCode) { Library.ExitCode = exitCode; }
+	bool IsKeyPressed(const KeyboardKey key) { return Library.InputListener.IsKeyPressed(key); }
+	bool IsKeyDown(const KeyboardKey key) { return Library.InputListener.IsKeyDown(key); }
+	bool IsKeyReleased(const KeyboardKey key) { return Library.InputListener.IsKeyReleased(key); }
+	bool IsMouseButtonPressed(const MouseButton button) { return Library.InputListener.IsMouseButtonPressed(button); }
+	bool IsMouseButtonDown(const MouseButton button) { return Library.InputListener.IsMouseButtonDown(button); }
+	bool IsMouseButtonReleased(const MouseButton button) { return Library.InputListener.IsMouseButtonReleased(button); }
+	Math::Int2 GetMousePosition() { return Library.InputListener.GetMousePosition(); }
 }
 
 /// <summary>

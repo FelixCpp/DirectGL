@@ -14,6 +14,7 @@ project("Window")
 	})
 
 	links({
+		"DirectGL-Input",
 		"Math"
 	})
 

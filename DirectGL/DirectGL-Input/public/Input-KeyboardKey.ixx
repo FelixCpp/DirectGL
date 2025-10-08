@@ -1,14 +1,14 @@
-﻿// Project Name : Window
-// File Name    : Window-KeyboardKey.ixx
+// Project Name : DirectGL-Input
+// File Name    : Input-KeyboardKey.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/09
 
-export module System.Window:KeyboardKey;
+export module DirectGL.Input:KeyboardKey;
 
-export namespace System
+export namespace DGL::Input
 {
-	enum class KeyboardKey
-	{
+    enum class KeyboardKey
+    {
         Unknown = -1, //!< Unhandled key
         A,            //!< The A key
         B,            //!< The B key
@@ -111,5 +111,7 @@ export namespace System
         F14,          //!< The F14 key
         F15,          //!< The F15 key
         Pause,        //!< The Pause key
-	};
+    };
+
+	inline constexpr size_t KeyboardKeyCount = static_cast<int>(KeyboardKey::Pause) + 1;
 }

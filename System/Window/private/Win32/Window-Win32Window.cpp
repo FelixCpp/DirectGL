@@ -11,6 +11,8 @@
 
 module System.Window;
 
+import DirectGL.Input;
+
 namespace System
 {
 	[[nodiscard]] std::optional<std::wstring> StringToWide(const std::string_view source)
@@ -49,7 +51,7 @@ namespace System
 		return string;
 	}
 
-	[[nodiscard]] KeyboardKey TranslateVirtualKey(const WPARAM key, const LPARAM flags)
+	[[nodiscard]] DGL::Input::KeyboardKey TranslateVirtualKey(const WPARAM key, const LPARAM flags)
 	{
 		switch (key)
 		{
@@ -58,112 +60,112 @@ namespace System
 			{
 				static const UINT lShift = MapVirtualKeyW(VK_LSHIFT, MAPVK_VK_TO_VSC);
 				const UINT scancode = static_cast<UINT>((flags & (0xFF << 16)) >> 16);
-				return scancode == lShift ? KeyboardKey::LShift : KeyboardKey::RShift;
+				return scancode == lShift ? DGL::Input::KeyboardKey::LShift : DGL::Input::KeyboardKey::RShift;
 			}
 
 			// Check the "extended" flag to distinguish between left and right alt
-			case VK_MENU: return (HIWORD(flags) & KF_EXTENDED) ? KeyboardKey::RAlt : KeyboardKey::LAlt;
+			case VK_MENU: return (HIWORD(flags) & KF_EXTENDED) ? DGL::Input::KeyboardKey::RAlt : DGL::Input::KeyboardKey::LAlt;
 
 			// Check the "extended" flag to distinguish between left and right control
-			case VK_CONTROL: return (HIWORD(flags) & KF_EXTENDED) ? KeyboardKey::RControl : KeyboardKey::LControl;
+			case VK_CONTROL: return (HIWORD(flags) & KF_EXTENDED) ? DGL::Input::KeyboardKey::RControl : DGL::Input::KeyboardKey::LControl;
 
 			// Other keys are reported properly
-			case VK_LWIN:       return KeyboardKey::LSystem;
-			case VK_RWIN:       return KeyboardKey::RSystem;
-			case VK_APPS:       return KeyboardKey::Menu;
-			case VK_OEM_1:      return KeyboardKey::Semicolon;
-			case VK_OEM_2:      return KeyboardKey::Slash;
-			case VK_OEM_PLUS:   return KeyboardKey::Equal;
-			case VK_OEM_MINUS:  return KeyboardKey::Hyphen;
-			case VK_OEM_4:      return KeyboardKey::LBracket;
-			case VK_OEM_6:      return KeyboardKey::RBracket;
-			case VK_OEM_COMMA:  return KeyboardKey::Comma;
-			case VK_OEM_PERIOD: return KeyboardKey::Period;
-			case VK_OEM_7:      return KeyboardKey::Apostrophe;
-			case VK_OEM_5:      return KeyboardKey::Backslash;
-			case VK_OEM_3:      return KeyboardKey::Grave;
-			case VK_ESCAPE:     return KeyboardKey::Escape;
-			case VK_SPACE:      return KeyboardKey::Space;
-			case VK_RETURN:     return KeyboardKey::Enter;
-			case VK_BACK:       return KeyboardKey::Backspace;
-			case VK_TAB:        return KeyboardKey::Tab;
-			case VK_PRIOR:      return KeyboardKey::PageUp;
-			case VK_NEXT:       return KeyboardKey::PageDown;
-			case VK_END:        return KeyboardKey::End;
-			case VK_HOME:       return KeyboardKey::Home;
-			case VK_INSERT:     return KeyboardKey::Insert;
-			case VK_DELETE:     return KeyboardKey::Delete;
-			case VK_ADD:        return KeyboardKey::Add;
-			case VK_SUBTRACT:   return KeyboardKey::Subtract;
-			case VK_MULTIPLY:   return KeyboardKey::Multiply;
-			case VK_DIVIDE:     return KeyboardKey::Divide;
-			case VK_PAUSE:      return KeyboardKey::Pause;
-			case VK_F1:         return KeyboardKey::F1;
-			case VK_F2:         return KeyboardKey::F2;
-			case VK_F3:         return KeyboardKey::F3;
-			case VK_F4:         return KeyboardKey::F4;
-			case VK_F5:         return KeyboardKey::F5;
-			case VK_F6:         return KeyboardKey::F6;
-			case VK_F7:         return KeyboardKey::F7;
-			case VK_F8:         return KeyboardKey::F8;
-			case VK_F9:         return KeyboardKey::F9;
-			case VK_F10:        return KeyboardKey::F10;
-			case VK_F11:        return KeyboardKey::F11;
-			case VK_F12:        return KeyboardKey::F12;
-			case VK_F13:        return KeyboardKey::F13;
-			case VK_F14:        return KeyboardKey::F14;
-			case VK_F15:        return KeyboardKey::F15;
-			case VK_LEFT:       return KeyboardKey::Left;
-			case VK_RIGHT:      return KeyboardKey::Right;
-			case VK_UP:         return KeyboardKey::Up;
-			case VK_DOWN:       return KeyboardKey::Down;
-			case VK_NUMPAD0:    return KeyboardKey::Numpad0;
-			case VK_NUMPAD1:    return KeyboardKey::Numpad1;
-			case VK_NUMPAD2:    return KeyboardKey::Numpad2;
-			case VK_NUMPAD3:    return KeyboardKey::Numpad3;
-			case VK_NUMPAD4:    return KeyboardKey::Numpad4;
-			case VK_NUMPAD5:    return KeyboardKey::Numpad5;
-			case VK_NUMPAD6:    return KeyboardKey::Numpad6;
-			case VK_NUMPAD7:    return KeyboardKey::Numpad7;
-			case VK_NUMPAD8:    return KeyboardKey::Numpad8;
-			case VK_NUMPAD9:    return KeyboardKey::Numpad9;
-			case 'A':           return KeyboardKey::A;
-			case 'Z':           return KeyboardKey::Z;
-			case 'E':           return KeyboardKey::E;
-			case 'R':           return KeyboardKey::R;
-			case 'T':           return KeyboardKey::T;
-			case 'Y':           return KeyboardKey::Y;
-			case 'U':           return KeyboardKey::U;
-			case 'I':           return KeyboardKey::I;
-			case 'O':           return KeyboardKey::O;
-			case 'P':           return KeyboardKey::P;
-			case 'Q':           return KeyboardKey::Q;
-			case 'S':           return KeyboardKey::S;
-			case 'D':           return KeyboardKey::D;
-			case 'F':           return KeyboardKey::F;
-			case 'G':           return KeyboardKey::G;
-			case 'H':           return KeyboardKey::H;
-			case 'J':           return KeyboardKey::J;
-			case 'K':           return KeyboardKey::K;
-			case 'L':           return KeyboardKey::L;
-			case 'M':           return KeyboardKey::M;
-			case 'W':           return KeyboardKey::W;
-			case 'X':           return KeyboardKey::X;
-			case 'C':           return KeyboardKey::C;
-			case 'V':           return KeyboardKey::V;
-			case 'B':           return KeyboardKey::B;
-			case 'N':           return KeyboardKey::N;
-			case '0':           return KeyboardKey::Num0;
-			case '1':           return KeyboardKey::Num1;
-			case '2':           return KeyboardKey::Num2;
-			case '3':           return KeyboardKey::Num3;
-			case '4':           return KeyboardKey::Num4;
-			case '5':           return KeyboardKey::Num5;
-			case '6':           return KeyboardKey::Num6;
-			case '7':           return KeyboardKey::Num7;
-			case '8':           return KeyboardKey::Num8;
-			case '9':           return KeyboardKey::Num9;
-			default:            return KeyboardKey::Unknown;
+			case VK_LWIN:       return DGL::Input::KeyboardKey::LSystem;
+			case VK_RWIN:       return DGL::Input::KeyboardKey::RSystem;
+			case VK_APPS:       return DGL::Input::KeyboardKey::Menu;
+			case VK_OEM_1:      return DGL::Input::KeyboardKey::Semicolon;
+			case VK_OEM_2:      return DGL::Input::KeyboardKey::Slash;
+			case VK_OEM_PLUS:   return DGL::Input::KeyboardKey::Equal;
+			case VK_OEM_MINUS:  return DGL::Input::KeyboardKey::Hyphen;
+			case VK_OEM_4:      return DGL::Input::KeyboardKey::LBracket;
+			case VK_OEM_6:      return DGL::Input::KeyboardKey::RBracket;
+			case VK_OEM_COMMA:  return DGL::Input::KeyboardKey::Comma;
+			case VK_OEM_PERIOD: return DGL::Input::KeyboardKey::Period;
+			case VK_OEM_7:      return DGL::Input::KeyboardKey::Apostrophe;
+			case VK_OEM_5:      return DGL::Input::KeyboardKey::Backslash;
+			case VK_OEM_3:      return DGL::Input::KeyboardKey::Grave;
+			case VK_ESCAPE:     return DGL::Input::KeyboardKey::Escape;
+			case VK_SPACE:      return DGL::Input::KeyboardKey::Space;
+			case VK_RETURN:     return DGL::Input::KeyboardKey::Enter;
+			case VK_BACK:       return DGL::Input::KeyboardKey::Backspace;
+			case VK_TAB:        return DGL::Input::KeyboardKey::Tab;
+			case VK_PRIOR:      return DGL::Input::KeyboardKey::PageUp;
+			case VK_NEXT:       return DGL::Input::KeyboardKey::PageDown;
+			case VK_END:        return DGL::Input::KeyboardKey::End;
+			case VK_HOME:       return DGL::Input::KeyboardKey::Home;
+			case VK_INSERT:     return DGL::Input::KeyboardKey::Insert;
+			case VK_DELETE:     return DGL::Input::KeyboardKey::Delete;
+			case VK_ADD:        return DGL::Input::KeyboardKey::Add;
+			case VK_SUBTRACT:   return DGL::Input::KeyboardKey::Subtract;
+			case VK_MULTIPLY:   return DGL::Input::KeyboardKey::Multiply;
+			case VK_DIVIDE:     return DGL::Input::KeyboardKey::Divide;
+			case VK_PAUSE:      return DGL::Input::KeyboardKey::Pause;
+			case VK_F1:         return DGL::Input::KeyboardKey::F1;
+			case VK_F2:         return DGL::Input::KeyboardKey::F2;
+			case VK_F3:         return DGL::Input::KeyboardKey::F3;
+			case VK_F4:         return DGL::Input::KeyboardKey::F4;
+			case VK_F5:         return DGL::Input::KeyboardKey::F5;
+			case VK_F6:         return DGL::Input::KeyboardKey::F6;
+			case VK_F7:         return DGL::Input::KeyboardKey::F7;
+			case VK_F8:         return DGL::Input::KeyboardKey::F8;
+			case VK_F9:         return DGL::Input::KeyboardKey::F9;
+			case VK_F10:        return DGL::Input::KeyboardKey::F10;
+			case VK_F11:        return DGL::Input::KeyboardKey::F11;
+			case VK_F12:        return DGL::Input::KeyboardKey::F12;
+			case VK_F13:        return DGL::Input::KeyboardKey::F13;
+			case VK_F14:        return DGL::Input::KeyboardKey::F14;
+			case VK_F15:        return DGL::Input::KeyboardKey::F15;
+			case VK_LEFT:       return DGL::Input::KeyboardKey::Left;
+			case VK_RIGHT:      return DGL::Input::KeyboardKey::Right;
+			case VK_UP:         return DGL::Input::KeyboardKey::Up;
+			case VK_DOWN:       return DGL::Input::KeyboardKey::Down;
+			case VK_NUMPAD0:    return DGL::Input::KeyboardKey::Numpad0;
+			case VK_NUMPAD1:    return DGL::Input::KeyboardKey::Numpad1;
+			case VK_NUMPAD2:    return DGL::Input::KeyboardKey::Numpad2;
+			case VK_NUMPAD3:    return DGL::Input::KeyboardKey::Numpad3;
+			case VK_NUMPAD4:    return DGL::Input::KeyboardKey::Numpad4;
+			case VK_NUMPAD5:    return DGL::Input::KeyboardKey::Numpad5;
+			case VK_NUMPAD6:    return DGL::Input::KeyboardKey::Numpad6;
+			case VK_NUMPAD7:    return DGL::Input::KeyboardKey::Numpad7;
+			case VK_NUMPAD8:    return DGL::Input::KeyboardKey::Numpad8;
+			case VK_NUMPAD9:    return DGL::Input::KeyboardKey::Numpad9;
+			case 'A':           return DGL::Input::KeyboardKey::A;
+			case 'Z':           return DGL::Input::KeyboardKey::Z;
+			case 'E':           return DGL::Input::KeyboardKey::E;
+			case 'R':           return DGL::Input::KeyboardKey::R;
+			case 'T':           return DGL::Input::KeyboardKey::T;
+			case 'Y':           return DGL::Input::KeyboardKey::Y;
+			case 'U':           return DGL::Input::KeyboardKey::U;
+			case 'I':           return DGL::Input::KeyboardKey::I;
+			case 'O':           return DGL::Input::KeyboardKey::O;
+			case 'P':           return DGL::Input::KeyboardKey::P;
+			case 'Q':           return DGL::Input::KeyboardKey::Q;
+			case 'S':           return DGL::Input::KeyboardKey::S;
+			case 'D':           return DGL::Input::KeyboardKey::D;
+			case 'F':           return DGL::Input::KeyboardKey::F;
+			case 'G':           return DGL::Input::KeyboardKey::G;
+			case 'H':           return DGL::Input::KeyboardKey::H;
+			case 'J':           return DGL::Input::KeyboardKey::J;
+			case 'K':           return DGL::Input::KeyboardKey::K;
+			case 'L':           return DGL::Input::KeyboardKey::L;
+			case 'M':           return DGL::Input::KeyboardKey::M;
+			case 'W':           return DGL::Input::KeyboardKey::W;
+			case 'X':           return DGL::Input::KeyboardKey::X;
+			case 'C':           return DGL::Input::KeyboardKey::C;
+			case 'V':           return DGL::Input::KeyboardKey::V;
+			case 'B':           return DGL::Input::KeyboardKey::B;
+			case 'N':           return DGL::Input::KeyboardKey::N;
+			case '0':           return DGL::Input::KeyboardKey::Num0;
+			case '1':           return DGL::Input::KeyboardKey::Num1;
+			case '2':           return DGL::Input::KeyboardKey::Num2;
+			case '3':           return DGL::Input::KeyboardKey::Num3;
+			case '4':           return DGL::Input::KeyboardKey::Num4;
+			case '5':           return DGL::Input::KeyboardKey::Num5;
+			case '6':           return DGL::Input::KeyboardKey::Num6;
+			case '7':           return DGL::Input::KeyboardKey::Num7;
+			case '8':           return DGL::Input::KeyboardKey::Num8;
+			case '9':           return DGL::Input::KeyboardKey::Num9;
+			default:            return DGL::Input::KeyboardKey::Unknown;
 		}
 	}
 
@@ -663,7 +665,7 @@ namespace System
 			case WM_KEYDOWN:
 			case WM_SYSKEYDOWN:
 			{
-				const KeyboardKey key = TranslateVirtualKey(wParam, lParam);
+				const DGL::Input::KeyboardKey key = TranslateVirtualKey(wParam, lParam);
 				const bool isRepeated = (lParam & (1 << 30)) != 0;
 				const bool isAltPressed = (lParam & (1 << 29)) != 0;
 				const bool isCtrlPressed = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
@@ -683,7 +685,7 @@ namespace System
 			case WM_KEYUP:
 			case WM_SYSKEYUP:
 			{
-				const KeyboardKey key = TranslateVirtualKey(wParam, lParam);
+				const DGL::Input::KeyboardKey key = TranslateVirtualKey(wParam, lParam);
 				const bool isAltPressed = (lParam & (1 << 29)) != 0;
 				const bool isCtrlPressed = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 				const bool isShiftPressed = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
@@ -697,6 +699,81 @@ namespace System
 					.IsSystemDown = isSuperPressed
 				});
 			} break;
+
+			case WM_LBUTTONDOWN:
+			{
+				m_EventQueue.emplace(WindowEvent::MouseButtonPressed{
+					.Button = DGL::Input::MouseButton::Left,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_LBUTTONUP:
+			{
+				m_EventQueue.emplace(WindowEvent::MouseButtonReleased{
+					.Button = DGL::Input::MouseButton::Left,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_RBUTTONDOWN:
+			{
+				m_EventQueue.emplace(WindowEvent::MouseButtonPressed{
+					.Button = DGL::Input::MouseButton::Right,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_RBUTTONUP:
+			{
+				m_EventQueue.emplace(WindowEvent::MouseButtonReleased{
+					.Button = DGL::Input::MouseButton::Right,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_MBUTTONDOWN:
+			{
+				m_EventQueue.emplace(WindowEvent::MouseButtonPressed{
+					.Button = DGL::Input::MouseButton::Middle,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_MBUTTONUP:
+			{
+				m_EventQueue.emplace(WindowEvent::MouseButtonReleased{
+					.Button = DGL::Input::MouseButton::Middle,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_XBUTTONDOWN:
+			{
+				const DGL::Input::MouseButton button = (HIWORD(wParam) & XBUTTON1) ? DGL::Input::MouseButton::Extra1 : DGL::Input::MouseButton::Extra2;
+				m_EventQueue.emplace(WindowEvent::MouseButtonPressed{
+					.Button = button,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
+			case WM_XBUTTONUP:
+			{
+				const DGL::Input::MouseButton button = (HIWORD(wParam) & XBUTTON1) ? DGL::Input::MouseButton::Extra1 : DGL::Input::MouseButton::Extra2;
+				m_EventQueue.emplace(WindowEvent::MouseButtonReleased{
+					.Button = button,
+					.MouseX = GET_X_LPARAM(lParam),
+					.MouseY = GET_Y_LPARAM(lParam),
+				});
+			} break;
+
 
 			default: break;
 		}

@@ -160,7 +160,13 @@ public:
 		return m_TimeAlive >= m_MaxLifetime;
 	}
 
-	void Show() const
+	bool IsClicked(const Math::Int2& mousePos) const
+	{
+		const float distanceSquared = m_Position.DistanceSquared(Math::Float2{ static_cast<float>(mousePos.X), static_cast<float>(mousePos.Y) });
+		return distanceSquared < (m_Size * m_Size) * 5.0f;
+	}
+
+	void Show(const bool debug) const
 	{
 		constexpr DGL::Color healthyColor(0, 255, 0);
 		constexpr DGL::Color dyingColor(255, 0, 0);
@@ -170,11 +176,11 @@ public:
 
 		DGL::PushState();
 
-		{
+		if (debug) {
 			// Render perception radii
 
 			//DGL::NoFill();
-			DGL::Blend(DGL::BlendModes::Exclusion);
+			DGL::Blend(DGL::BlendModes::Alpha);
 			DGL::StrokeWeight(1.0f);
 
 			// Render the food perception radius
@@ -188,7 +194,7 @@ public:
 			DGL::Circle(m_Position.X, m_Position.Y, m_PerceptionRadii.at(Target::Poison) * 2.0f);
 		}
 
-		{
+		if (debug) {
 			// Render the attraction factors
 
 			DGL::StrokeWeight(2.0f);
@@ -248,10 +254,13 @@ struct SpikesGame : DGL::Sketch
 	std::vector<Math::Float2> Poison;
 	std::vector<Creature> Creatures;
 
+	float m_TimeElapsedSinceLastSpawn = 0.0f;
+	float m_SpawnInterval = 0.15f;
+
 	bool Setup() override
 	{
 		DGL::SetWindowSize(1600, 900);
-
+		
 		const auto [width, height] = DGL::GetWindowSize();
 
 		// Generate some random food and poison
@@ -283,12 +292,25 @@ struct SpikesGame : DGL::Sketch
 
 	void Draw() override
 	{
+
+		static bool isDebuggingEnabled = false;
+		if (DGL::IsKeyPressed(DGL::KeyboardKey::D))
+			isDebuggingEnabled = not isDebuggingEnabled;
+
+		static bool isSimulationPaused = false;
+		if (DGL::IsKeyPressed(DGL::KeyboardKey::P))
+			isSimulationPaused = not isSimulationPaused;
+
+		const float gameSpeed = isSimulationPaused ? 0.0f : 1.0f / 60.0f;
+		m_TimeElapsedSinceLastSpawn += gameSpeed;
+
 		// Occasionally add new food and poison
-		if (Math::Random(1.0f) < 0.1f)
+		if (m_TimeElapsedSinceLastSpawn > m_SpawnInterval)
 		{
 			const auto [width, height] = DGL::GetWindowSize();
 			Food.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) });
 			Poison.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) });
+			m_TimeElapsedSinceLastSpawn = 0.0f;
 		}
 
 		// Update the creatures
@@ -296,7 +318,7 @@ struct SpikesGame : DGL::Sketch
 		{
 			Creatures[i].Consume(Food, Target::Food);
 			Creatures[i].Consume(Poison, Target::Poison);
-			Creatures[i].Update(1.0f / 60.0f);
+			Creatures[i].Update(gameSpeed);
 
 			const auto [width, height] = DGL::GetWindowSize();
 			Creatures[i].WrapAround(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)));
@@ -324,55 +346,25 @@ struct SpikesGame : DGL::Sketch
 		// Render the creatures
 		for (size_t i = 0; i < Creatures.size(); ++i)
 		{
-			Creatures[i].Show();
+			const bool isHovered = Creatures[i].IsClicked(DGL::GetMousePosition());
+			Creatures[i].Show(isHovered or isDebuggingEnabled);
 		}
 
 		// Remove dead creatures
 		std::erase_if(Creatures, [](const Creature& creature) { return creature.IsDead(); });
-	}
 
-	bool IsDone() const
-	{
-		return Creatures.empty();
-	}
-
-	void Destroy() override
-	{
-	}
-};
-
-struct InfiniteRepeatingSketch : DGL::Sketch
-{
-	bool Setup() override
-	{
-		Game = std::make_unique<SpikesGame>();
-		return Game->Setup();
-	}
-
-	void Event(const System::WindowEvent& event) override
-	{
-		if (Game) Game->Event(event);
-	}
-
-	void Draw() override
-	{
-		Game->Draw();
-
-		if (Game->IsDone())
+		// Restart the simulation if all creatures are dead
+		if (Creatures.empty())
 		{
-			Game->Destroy();
-			Game.reset();
+			DGL::Restart();
 		}
 	}
 
 	void Destroy() override
 	{
-		if (Game) Game->Destroy();
 	}
-
-	std::unique_ptr<SpikesGame> Game;
 };
 
 int main() {
-	return DGL::Launch([] { return std::make_unique<InfiniteRepeatingSketch>(); });
+	return DGL::Launch([] { return std::make_unique<SpikesGame>(); });
 }

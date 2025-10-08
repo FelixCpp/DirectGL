@@ -23,6 +23,7 @@ export import System.Window;
 import LogForge;
 import DirectGL.Renderer;
 import DirectGL.Logging;
+import DirectGL.Input;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -70,6 +71,17 @@ export namespace DGL
 	void Quit();
 	void Quit(int exitCode);
 	void SetExitCode(int exitCode);
+
+	using KeyboardKey = Input::KeyboardKey;
+	using MouseButton = Input::MouseButton;
+
+	[[nodiscard]] bool IsKeyPressed(KeyboardKey key);
+	[[nodiscard]] bool IsKeyDown(KeyboardKey key);
+	[[nodiscard]] bool IsKeyReleased(KeyboardKey key);
+	[[nodiscard]] bool IsMouseButtonPressed(MouseButton button);
+	[[nodiscard]] bool IsMouseButtonDown(MouseButton button);
+	[[nodiscard]] bool IsMouseButtonReleased(MouseButton button);
+	[[nodiscard]] Math::Int2 GetMousePosition();
 }
 
 /// <summary>
@@ -126,6 +138,7 @@ import :ContextWrapper;
 import :RenderStateStack;
 
 import :WindowStartupTask;
+import :InputListener;
 
 enum struct ExitType
 {
@@ -133,7 +146,7 @@ enum struct ExitType
 	Restart,
 };
 
-struct SpikyLibrary
+struct DirectGLLibrary
 {
 	std::shared_ptr<System::MonitorProvider>		MonitorProvider;	//!< The monitor provider to use
 	std::shared_ptr<DGL::ContextWrapper>			Context;			//!< The WGL configuration task
@@ -142,6 +155,7 @@ struct SpikyLibrary
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
 	std::shared_ptr<DGL::Logging::AsyncLogger>		Logger;				//!< The logging channel to use
 
+	DGL::InputListener									InputListener;		//!< The input listener to use
 	DGL::RenderStateStack								RenderStateStack;	//!< The render state stack to use
 
 	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidFillBrush;			//!< The default fill brush to use for rendering
@@ -155,4 +169,4 @@ struct SpikyLibrary
 
 module :private;
 
-SpikyLibrary Library;
+DirectGLLibrary Library;

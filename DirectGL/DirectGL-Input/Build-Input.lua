@@ -1,4 +1,4 @@
-project("Math")
+project("DirectGL-Input")
 	kind("StaticLib")
 	language("C++")
 	cppdialect("C++23")
@@ -10,10 +10,13 @@ project("Math")
 		"private/**.cpp",
 	})
 
+	filter("system:windows")
+		systemversion("latest")
+
 	filter("configurations:Debug")
 		runtime("Debug")
-		symbols("On")
+		symbols("on")
 
 	filter("configurations:Release")
 		runtime("Release")
-		optimize("On")
+		optimize("on")

@@ -10,7 +10,7 @@ module;
 
 export module System.Window:WindowEvent;
 
-import :KeyboardKey;
+import DirectGL.Input;
 
 namespace System
 {
@@ -61,7 +61,7 @@ namespace System
 
 		struct KeyPressed
 		{
-			KeyboardKey Key;
+			DGL::Input::KeyboardKey Key;
 			bool IsAltDown;
 			bool IsControlDown;
 			bool IsShiftDown;
@@ -71,12 +71,26 @@ namespace System
 
 		struct KeyReleased
 		{
-			KeyboardKey Key;
+			DGL::Input::KeyboardKey Key;
 			bool IsAltDown;
 			bool IsControlDown;
 			bool IsShiftDown;
 			bool IsSystemDown;
 			bool IsRepeated;
+		};
+
+		struct MouseButtonPressed
+		{
+			DGL::Input::MouseButton Button;
+			int32_t MouseX;
+			int32_t MouseY;
+		};
+
+		struct MouseButtonReleased
+		{
+			DGL::Input::MouseButton Button;
+			int32_t MouseX;
+			int32_t MouseY;
 		};
 
 		/// Type definition of all possible window events.
@@ -90,7 +104,9 @@ namespace System
 			MouseEntered,
 			MouseLeft,
 			KeyPressed,
-			KeyReleased
+			KeyReleased,
+			MouseButtonPressed,
+			MouseButtonReleased
 		>;
 
 		/// Construct a new WindowEvent object with a given event type.

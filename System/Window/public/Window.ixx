@@ -9,7 +9,6 @@ export module System.Window;
 import :Win32Window;
 #endif
 
-export import :KeyboardKey;
 export import :NativeWindowHandle;
 export import :Window;
 export import :WindowEvent;

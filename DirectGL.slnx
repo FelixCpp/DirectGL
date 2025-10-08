@@ -9,6 +9,8 @@
   <Folder Name="/DirectGL/">
     <Project Path="DirectGL\DirectGL-Core\DirectGL-Core.vcxproj" Id="292777B9-95E7-F2EF-5E22-3C6DCAA137CC">
     </Project>
+    <Project Path="DirectGL\DirectGL-Input\DirectGL-Input.vcxproj" Id="F00CC8E8-DCDA-BBEE-C56E-2C15B1DB9753">
+    </Project>
     <Project Path="DirectGL\DirectGL-Logging\DirectGL-Logging.vcxproj" Id="C73D9823-B336-B775-DC68-9CFAC8C09681">
     </Project>
     <Project Path="DirectGL\DirectGL-Renderer\DirectGL-Renderer.vcxproj" Id="F746802E-635D-7EC4-ACD4-09E6182A4F4C">
