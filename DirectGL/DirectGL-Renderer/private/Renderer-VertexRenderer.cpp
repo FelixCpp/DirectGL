@@ -8,6 +8,42 @@ import Math;
 
 namespace DGL::Renderer
 {
+	constexpr GLenum BlendFactorToGlId(const BlendMode::Factor factor)
+	{
+		switch (factor)
+		{
+			case BlendMode::Factor::Zero: return GL_ZERO;
+			case BlendMode::Factor::One: return GL_ONE;
+			case BlendMode::Factor::SrcColor: return GL_SRC_COLOR;
+			case BlendMode::Factor::OneMinusSrcColor: return GL_ONE_MINUS_SRC_COLOR;
+			case BlendMode::Factor::DstColor: return GL_DST_COLOR;
+			case BlendMode::Factor::OneMinusDstColor: return GL_ONE_MINUS_DST_COLOR;
+			case BlendMode::Factor::SrcAlpha: return GL_SRC_ALPHA;
+			case BlendMode::Factor::OneMinusSrcAlpha: return GL_ONE_MINUS_SRC_ALPHA;
+			case BlendMode::Factor::DstAlpha: return GL_DST_ALPHA;
+			case BlendMode::Factor::OneMinusDstAlpha: return GL_ONE_MINUS_DST_ALPHA;
+			case BlendMode::Factor::ConstantColor: return GL_CONSTANT_COLOR;
+			case BlendMode::Factor::OneMinusConstantColor: return GL_ONE_MINUS_CONSTANT_COLOR;
+			case BlendMode::Factor::ConstantAlpha: return GL_CONSTANT_ALPHA;
+			case BlendMode::Factor::OneMinusConstantAlpha: return GL_ONE_MINUS_CONSTANT_ALPHA;
+			case BlendMode::Factor::SrcAlphaSaturate: return GL_SRC_ALPHA_SATURATE;
+			default: return GL_INVALID_ENUM;
+		}
+	}
+
+	constexpr GLenum BlendEquationToGlId(const BlendMode::Equation equation)
+	{
+		switch (equation)
+		{
+			case BlendMode::Equation::Add: return GL_FUNC_ADD;
+			case BlendMode::Equation::Subtract: return GL_FUNC_SUBTRACT;
+			case BlendMode::Equation::ReverseSubtract: return GL_FUNC_REVERSE_SUBTRACT;
+			case BlendMode::Equation::Min: return GL_MIN;
+			case BlendMode::Equation::Max: return GL_MAX;
+			default: return GL_INVALID_ENUM;
+		}
+	}
+
 	std::unique_ptr<VertexRenderer> VertexRenderer::Create(const size_t maxVertices)
 	{
 		// Create position vertex buffer object (VBO)
@@ -43,8 +79,10 @@ namespace DGL::Renderer
 		if (m_IndexBufferId != 0) glDeleteBuffers(1, &m_IndexBufferId);
 	}
 
-	void VertexRenderer::Render(const Vertices& vertices)
+	void VertexRenderer::Render(const Vertices& vertices, const BlendMode& blendMode)
 	{
+		Activate(blendMode);
+
 		// TODO(Felix): What's up with buffer overflows?
 
 		// Submit the vertex and index data to the GPU
@@ -61,5 +99,20 @@ namespace DGL::Renderer
 		m_VertexBufferId(vertexBufferId),
 		m_IndexBufferId(indexBufferId)
 	{
+	}
+
+	void VertexRenderer::Activate(const BlendMode& blendMode)
+	{
+		glEnable(GL_BLEND);
+		glBlendFuncSeparate(
+			BlendFactorToGlId(blendMode.SourceFactorRGB),
+			BlendFactorToGlId(blendMode.DestinationFactorRGB),
+			BlendFactorToGlId(blendMode.SourceFactorAlpha),
+			BlendFactorToGlId(blendMode.DestinationFactorAlpha)
+		);
+		glBlendEquationSeparate(
+			BlendEquationToGlId(blendMode.BlendEquationRGB),
+			BlendEquationToGlId(blendMode.BlendEquationAlpha)
+		);
 	}
 }

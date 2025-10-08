@@ -8,6 +8,7 @@ module;
 export module DirectGL:RenderState;
 
 import :Color;
+import :BlendMode;
 
 export namespace DGL
 {
@@ -19,6 +20,8 @@ export namespace DGL
 
 		bool IsFillEnabled;
 		bool IsStrokeEnabled;
+
+		BlendMode BlendMode;
 
 		RenderState();
 	};

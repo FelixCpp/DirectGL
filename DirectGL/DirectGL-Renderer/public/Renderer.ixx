@@ -5,6 +5,7 @@
 
 export module DirectGL.Renderer;
 
+export import :BlendMode;
 export import :Color;
 export import :Shapes;
 export import :SolidColorBrush;

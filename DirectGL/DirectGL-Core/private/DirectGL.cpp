@@ -5,6 +5,8 @@
 #include <string_view>
 #include <filesystem>
 
+#include <glad/gl.h>
+
 module DirectGL;
 
 import System.Monitor;
@@ -71,6 +73,7 @@ namespace DGL
 						},
 						[&](const WindowEvent::Resized& resized)
 						{
+							glViewport(0, 0, static_cast<GLsizei>(resized.Width), static_cast<GLsizei>(resized.Height));
 							Info(std::format("Window has been resized: {}, {}", resized.Width, resized.Height));
 							return true;
 						},
@@ -151,6 +154,7 @@ namespace DGL
 	void Stroke(const Color color) { auto& state = PeekState(); state.StrokeColor = color; state.IsStrokeEnabled = true; }
 	void NoStroke() { PeekState().IsStrokeEnabled = false; }
 	void StrokeWeight(const float strokeWeight) { PeekState().StrokeWeight = strokeWeight; }
+	void Blend(const BlendMode& blendMode) { PeekState().BlendMode = blendMode; }
 
 	void Background(const Color color)
 	{
@@ -164,7 +168,7 @@ namespace DGL
 
 		Library.SolidFillBrush->SetColor(color);
 		Library.SolidFillBrush->UploadUniforms(camera);
-		Library.VertexRenderer->Render(vertices);
+		Library.VertexRenderer->Render(vertices, BlendModes::Opaque);
 	}
 
 	void Ellipse(const float x, const float y, const float width, const float height)
@@ -186,7 +190,7 @@ namespace DGL
 
 			Library.SolidFillBrush->SetColor(state.FillColor);
 			Library.SolidFillBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices);
+			Library.VertexRenderer->Render(vertices, state.BlendMode);
 		}
 
 		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
@@ -195,8 +199,13 @@ namespace DGL
 		
 			Library.SolidStrokeBrush->SetColor(state.StrokeColor);
 			Library.SolidStrokeBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices);
+			Library.VertexRenderer->Render(vertices, state.BlendMode);
 		}
+	}
+
+	void Circle(const float x, const float y, const float diameter)
+	{
+		Ellipse(x, y, diameter, diameter);
 	}
 
 	void Line(const float x1, const float y1, const float x2, const float y2)
@@ -212,7 +221,7 @@ namespace DGL
 
 			Library.SolidStrokeBrush->SetColor(state.StrokeColor);
 			Library.SolidStrokeBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices);
+			Library.VertexRenderer->Render(vertices, state.BlendMode);
 		}
 	}
 
@@ -234,7 +243,7 @@ namespace DGL
 			const auto vertices = Renderer::GetFilledTriangle(v1, v2, v3);
 			Library.SolidFillBrush->SetColor(state.FillColor);
 			Library.SolidFillBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices);
+			Library.VertexRenderer->Render(vertices, state.BlendMode);
 		}
 
 		// TODO(Felix): Implement stroke for triangles

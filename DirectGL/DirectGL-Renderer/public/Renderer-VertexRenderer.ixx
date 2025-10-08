@@ -11,6 +11,7 @@ module;
 
 export module DirectGL.Renderer:VertexRenderer;
 
+import :BlendMode;
 import :Vertices;
 
 export namespace DGL::Renderer
@@ -23,7 +24,7 @@ export namespace DGL::Renderer
 
 		~VertexRenderer();
 
-		void Render(const Vertices& vertices);
+		void Render(const Vertices& vertices, const BlendMode& blendMode);
 
 	private:
 
@@ -32,6 +33,8 @@ export namespace DGL::Renderer
 			GLuint vertexBufferId,
 			GLuint indexBufferId
 		);
+
+		void Activate(const BlendMode& blendMode);
 
 		GLuint m_VertexArrayId;
 		GLuint m_VertexBufferId;

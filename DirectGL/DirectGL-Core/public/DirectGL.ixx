@@ -79,6 +79,7 @@ export namespace DGL
 	std::string GetWindowTitle();									  //!< Get the window title
 }
 
+export import :BlendMode;
 export import :Color;
 export import :RenderState;
 
@@ -92,8 +93,10 @@ export namespace DGL
 	void Stroke(Color color);
 	void NoStroke();
 	void StrokeWeight(float strokeWeight);
+	void Blend(const BlendMode& blendMode);
 	void Background(Color color);
 	void Ellipse(float x, float y, float width, float height);
+	void Circle(float x, float y, float diameter);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 }
