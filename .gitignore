@@ -5,6 +5,7 @@ bin/
 
 # Visual Studio Solution files
 *.sln
+*.slnx
 *.vcxproj
 *.vcxproj.user
 *.vcxproj.filters
