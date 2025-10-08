@@ -16,7 +16,6 @@ struct SpikesGame : DGL::Sketch
 
 	void Draw() override
 	{
-		const auto ptr = DGL::Renderer::SolidColorBrush::Create(DGL::Color(255, 0, 0));
 	}
 
 	void Destroy() override

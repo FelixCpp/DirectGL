@@ -20,7 +20,7 @@ namespace DGL::Renderer
 			case ShaderType::Vertex: return GL_VERTEX_SHADER;
 			case ShaderType::Fragment: return GL_FRAGMENT_SHADER;
 			case ShaderType::Geometry: return GL_GEOMETRY_SHADER;
-			default: System::Error(std::format("Unknown Shader-Type: {}", type));
+			default: System::Error("Unknown Shader-Type");
 		}
 	}
 
