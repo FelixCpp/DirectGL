@@ -44,7 +44,7 @@ export namespace DGL::Logging
 		std::condition_variable m_SubmitCondition;
 
 		std::queue<LogEntry> m_SubmittedEntries;
-		std::unique_ptr<LogForge::Logger> m_Logger;
+		std::shared_ptr<Logger> m_Logger;
 
 	};
 }

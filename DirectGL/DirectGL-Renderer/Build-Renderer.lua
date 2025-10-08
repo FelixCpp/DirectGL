@@ -16,6 +16,8 @@ project("DirectGL-Renderer")
 	})
 
 	links({
+		"DirectGL-Logging",
+
 		"Glad",
 		"Math",
 		"LogForge",

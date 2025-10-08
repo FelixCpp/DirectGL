@@ -29,8 +29,6 @@ namespace DGL
 			std::make_unique<LogForge::ConsoleLogOutput>()
 		));
 
-		Renderer::SetLogger(Library.Logger);
-
 		Library.MonitorProvider = std::make_shared<MonitorProviderCache>(std::make_shared<Win32MonitorProvider>());
 		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
 		Library.Window = std::make_unique<WindowWrapper>(Library.MonitorProvider);
@@ -122,12 +120,12 @@ namespace DGL
 /// </summary>
 namespace DGL
 {
-	void Log(const LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& time) { Library.Logger->Log(level, message, time); }
-	void Trace(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Trace, message, time); }
-	void Debug(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Debug, message, time); }
-	void Info(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Info, message, time); }
-	void Warning(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Warning, message, time); }
-	void Error(const std::string& message, const std::chrono::system_clock::time_point& time) { Log(LogLevel::Error, message, time); }
+	void Log(const LogLevel level, const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Log(level, message, time); }
+	void Trace(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Trace(message, time); }
+	void Debug(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Debug(message, time); }
+	void Info(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Info(message, time); }
+	void Warning(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Warning(message, time); }
+	void Error(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Error(message, time); }
 }
 
 /// <summary>

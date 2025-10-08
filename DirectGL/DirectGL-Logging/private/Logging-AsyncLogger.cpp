@@ -24,6 +24,8 @@ namespace DGL::Logging
 
 	Startup::StartupTask::Continuation AsyncLogger::Setup()
 	{
+		SetLogger(m_Logger);
+
 		m_LoggingThread = std::jthread([this](const std::stop_token& token)
 		{
 			while (not token.stop_requested() or not m_SubmittedEntries.empty())
@@ -53,13 +55,13 @@ namespace DGL::Logging
 			}
 		});
 
-		//Info("Logging system initialized");
+		Info("Logging system initialized");
 		return Continue;
 	}
 
 	void AsyncLogger::Teardown()
 	{
-		//Info("Logging system deinitialized");
+		Info("Logging system deinitialized");
 
 		if (m_LoggingThread.joinable())
 		{

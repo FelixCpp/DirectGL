@@ -11,7 +11,7 @@ module;
 export module DirectGL.Renderer:SolidColorBrush;
 
 import :Color;
-import :AutoRelease;
+import :ShaderProgram;
 
 import Math;
 
@@ -31,16 +31,12 @@ export namespace DGL::Renderer
 	private:
 
 		explicit SolidColorBrush(
-			AutoRelease<GLuint>&& shaderProgramId,
-			GLint colorLocation,
-			GLint projectionViewMatrixLocation,
+			std::unique_ptr<ShaderProgram> shaderProgram,
 			Color color
 		);
 
 		Color m_Color;
-		AutoRelease<GLuint> m_ShaderProgramId;
-		GLint m_ColorLocation;
-		GLint m_ProjectionViewMatrixLocation;
+		std::unique_ptr<ShaderProgram> m_ShaderProgram;
 
 	};
 }

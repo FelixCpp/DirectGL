@@ -4,11 +4,7 @@
 #include <format>
 
 module DirectGL.Renderer;
-
-import Preconditions;
-
-import :Logging;
-import :AutoRelease;
+import DirectGL.Logging;
 
 inline constexpr auto VERTEX_SOURCE = R"(
 #version 460 core
@@ -39,100 +35,28 @@ namespace DGL::Renderer
 {
 	std::unique_ptr<SolidColorBrush> SolidColorBrush::Create(const Color color)
 	{
-		const AutoRelease<GLuint> vertexShader(glCreateShader(GL_VERTEX_SHADER), [](const GLuint value) { glDeleteShader(value); });
-		glShaderSource(vertexShader.Get(), 1, &VERTEX_SOURCE, nullptr);
-		glCompileShader(vertexShader.Get());
+		const auto vertexShader = Shader::Create(VERTEX_SOURCE, ShaderType::Vertex);
+		if (vertexShader == nullptr)
 		{
-			GLint compilationSucceeded = GL_FALSE;
-			glGetShaderiv(vertexShader.Get(), GL_COMPILE_STATUS, &compilationSucceeded);
-			if (compilationSucceeded != GL_TRUE)
-			{
-				GLint logLength = 0;
-				glGetShaderiv(vertexShader.Get(), GL_INFO_LOG_LENGTH, &logLength);
-
-				std::string log(static_cast<size_t>(logLength), '\0');
-				glGetShaderInfoLog(vertexShader.Get(), logLength, nullptr, log.data());
-
-				Error(std::format("Vertex shader compilation failed: {}", log));
-				return nullptr;
-			}
-		}
-
-		const AutoRelease<GLuint> fragmentShader(glCreateShader(GL_FRAGMENT_SHADER), [](const GLuint value) { glDeleteShader(value); });
-		glShaderSource(fragmentShader.Get(), 1, &FRAGMENT_SOURCE, nullptr);
-		glCompileShader(fragmentShader.Get());
-		{
-			GLint compilationSucceeded = GL_FALSE;
-			glGetShaderiv(fragmentShader.Get(), GL_COMPILE_STATUS, &compilationSucceeded);
-			if (compilationSucceeded != GL_TRUE)
-			{
-				GLint logLength = 0;
-				glGetShaderiv(fragmentShader.Get(), GL_INFO_LOG_LENGTH, &logLength);
-
-				std::string log(static_cast<size_t>(logLength), '\0');
-				glGetShaderInfoLog(fragmentShader.Get(), logLength, nullptr, log.data());
-
-				Error(std::format("Fragment shader compilation failed: {}", log));
-				return nullptr;
-			}
-		}
-
-		AutoRelease<GLuint> shaderProgram(glCreateProgram(), [](const GLuint value) { glDeleteProgram(value); });
-		glAttachShader(shaderProgram.Get(), vertexShader.Get());
-		glAttachShader(shaderProgram.Get(), fragmentShader.Get());
-
-		const auto _releaseVs = System::Finally([program = shaderProgram.Get(), vs = vertexShader.Get()] { glDetachShader(program, vs); });
-		const auto _releaseFs = System::Finally([program = shaderProgram.Get(), fs = fragmentShader.Get()] { glDetachShader(program, fs); });
-
-		glLinkProgram(shaderProgram.Get());
-		{
-			GLint linkageSucceeded = GL_FALSE;
-			glGetProgramiv(shaderProgram.Get(), GL_LINK_STATUS, &linkageSucceeded);
-			if (linkageSucceeded != GL_TRUE)
-			{
-				GLint logLength = 0;
-				glGetProgramiv(shaderProgram.Get(), GL_INFO_LOG_LENGTH, &logLength);
-
-				std::string log(static_cast<size_t>(logLength), '\0');
-				glGetProgramInfoLog(shaderProgram.Get(), logLength, nullptr, log.data());
-
-				Error(std::format("Shader program linkage failed: {}", log));
-				return nullptr;
-			}
-		}
-
-		glValidateProgram(shaderProgram.Get());
-		{
-			GLint validationSucceeded = GL_FALSE;
-			glGetProgramiv(shaderProgram.Get(), GL_VALIDATE_STATUS, &validationSucceeded);
-			if (validationSucceeded != GL_TRUE)
-			{
-				GLint logLength = 0;
-				glGetProgramiv(shaderProgram.Get(), GL_INFO_LOG_LENGTH, &logLength);
-
-				std::string log(static_cast<size_t>(logLength), '\0');
-				glGetProgramInfoLog(shaderProgram.Get(), logLength, nullptr, log.data());
-
-				Error(std::format("Shader program validation failed: {}", log));
-				return nullptr;
-			}
-		}
-
-		const GLint colorUniformLocation = glGetProgramResourceLocation(shaderProgram.Get(), GL_UNIFORM, "u_Color");
-		if (colorUniformLocation == -1)
-		{
-			Warning("Couldn't find color uniform in solid color brush shader");
+			Logging::Error("Failed to create vertex shader");
 			return nullptr;
 		}
 
-		const GLint projectionViewMatrixLocation = glGetProgramResourceLocation(shaderProgram.Get(), GL_UNIFORM, "u_ProjectionViewMatrix");
-		if (projectionViewMatrixLocation == -1)
+		const auto fragmentShader = Shader::Create(FRAGMENT_SOURCE, ShaderType::Fragment);
+		if (fragmentShader == nullptr)
 		{
-			Warning("Couldn't find projection-view matrix uniform in solid color brush shader");
+			Logging::Error("Failed to create fragment shader");
 			return nullptr;
 		}
 
-		return std::unique_ptr<SolidColorBrush>(new SolidColorBrush(std::move(shaderProgram), colorUniformLocation, projectionViewMatrixLocation, color));
+		auto shaderProgram = ShaderProgram::Create(*vertexShader, *fragmentShader);
+		if (shaderProgram == nullptr)
+		{
+			Logging::Error("Failed to create shader program");
+			return nullptr;
+		}
+
+		return std::unique_ptr<SolidColorBrush>(new SolidColorBrush(std::move(shaderProgram), color));
 	}
 
 	void SolidColorBrush::SetColor(const Color color)
@@ -153,18 +77,16 @@ namespace DGL::Renderer
 		const float alpha = static_cast<float>(m_Color.A) / 255.0f;
 
 		// Upload the uniforms by directly setting them in the shader program
-		glProgramUniform4f(m_ShaderProgramId.Get(), m_ColorLocation, red, green, blue, alpha);
-		glProgramUniformMatrix4fv(m_ShaderProgramId.Get(), m_ProjectionViewMatrixLocation, 1, GL_FALSE, projectionViewMatrix.GetData());
+		m_ShaderProgram->UploadFloat4("u_Color", red, green, blue, alpha);
+		m_ShaderProgram->UploadMatrix4x4("u_ProjectionViewMatrix", std::span<const float, 16>(projectionViewMatrix.GetData(), 16));
 
 		// Bind the shader program for rendering
-		glUseProgram(m_ShaderProgramId.Get());
+		ShaderProgram::Activate(m_ShaderProgram.get());
 	}
 
-	SolidColorBrush::SolidColorBrush(AutoRelease<GLuint>&& shaderProgramId, const GLint colorLocation, const GLint projectionViewMatrixLocation, const Color color) :
+	SolidColorBrush::SolidColorBrush(std::unique_ptr<ShaderProgram> shaderProgram, const Color color) :
 		m_Color(color),
-		m_ShaderProgramId(std::move(shaderProgramId)),
-		m_ColorLocation(colorLocation),
-		m_ProjectionViewMatrixLocation(projectionViewMatrixLocation)
+		m_ShaderProgram(std::move(shaderProgram))
 	{
 	}
 }
