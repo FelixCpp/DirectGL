@@ -92,6 +92,10 @@ export namespace DGL
 	void Stroke(Color color);
 	void NoStroke();
 	void StrokeWeight(float strokeWeight);
+	void Background(Color color);
+	void Ellipse(float x, float y, float width, float height);
+	void Line(float x1, float y1, float x2, float y2);
+	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -120,7 +124,11 @@ struct SpikyLibrary
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
 	std::shared_ptr<DGL::Logging::AsyncLogger>		Logger;				//!< The logging channel to use
 
-	DGL::RenderStateStack							RenderStateStack;	//!< The render state stack to use
+	DGL::RenderStateStack								RenderStateStack;	//!< The render state stack to use
+
+	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidFillBrush;			//!< The default fill brush to use for rendering
+	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidStrokeBrush;		//!< The default stroke brush to use for rendering
+	std::unique_ptr<DGL::Renderer::VertexRenderer>		VertexRenderer;			//!< The vertex renderer to use
 };
 
 module :private;

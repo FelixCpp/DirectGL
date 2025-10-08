@@ -51,26 +51,11 @@ namespace DGL
 
 			Library.Window->SetVisible(true);
 
-			const auto brush = Renderer::SolidColorBrush::Create(Color(255, 0, 0));
-			const auto renderer = Renderer::VertexRenderer::Create(10'000);
+			Library.RenderStateStack.Clear();
 
-			const Math::Matrix4x4 projection = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(Library.Window->GetSize().X), static_cast<float>(Library.Window->GetSize().Y)), -1.0f, 1.0f);
-			const Renderer::Vertices vertices = {
-				// Positions
-				{
-					{ 100.0f, 100.0f, },
-					{ 200.0f, 100.0f, },
-					{ 200.0f, 200.0f, },
-					{ 200.0f, 200.0f, },
-					{ 100.0f, 200.0f, },
-					{ 100.0f, 100.0f, },
-				},
-				// Indices
-				{
-					0, 1, 2,
-					3, 4, 5,
-				}
-			};
+			Library.SolidFillBrush = Renderer::SolidColorBrush::Create(Color(255, 255, 255));
+			Library.SolidStrokeBrush = Renderer::SolidColorBrush::Create(Color(255, 255, 255));
+			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
 
 			bool running = true;
 			while (running)
@@ -100,9 +85,6 @@ namespace DGL
 						Library.Sketch->Event(*event);
 					}
 				}
-
-				brush->UploadUniforms(projection);
-				renderer->Render(vertices);
 
 				Library.Sketch->Draw();
 				Library.Context->Flush();
@@ -169,4 +151,92 @@ namespace DGL
 	void Stroke(const Color color) { auto& state = PeekState(); state.StrokeColor = color; state.IsStrokeEnabled = true; }
 	void NoStroke() { PeekState().IsStrokeEnabled = false; }
 	void StrokeWeight(const float strokeWeight) { PeekState().StrokeWeight = strokeWeight; }
+
+	void Background(const Color color)
+	{
+		// Get the window size
+		const auto [windowWidth, windowHeight] = Library.Window->GetSize();
+		const auto windowArea = Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight));
+		const auto camera = Math::Matrix4x4::Orthographic(windowArea, -1.0f, 1.0f);
+
+		// Paint a rectangle covering the entire window with the specified color
+		const auto vertices = Renderer::GetFilledRectangle(windowArea);
+
+		Library.SolidFillBrush->SetColor(color);
+		Library.SolidFillBrush->UploadUniforms(camera);
+		Library.VertexRenderer->Render(vertices);
+	}
+
+	void Ellipse(const float x, const float y, const float width, const float height)
+	{
+		// Create an ellipse centered at (x, y) with the specified width and height
+		const auto radius = Math::Radius::Elliptical(width * 0.5f, height * 0.5f);
+		const auto center = Math::Float2{ x, y };
+
+		// Get the current render state
+		const auto& state = PeekState();
+
+		const auto [windowWidth, windowHeight] = Library.Window->GetSize();
+		const auto camera = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight)), -1.0f, 1.0f);
+
+		// Render the geometry using the fill shape if fill is enabled
+		if (state.IsFillEnabled)
+		{
+			const auto vertices = Renderer::GetFilledEllipse(center, radius, 64);
+
+			Library.SolidFillBrush->SetColor(state.FillColor);
+			Library.SolidFillBrush->UploadUniforms(camera);
+			Library.VertexRenderer->Render(vertices);
+		}
+
+		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
+		{
+			const auto vertices = Renderer::GetOutlinedEllipse(center, radius, state.StrokeWeight, 64);
+		
+			Library.SolidStrokeBrush->SetColor(state.StrokeColor);
+			Library.SolidStrokeBrush->UploadUniforms(camera);
+			Library.VertexRenderer->Render(vertices);
+		}
+	}
+
+	void Line(const float x1, const float y1, const float x2, const float y2)
+	{
+		// Get the current render state
+		const auto& state = PeekState();
+
+		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
+		{
+			const auto [windowWidth, windowHeight] = Library.Window->GetSize();
+			const auto camera = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight)), -1.0f, 1.0f);
+			const auto vertices = Renderer::GetLine(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, state.StrokeWeight);
+
+			Library.SolidStrokeBrush->SetColor(state.StrokeColor);
+			Library.SolidStrokeBrush->UploadUniforms(camera);
+			Library.VertexRenderer->Render(vertices);
+		}
+	}
+
+	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3)
+	{
+		// Get the current render state
+		const auto& state = PeekState();
+		const auto [windowWidth, windowHeight] = Library.Window->GetSize();
+		const auto camera = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight)), -1.0f, 1.0f);
+
+		// Render the geometry using the fill shape if fill is enabled
+		if (state.IsFillEnabled)
+		{
+			// Create a triangle with the specified vertices
+			const auto v1 = Math::Float2{ x1, y1 };
+			const auto v2 = Math::Float2{ x2, y2 };
+			const auto v3 = Math::Float2{ x3, y3 };
+
+			const auto vertices = Renderer::GetFilledTriangle(v1, v2, v3);
+			Library.SolidFillBrush->SetColor(state.FillColor);
+			Library.SolidFillBrush->UploadUniforms(camera);
+			Library.VertexRenderer->Render(vertices);
+		}
+
+		// TODO(Felix): Implement stroke for triangles
+	}
 }

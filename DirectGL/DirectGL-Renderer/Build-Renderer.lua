@@ -20,7 +20,6 @@ project("DirectGL-Renderer")
 
 		"Glad",
 		"Math",
-		"LogForge",
 		"Preconditions",
 	})
 

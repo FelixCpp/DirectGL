@@ -21,6 +21,7 @@ namespace DGL
 
 		void PushState();
 		void PopState();
+		void Clear();
 
 		RenderState& PeekState() const;
 

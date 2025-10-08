@@ -25,6 +25,10 @@ namespace Math
 		T Length() const;
 		constexpr T LengthSquared() const;
 
+		T Distance(const Value2& other) const;
+		constexpr T DistanceSquared(const Value2& other) const;
+
+		Value2 Limited(T maxLength) const;
 		Value2 Normalized() const;
 		Value2 Perpendicular() const;
 
@@ -88,6 +92,20 @@ namespace Math
 
 	template <typename T> T Value2<T>::Length() const { return static_cast<T>(std::sqrt(LengthSquared())); }
 	template <typename T> constexpr T Value2<T>::LengthSquared() const { return X * X + Y * Y; }
+
+	template <typename T> T Value2<T>::Distance(const Value2& other) const { return (*this - other).Length(); }
+	template <typename T> constexpr T Value2<T>::DistanceSquared(const Value2& other) const { return (*this - other).LengthSquared(); }
+
+	template <typename T> Value2<T> Value2<T>::Limited(const T maxLength) const
+	{
+		const T length = LengthSquared();
+		if (length > (maxLength * maxLength))
+		{
+			return Normalized() * maxLength;
+		}
+
+		return *this;
+	}
 
 	template <typename T> Value2<T> Value2<T>::Normalized() const
 	{

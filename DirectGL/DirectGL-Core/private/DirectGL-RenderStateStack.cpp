@@ -24,6 +24,14 @@ namespace DGL
 		}
 	}
 
+	void RenderStateStack::Clear()
+	{
+		while (not m_RenderStates.empty())
+			m_RenderStates.pop();
+
+		m_CurrentState = &m_DefaultState;
+	}
+
 	RenderState& RenderStateStack::PeekState() const
 	{
 		return *m_CurrentState;

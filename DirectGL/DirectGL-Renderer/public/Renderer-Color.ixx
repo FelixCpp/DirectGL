@@ -9,6 +9,8 @@ module;
 
 export module DirectGL.Renderer:Color;
 
+import Math;
+
 export namespace DGL::Renderer
 {
 	struct Color
@@ -19,6 +21,8 @@ export namespace DGL::Renderer
 
 		constexpr bool operator == (Color other) const;
 		constexpr bool operator != (Color other) const;
+
+		constexpr Color Lerp(Color other, float t) const;
 
 		uint8_t R, G, B, A;
 	};
@@ -52,6 +56,16 @@ namespace DGL::Renderer
 	constexpr bool Color::operator!=(const Color other) const
 	{
 		return !(*this == other);
+	}
+
+	constexpr Color Color::Lerp(const Color other, const float t) const
+	{
+		return Color(
+			static_cast<uint8_t>(Math::Lerp(R, other.R, t)),
+			static_cast<uint8_t>(Math::Lerp(G, other.G, t)),
+			static_cast<uint8_t>(Math::Lerp(B, other.B, t)),
+			static_cast<uint8_t>(Math::Lerp(A, other.A, t))
+		);
 	}
 
 

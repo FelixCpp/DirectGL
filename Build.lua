@@ -31,8 +31,8 @@ workspace("DirectGL")
 
     group("DirectGL")
         include("DirectGL/DirectGL-Core/Build-Core.lua")
-        include("DirectGL/DirectGL-Renderer/Build-Renderer.lua")
         include("DirectGL/DirectGL-Logging/Build-Logging.lua")
+        include("DirectGL/DirectGL-Renderer/Build-Renderer.lua")
 
     group("") -- Root group
         include("App/Build-App.lua")

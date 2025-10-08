@@ -7,7 +7,7 @@ export module DirectGL:Color;
 
 import DirectGL.Renderer;
 
-namespace DGL
+export namespace DGL
 {
 	using Color = Renderer::Color;
 }
