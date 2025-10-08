@@ -4,7 +4,7 @@
 #include <optional>
 #include <format>
 
-module DGL;
+module DirectGL;
 
 import System.Monitor;
 

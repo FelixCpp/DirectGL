@@ -5,7 +5,7 @@
 #include <string_view>
 #include <filesystem>
 
-module DGL;
+module DirectGL;
 
 import System.Monitor;
 
@@ -157,4 +157,16 @@ namespace DGL
 	Math::Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
 	void SetWindowTitle(const std::string_view title) { Library.Window->SetTitle(title); }
 	std::string GetWindowTitle() { return Library.Window->GetTitle(); }
+}
+
+namespace DGL
+{
+	void PushState() { Library.RenderStateStack.PushState(); }
+	void PopState() { Library.RenderStateStack.PopState(); }
+	RenderState& PeekState() { return Library.RenderStateStack.PeekState(); }
+	void Fill(const Color color) { auto& state = PeekState(); state.FillColor = color; state.IsFillEnabled = true; }
+	void NoFill() { PeekState().IsFillEnabled = false; }
+	void Stroke(const Color color) { auto& state = PeekState(); state.StrokeColor = color; state.IsStrokeEnabled = true; }
+	void NoStroke() { PeekState().IsStrokeEnabled = false; }
+	void StrokeWeight(const float strokeWeight) { PeekState().StrokeWeight = strokeWeight; }
 }

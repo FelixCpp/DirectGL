@@ -5,9 +5,8 @@ module;
 #include <string>
 #include <string_view>
 #include <chrono>
-#include <filesystem>
 
-export module DGL;
+export module DirectGL;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -80,9 +79,19 @@ export namespace DGL
 	std::string GetWindowTitle();									  //!< Get the window title
 }
 
+export import :Color;
+export import :RenderState;
+
 export namespace DGL
 {
-	using Color = Renderer::Color;
+	void PushState();
+	void PopState();
+	RenderState& PeekState();
+	void Fill(Color color);
+	void NoFill();
+	void Stroke(Color color);
+	void NoStroke();
+	void StrokeWeight(float strokeWeight);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -92,13 +101,13 @@ export namespace DGL
 ///																		///
 ///////////////////////////////////////////////////////////////////////////
 
-
 // DPI
 import :ConfigureDPIStartupTask;
 
 // Graphics
 import :ConfigureGladStartupTask;
 import :ContextWrapper;
+import :RenderStateStack;
 
 import :WindowStartupTask;
 
@@ -110,6 +119,8 @@ struct SpikyLibrary
 
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
 	std::shared_ptr<DGL::Logging::AsyncLogger>		Logger;				//!< The logging channel to use
+
+	DGL::RenderStateStack							RenderStateStack;	//!< The render state stack to use
 };
 
 module :private;

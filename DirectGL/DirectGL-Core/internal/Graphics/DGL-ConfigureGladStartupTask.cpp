@@ -7,7 +7,7 @@
 #include <format>
 #include <sstream>
 
-module DGL;
+module DirectGL;
 
 namespace DGL
 {

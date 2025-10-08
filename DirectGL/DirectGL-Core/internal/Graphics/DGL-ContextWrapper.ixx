@@ -9,7 +9,7 @@ module;
 #include <functional>
 #include <memory>
 
-export module DGL:ContextWrapper;
+export module DirectGL:ContextWrapper;
 
 import Startup;
 import System.Window;

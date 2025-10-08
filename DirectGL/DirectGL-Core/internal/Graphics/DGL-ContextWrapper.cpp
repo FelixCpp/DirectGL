@@ -2,7 +2,7 @@
 
 #include <format>
 
-module DGL;
+module DirectGL;
 
 namespace DGL
 {

@@ -3,7 +3,7 @@
 // Author       : Felix Busch
 // Created Date : 2025/09/18
 
-export module DGL:ConfigureDPIStartupTask;
+export module DirectGL:ConfigureDPIStartupTask;
 
 import Startup;
 

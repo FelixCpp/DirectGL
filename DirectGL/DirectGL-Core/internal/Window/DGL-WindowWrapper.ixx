@@ -10,7 +10,7 @@ module;
 #include <string_view>
 #include <string>
 
-export module DGL:WindowStartupTask;
+export module DirectGL:WindowStartupTask;
 
 import Startup;
 import System.Monitor;

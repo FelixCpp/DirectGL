@@ -5,7 +5,7 @@
 #include <memory>
 #include <string_view>
 
-module DGL;
+module DirectGL;
 
 using LibraryPtr = std::unique_ptr<HINSTANCE__, decltype(&FreeLibrary)>;
 

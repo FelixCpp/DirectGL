@@ -3,7 +3,7 @@
 // Author       : Felix Busch
 // Created Date : 2025/09/22
 
-export module DGL:ConfigureGladStartupTask;
+export module DirectGL:ConfigureGladStartupTask;
 
 import Startup;
 
