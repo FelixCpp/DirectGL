@@ -23,7 +23,7 @@ using namespace System;
 /// </summary>
 namespace DGL
 {
-	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory)
+	void LaunchImpl(const std::function<std::unique_ptr<Sketch>()>& factory)
 	{
 		Library.Logger = std::make_unique<Logging::AsyncLogger>(std::make_unique<LogForge::DefaultLogger>(
 			std::make_unique<LogForge::DevelopmentLogFilter>(),
@@ -59,22 +59,36 @@ namespace DGL
 			Library.SolidStrokeBrush = Renderer::SolidColorBrush::Create(Color(255, 255, 255));
 			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
 
-			bool running = true;
-			while (running)
+			while (not Library.CloseRequested)
 			{
 				while (const auto event = Library.Window->PollEvent())
 				{
 					const bool forwardToUser = event->Visit(
-						[&running](const WindowEvent::Closed&)
+						[](const WindowEvent::Closed&)
 						{
 							Info("Window close event received");
-							running = false;
+							Quit();
 							return true;
 						},
 						[&](const WindowEvent::Resized& resized)
 						{
 							glViewport(0, 0, static_cast<GLsizei>(resized.Width), static_cast<GLsizei>(resized.Height));
 							Info(std::format("Window has been resized: {}, {}", resized.Width, resized.Height));
+							return true;
+						},
+						[&](const WindowEvent::KeyReleased& keyPressed)
+						{
+							if (keyPressed.Key == KeyboardKey::R and keyPressed.IsControlDown)
+							{
+								Info("Restart requested via Ctrl+R");
+								Restart();
+							}
+							else if (keyPressed.Key == KeyboardKey::Q and keyPressed.IsControlDown)
+							{
+								Info("Quit requested via Ctrl+Q");
+								Quit();
+							}
+
 							return true;
 						},
 						[](const auto&)
@@ -95,8 +109,26 @@ namespace DGL
 
 			Library.Sketch->Destroy();
 		});
+	}
 
-		return 0;
+	int Launch(const std::function<std::unique_ptr<Sketch>()>& factory)
+	{
+		ExitType exitType;
+		int exitCode;
+
+		do
+		{
+			// Reset the library state
+			Library = {};
+
+			// Run the application
+			LaunchImpl(factory);
+
+			exitType = Library.ExitType;
+			exitCode = Library.ExitCode;
+		} while (exitType == ExitType::Restart);
+
+		return exitCode;
 	}
 }
 
@@ -111,6 +143,15 @@ namespace DGL
 	void Info(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Info(message, time); }
 	void Warning(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Warning(message, time); }
 	void Error(const std::string& message, const std::chrono::system_clock::time_point& time) { Logging::Error(message, time); }
+}
+
+namespace DGL
+{
+	void Restart() { Library.ExitType = ExitType::Restart; Library.CloseRequested = true; }
+	void Restart(const int exitCode) { SetExitCode(exitCode); Restart(); }
+	void Quit() { Library.ExitType = ExitType::Quit; Library.CloseRequested = true; }
+	void Quit(const int exitCode) { SetExitCode(exitCode); Quit(); }
+	void SetExitCode(const int exitCode) { Library.ExitCode = exitCode; }
 }
 
 /// <summary>

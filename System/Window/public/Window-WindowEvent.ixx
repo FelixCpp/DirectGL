@@ -10,6 +10,8 @@ module;
 
 export module System.Window:WindowEvent;
 
+import :KeyboardKey;
+
 namespace System
 {
 	/// This class is a container for window events.
@@ -57,6 +59,26 @@ namespace System
 		/// The window has lost focus and is no longer the active window.
 		struct FocusLost {};
 
+		struct KeyPressed
+		{
+			KeyboardKey Key;
+			bool IsAltDown;
+			bool IsControlDown;
+			bool IsShiftDown;
+			bool IsSystemDown;
+			bool IsRepeated;
+		};
+
+		struct KeyReleased
+		{
+			KeyboardKey Key;
+			bool IsAltDown;
+			bool IsControlDown;
+			bool IsShiftDown;
+			bool IsSystemDown;
+			bool IsRepeated;
+		};
+
 		/// Type definition of all possible window events.
 		using EventType = std::variant<
 			Closed,
@@ -66,7 +88,9 @@ namespace System
 			TextEntered,
 			MouseMoved,
 			MouseEntered,
-			MouseLeft
+			MouseLeft,
+			KeyPressed,
+			KeyReleased
 		>;
 
 		/// Construct a new WindowEvent object with a given event type.

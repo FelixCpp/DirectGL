@@ -174,7 +174,7 @@ public:
 			// Render perception radii
 
 			//DGL::NoFill();
-			DGL::Blend(DGL::BlendModes::Burn);
+			DGL::Blend(DGL::BlendModes::Exclusion);
 			DGL::StrokeWeight(1.0f);
 
 			// Render the food perception radius
@@ -356,12 +356,6 @@ struct InfiniteRepeatingSketch : DGL::Sketch
 
 	void Draw() override
 	{
-		if (Game == nullptr)
-		{
-			Game = std::make_unique<SpikesGame>();
-			Game->Setup();
-		}
-
 		Game->Draw();
 
 		if (Game->IsDone())

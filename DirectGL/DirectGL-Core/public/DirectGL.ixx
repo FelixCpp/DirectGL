@@ -63,6 +63,15 @@ export namespace DGL
 	void Error(const std::string& message, const std::chrono::system_clock::time_point& time = std::chrono::system_clock::now());
 }
 
+export namespace DGL
+{
+	void Restart();
+	void Restart(int exitCode);
+	void Quit();
+	void Quit(int exitCode);
+	void SetExitCode(int exitCode);
+}
+
 /// <summary>
 /// Windowing and event handling
 /// </summary>
@@ -118,6 +127,12 @@ import :RenderStateStack;
 
 import :WindowStartupTask;
 
+enum struct ExitType
+{
+	Quit,
+	Restart,
+};
+
 struct SpikyLibrary
 {
 	std::shared_ptr<System::MonitorProvider>		MonitorProvider;	//!< The monitor provider to use
@@ -132,6 +147,10 @@ struct SpikyLibrary
 	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidFillBrush;			//!< The default fill brush to use for rendering
 	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidStrokeBrush;		//!< The default stroke brush to use for rendering
 	std::unique_ptr<DGL::Renderer::VertexRenderer>		VertexRenderer;			//!< The vertex renderer to use
+
+	ExitType										ExitType = ExitType::Quit;	//!< The exit code to return on application shutdown
+	int												ExitCode = 0;				//!< The return code to return on application shutdown
+	bool											CloseRequested = false;		//!< Whether a restart of the application was requested
 };
 
 module :private;
