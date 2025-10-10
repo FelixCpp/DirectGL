@@ -11,6 +11,89 @@ enum class Target
 	Poison
 };
 
+
+
+constexpr float EaseOutBounce(float t)
+{
+	if (t < 1.0f / 2.75f)
+	{
+		return 7.5625f * t * t;
+	}
+	else if (t < 2.0f / 2.75f)
+	{
+		t -= 1.5f / 2.75f;
+		return 7.5625f * t * t + 0.75f;
+	}
+	else if (t < 2.5f / 2.75f)
+	{
+		t -= 2.25f / 2.75f;
+		return 7.5625f * t * t + 0.9375f;
+	}
+	else
+	{
+		t -= 2.625f / 2.75f;
+		return 7.5625f * t * t + 0.984375f;
+	}
+}
+
+constexpr float EaseInOutBounce(float t)
+{
+	if (t < 0.5f)
+	{
+		return 0.5f * (1.0f - EaseOutBounce(1.0f - 2.0f * t));
+	}
+	else
+	{
+		return 0.5f * EaseOutBounce(2.0f * t - 1.0f) + 0.5f;
+	}
+}
+
+float EaseInOutSine(float t)
+{
+	return -(std::cos(Math::PI * t) - 1.0f) / 2.0f;
+}
+
+struct Particle
+{
+	Math::Float2 Position;
+	Math::Float2 Size;
+	Target Type;
+
+	float timeElapsed = 0.0f;
+	float animationDuration = 1.0f;
+
+	Particle(const Math::Float2 position, const Target type) :
+		Position(position),
+		Size(Math::Float2::Zero),
+		Type(type)
+	{
+	}
+
+	void Update(const float deltaTime)
+	{
+		timeElapsed += deltaTime;
+	}
+
+	void Show()
+	{
+		constexpr auto poisonColor = DGL::Color(255, 0, 0);
+		constexpr auto foodColor = DGL::Color(0, 255, 0);
+
+		const float progress = Math::Constrain(timeElapsed / animationDuration, 0.0f, 1.0f);
+		const float easedProgress = EaseInOutBounce(progress);
+		const float size = Math::Lerp(0.0f, 10.0f, easedProgress);
+
+		auto targetColor = (Type == Target::Food) ? foodColor : poisonColor;
+		targetColor.A = static_cast<uint8_t>(Math::Lerp(0.0f, 255.0f, easedProgress));
+
+		DGL::Blend(DGL::BlendModes::Alpha);
+		DGL::StrokeWeight(size);
+		DGL::Stroke(targetColor);
+		DGL::Point(Position.X, Position.Y);
+	}
+};
+
+
 class Creature
 {
 	struct SearchResult
@@ -19,8 +102,10 @@ class Creature
 		float DistanceSquared;
 	};
 
-	static constexpr float MinFactor = -10.0f;
-	static constexpr float MaxFactor = 10.0f;
+	static constexpr float MinFoodFactor = -2.5f;
+	static constexpr float MaxFoodFactor = 5.0f;
+	static constexpr float MinPoisonFactor = -5.0f;
+	static constexpr float MaxPoisonFactor = 2.50f;
 
 public:
 
@@ -34,8 +119,8 @@ public:
 		m_TimeAlive(0.0f),
 		m_MaxLifetime(5.0f),
 		m_AttractionFactors {
-			{ Target::Food, Math::Random(MinFactor, MaxFactor) },
-			{ Target::Poison, Math::Random(MinFactor, MaxFactor) }
+			{ Target::Food, Math::Random(MinFoodFactor, MaxFoodFactor) },
+			{ Target::Poison, Math::Random(MinPoisonFactor, MaxPoisonFactor) }
 		},
 		m_PerceptionRadii {
 			{ Target::Food, Math::Random(50.0f, 150.0f) },
@@ -44,7 +129,7 @@ public:
 	{
 	}
 
-	void Consume(std::vector<Math::Float2>& food, const Target target)
+	void Consume(std::vector<Particle>& food, const Target target)
 	{
 		const auto searchResult = GetNearestFood(food, target);
 		if (not searchResult.has_value())
@@ -59,7 +144,7 @@ public:
 			// Decide whether to heal or damage the creature based on the target type.
 			switch (target)
 			{
-				case Target::Food: m_MaxLifetime += 1.0f; break; //< Eating food increases the lifetime by one second.
+				case Target::Food: m_MaxLifetime += 3.0f; break; //< Eating food increases the lifetime by one second.
 				case Target::Poison: m_MaxLifetime -= 0.5f; break; //< Eating poison decreases the lifetime by half a second.
 				default: break;
 			}
@@ -67,7 +152,11 @@ public:
 		else
 		{
 			// Get the steering force towards the food.
-			const auto force = Seek(food[searchResult->Index]);
+			const auto force = Seek(food[searchResult->Index].Position);
+
+			DGL::StrokeWeight(3.0f);
+			DGL::Stroke(DGL::Color(0, 255, 255));
+			DGL::Line(m_Position.X, m_Position.Y, food[searchResult->Index].Position.X, food[searchResult->Index].Position.Y);
 
 			// Apply the attraction factor to change the behavior of the creature.
 			// A positive attraction factor makes the creature seek the food more aggressively,
@@ -84,7 +173,7 @@ public:
 		m_Acceleration += force;
 	}
 
-	std::optional<SearchResult> GetNearestFood(const std::vector<Math::Float2>& food, const Target target) const
+	std::optional<SearchResult> GetNearestFood(const std::vector<Particle>& food, const Target target) const
 	{
 		// TODO(Felix): Consider using a quadtree for better performance with many food items.
 
@@ -97,7 +186,7 @@ public:
 
 		for (size_t i = 0; i < food.size(); ++i)
 		{
-			const float distance = food[i].DistanceSquared(m_Position);
+			const float distance = food[i].Position.DistanceSquared(m_Position);
 			const bool isVisible = distance < (perceptionRadius * perceptionRadius);
 			const bool beatsRecord = distance < nearestDistance;
 
@@ -200,8 +289,8 @@ public:
 			DGL::StrokeWeight(2.0f);
 
 			// Compute the direction vector
-			const auto foodAttraction = Math::Remap(m_AttractionFactors.at(Target::Food), MinFactor, MaxFactor, -1.0f, 1.0f) * m_Size * 5.0f;
-			const auto poisonAttraction = Math::Remap(m_AttractionFactors.at(Target::Poison), MinFactor, MaxFactor, -1.0f, 1.f) * m_Size * 5.0f;
+			const auto foodAttraction = Math::Remap(m_AttractionFactors.at(Target::Food), MinFoodFactor, MaxFoodFactor, -1.0f, 1.0f) * m_Size * 5.0f;
+			const auto poisonAttraction = Math::Remap(m_AttractionFactors.at(Target::Poison), MinPoisonFactor, MaxPoisonFactor, -1.0f, 1.f) * m_Size * 5.0f;
 
 			// Render the food attraction factor as a line
 			DGL::Stroke(DGL::Color(0, 255, 0));
@@ -250,8 +339,8 @@ private:
 
 struct SpikesGame : DGL::Sketch
 {
-	std::vector<Math::Float2> Food;
-	std::vector<Math::Float2> Poison;
+	std::vector<Particle> Food;
+	std::vector<Particle> Poison;
 	std::vector<Creature> Creatures;
 
 	float m_TimeElapsedSinceLastSpawn = 0.0f;
@@ -266,14 +355,14 @@ struct SpikesGame : DGL::Sketch
 		const auto [width, height] = DGL::GetWindowSize();
 
 		// Generate some random food and poison
-		for (size_t i = 0; i < 40; i++)
+		for (size_t i = 0; i < 100; i++)
 		{
-			Food.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) });
+			Food.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) }, Target::Food);
 		}
 
-		for (size_t i = 0; i < 20; i++)
+		for (size_t i = 0; i < 50; i++)
 		{
-			Poison.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) });
+			Poison.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) }, Target::Poison);
 		}
 
 		// Generate some creatures at random positions
@@ -308,6 +397,9 @@ struct SpikesGame : DGL::Sketch
 
 	void Draw() override
 	{
+		// Clear the background
+		DGL::Background(DGL::Color(51, 51, 51, 150));
+
 		const float gameSpeed = DGL::IsLooping() ? 1.0f / 60.0f : 0.0f;
 		m_TimeElapsedSinceLastSpawn += gameSpeed;
 
@@ -315,8 +407,8 @@ struct SpikesGame : DGL::Sketch
 		if (m_TimeElapsedSinceLastSpawn > m_SpawnInterval)
 		{
 			const auto [width, height] = DGL::GetWindowSize();
-			Food.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) });
-			Poison.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) });
+			Food.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) }, Target::Food);
+			Poison.emplace_back(Math::Float2{ Math::Random(width), Math::Random(height) }, Target::Poison);
 			m_TimeElapsedSinceLastSpawn = 0.0f;
 		}
 
@@ -331,30 +423,26 @@ struct SpikesGame : DGL::Sketch
 			Creatures[i].WrapAround(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height)));
 		}
 
-		// Clear the background
-		DGL::Background(DGL::Color(51, 51, 51));
-
-		// Render the food
-		for (size_t i = 0; i < Food.size(); ++i)
-		{
-			DGL::NoStroke();
-			DGL::Fill(DGL::Color(0, 255, 0));
-			DGL::Ellipse(Food[i].X, Food[i].Y, 8.0f, 8.0f);
-		}
-
-		// Render the poison
-		for (size_t i = 0; i < Poison.size(); ++i)
-		{
-			DGL::NoStroke();
-			DGL::Fill(DGL::Color(255, 0, 0));
-			DGL::Ellipse(Poison[i].X, Poison[i].Y, 8.0f, 8.0f);
-		}
-
 		// Render the creatures
 		for (size_t i = 0; i < Creatures.size(); ++i)
 		{
 			const bool isHovered = Creatures[i].IsClicked(DGL::GetMousePosition());
 			Creatures[i].Show(isHovered or IsDebugModeEnabled);
+		}
+
+		// Render the food
+		DGL::StrokeWeight(8.0f);
+		for (size_t i = 0; i < Food.size(); ++i)
+		{
+			Food[i].Update(gameSpeed);
+			Food[i].Show();
+		}
+
+		// Render the poison
+		for (size_t i = 0; i < Poison.size(); ++i)
+		{
+			Poison[i].Update(gameSpeed);
+			Poison[i].Show();
 		}
 
 		// Remove dead creatures
