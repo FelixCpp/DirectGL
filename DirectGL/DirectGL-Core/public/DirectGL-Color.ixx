@@ -10,4 +10,5 @@ import DirectGL.Renderer;
 export namespace DGL
 {
 	using Color = Renderer::Color;
+	namespace Colors = Renderer::Colors;
 }

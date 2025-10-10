@@ -297,7 +297,10 @@ struct SpikesGame : DGL::Sketch
 					DGL::ToggleLoop();
 
 				if (keyEvent.Key == DGL::KeyboardKey::D)
+				{
 					IsDebugModeEnabled = not IsDebugModeEnabled;
+					DGL::Redraw();
+				}
 			},
 			[](const auto&) {}
 		);

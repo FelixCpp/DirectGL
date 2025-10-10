@@ -8,7 +8,7 @@ export module DirectGL.Renderer;
 export import :BlendMode;
 export import :Color;
 export import :Renderer;
-export import :Shapes;
+export import :ShapeFactory;
 export import :SolidColorBrush;
 export import :TextureWrapMode;
 export import :TextureFilterMode;

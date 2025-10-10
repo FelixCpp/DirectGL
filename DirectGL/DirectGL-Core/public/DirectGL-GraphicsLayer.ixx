@@ -34,7 +34,7 @@ export namespace DGL
 		virtual void Background(Color color) = 0;
 		virtual void Rect(float x1, float y1, float x2, float y2) = 0;
 		virtual void Ellipse(float x1, float y1, float x2, float y2) = 0;
-		virtual void Circle(float x, float y, float diameter) = 0;
+		virtual void Point(float x, float y) = 0;
 		virtual void Line(float x1, float y1, float x2, float y2) = 0;
 		virtual void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) = 0;
 	};

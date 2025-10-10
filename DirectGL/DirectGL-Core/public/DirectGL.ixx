@@ -112,6 +112,7 @@ export namespace DGL
 	void NoLoop();
 	void ToggleLoop();
 	bool IsLooping();
+	void Redraw();
 
 	void PushState();
 	void PopState();
@@ -130,6 +131,7 @@ export namespace DGL
 	void Rect(float x1, float y1, float x2, float y2);
 	void Ellipse(float x1, float y1, float x2, float y2);
 	void Circle(float x1, float y1, float xy2);
+	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 }
@@ -171,14 +173,16 @@ struct DirectGLLibrary
 
 	DGL::InputListener									InputListener;		//!< The input listener to use
 
-	std::unique_ptr<DGL::MainGraphicsLayer>				MainGraphicsLayer;		//!< The main graphics layer to use for rendering
+	std::unique_ptr<DGL::Renderer::ShapeFactory>		ShapeFactory;			//!< The shape factory to use
 	std::unique_ptr<DGL::Renderer::VertexRenderer>		VertexRenderer;			//!< The vertex renderer to use
+	std::unique_ptr<DGL::MainGraphicsLayer>				MainGraphicsLayer;		//!< The main graphics layer to use for rendering
 
-	ExitType										ExitType = ExitType::Quit;	//!< The exit code to return on application shutdown
-	int												ExitCode = 0;				//!< The return code to return on application shutdown
-	bool											CloseRequested = false;		//!< Whether a restart of the application was requested
-	uint64_t										FrameCount = 0;				//!< The number of frames that have been rendered since application start
-	bool											IsPaused = false;			//!< Whether the application is currently paused
+	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
+	int				ExitCode = 0;					//!< The return code to return on application shutdown
+	bool			CloseRequested = false;			//!< Whether a restart of the application was requested
+	uint64_t		FrameCount = 0;					//!< The number of frames that have been rendered since application start
+	bool			IsPaused = false;				//!< Whether the application is currently paused
+	bool			UserRequestedRedraw = false;	//!< Whether the user requested a redraw (call to Sketch::Draw function).
 };
 
 module :private;

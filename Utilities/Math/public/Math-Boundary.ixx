@@ -31,6 +31,8 @@ namespace Math
 		[[nodiscard]] constexpr Value2<T> BottomRight() const;
 		[[nodiscard]] constexpr Value2<T> Center() const;
 
+		static const Boundary Zero;
+
 		T Left;
 		T Top;
 		T Width;
@@ -122,4 +124,6 @@ namespace Math
 	{
 		return { Left + Width / 2, Top + Height / 2 };
 	}
+
+	template <typename T> inline constexpr Boundary<T> Boundary<T>::Zero = Boundary<T>{};
 }

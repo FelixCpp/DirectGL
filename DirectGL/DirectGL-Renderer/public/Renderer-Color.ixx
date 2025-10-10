@@ -67,6 +67,11 @@ namespace DGL::Renderer
 			static_cast<uint8_t>(Math::Lerp(A, other.A, t))
 		);
 	}
+}
 
-
+export namespace DGL::Renderer::Colors
+{
+	inline constexpr Color White = Color(255, 255, 255);
+	inline constexpr Color Black = Color(0, 0, 0);
+	inline constexpr Color Transparent = Color(0, 0, 0, 0);
 }

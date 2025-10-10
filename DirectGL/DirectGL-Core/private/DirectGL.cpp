@@ -53,10 +53,12 @@ namespace DGL
 
 			Library.Window->SetVisible(true);
 
+			Library.ShapeFactory = std::make_unique<Renderer::DefaultShapeFactory>();
 			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
 			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
-				Library.Window->GetSize().X, Library.Window->GetSize().Y,
-				*Library.VertexRenderer
+				Library.Window->GetSize(),
+				*Library.VertexRenderer,
+				*Library.ShapeFactory
 			);
 
 			while (not Library.CloseRequested)
@@ -80,14 +82,14 @@ namespace DGL
 						},
 						[&](const WindowEvent::KeyReleased& keyEvent)
 						{
-							if (keyEvent.Key == KeyboardKey::R and keyEvent.IsControlDown)
+							if (keyEvent.Key == KeyboardKey::F5)
 							{
-								Info("Restart requested via Ctrl+R");
+								Info("Restart requested via F5");
 								Restart();
 							}
-							else if (keyEvent.Key == KeyboardKey::Q and keyEvent.IsControlDown or keyEvent.Key == KeyboardKey::Escape)
+							else if (keyEvent.Key == KeyboardKey::Escape)
 							{
-								Info("Quit requested via Ctrl+Q or Escape");
+								Info("Quit requested via Escape");
 								Quit();
 							}
 						},
@@ -100,14 +102,18 @@ namespace DGL
 				}
 
 				// Let the user render the next frame
-				if (not Library.IsPaused or Library.FrameCount == 0)
+				if (not Library.IsPaused or Library.FrameCount == 0 or Library.UserRequestedRedraw)
 				{
+					// Note that this needs to happen before we call the Draw function
+					Library.UserRequestedRedraw = false;
+
 					Library.MainGraphicsLayer->BeginDraw();
 					Library.Sketch->Draw();
 					Library.MainGraphicsLayer->EndDraw();
 
 					// Present the rendered frame on screen
 					Library.Context->Flush();
+
 				}
 
 				// Increment the number of frames processed
@@ -205,6 +211,7 @@ namespace DGL
 	void NoLoop() { Library.IsPaused = true; }
 	void ToggleLoop() { Library.IsPaused = not Library.IsPaused; }
 	bool IsLooping() { return not Library.IsPaused; }
+	void Redraw() { Library.UserRequestedRedraw = true; }
 
 	void PushState() { Library.MainGraphicsLayer->PushState(); }
 	void PopState() { Library.MainGraphicsLayer->PushState(); }
@@ -222,7 +229,8 @@ namespace DGL
 	void Background(const Color color) { Library.MainGraphicsLayer->Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Rect(x1, y1, x2, y2); }
 	void Ellipse(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Ellipse(x1, y1, x2, y2); }
-	void Circle(const float x1, const float y1, const float xy2) { Library.MainGraphicsLayer->Circle(x1, y1, xy2); }
+	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
+	void Point(const float x, const float y) { Library.MainGraphicsLayer->Point(x, y); }
 	void Line(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Line(x1, y1, x2, y2); }
 	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { Library.MainGraphicsLayer->Triangle(x1, y1, x2, y2, x3, y3); }
 }
