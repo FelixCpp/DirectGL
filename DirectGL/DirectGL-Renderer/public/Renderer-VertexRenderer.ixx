@@ -13,18 +13,19 @@ export module DirectGL.Renderer:VertexRenderer;
 
 import :BlendMode;
 import :Vertices;
+import :Renderer;
 
 export namespace DGL::Renderer
 {
-	class VertexRenderer
+	class VertexRenderer : public Renderer
 	{
 	public:
 
 		static std::unique_ptr<VertexRenderer> Create(size_t maxVertices);
 
-		~VertexRenderer();
-
-		void Render(const Vertices& vertices, const BlendMode& blendMode);
+		~VertexRenderer() override;
+ 
+		void Render(const Vertices& vertices, const BlendMode& blendMode) override;
 
 	private:
 

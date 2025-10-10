@@ -53,11 +53,11 @@ namespace DGL
 
 			Library.Window->SetVisible(true);
 
-			Library.RenderStateStack.Clear();
-
-			Library.SolidFillBrush = Renderer::SolidColorBrush::Create(Color(255, 255, 255));
-			Library.SolidStrokeBrush = Renderer::SolidColorBrush::Create(Color(255, 255, 255));
 			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
+			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
+				Library.Window->GetSize().X, Library.Window->GetSize().Y,
+				*Library.VertexRenderer
+			);
 
 			while (not Library.CloseRequested)
 			{
@@ -75,7 +75,7 @@ namespace DGL
 						},
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
-							glViewport(0, 0, static_cast<GLsizei>(resizeEvent.Width), static_cast<GLsizei>(resizeEvent.Height));
+							Library.MainGraphicsLayer->Resize(resizeEvent.Width, resizeEvent.Height);
 							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
 						},
 						[&](const WindowEvent::KeyReleased& keyEvent)
@@ -100,10 +100,18 @@ namespace DGL
 				}
 
 				// Let the user render the next frame
-				Library.Sketch->Draw();
+				if (not Library.IsPaused or Library.FrameCount == 0)
+				{
+					Library.MainGraphicsLayer->BeginDraw();
+					Library.Sketch->Draw();
+					Library.MainGraphicsLayer->EndDraw();
 
-				// Present the rendered frame on screen
-				Library.Context->Flush();
+					// Present the rendered frame on screen
+					Library.Context->Flush();
+				}
+
+				// Increment the number of frames processed
+				++Library.FrameCount;
 			}
 
 			Library.Sketch->Destroy();
@@ -193,106 +201,28 @@ namespace DGL
 
 namespace DGL
 {
-	void PushState() { Library.RenderStateStack.PushState(); }
-	void PopState() { Library.RenderStateStack.PopState(); }
-	RenderState& PeekState() { return Library.RenderStateStack.PeekState(); }
-	void Fill(const Color color) { auto& state = PeekState(); state.FillColor = color; state.IsFillEnabled = true; }
-	void NoFill() { PeekState().IsFillEnabled = false; }
-	void Stroke(const Color color) { auto& state = PeekState(); state.StrokeColor = color; state.IsStrokeEnabled = true; }
-	void NoStroke() { PeekState().IsStrokeEnabled = false; }
-	void StrokeWeight(const float strokeWeight) { PeekState().StrokeWeight = strokeWeight; }
-	void Blend(const BlendMode& blendMode) { PeekState().BlendMode = blendMode; }
+	void Loop() { Library.IsPaused = false; }
+	void NoLoop() { Library.IsPaused = true; }
+	void ToggleLoop() { Library.IsPaused = not Library.IsPaused; }
+	bool IsLooping() { return not Library.IsPaused; }
 
-	void Background(const Color color)
-	{
-		// Get the window size
-		const auto [windowWidth, windowHeight] = Library.Window->GetSize();
-		const auto windowArea = Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight));
-		const auto camera = Math::Matrix4x4::Orthographic(windowArea, -1.0f, 1.0f);
+	void PushState() { Library.MainGraphicsLayer->PushState(); }
+	void PopState() { Library.MainGraphicsLayer->PushState(); }
+	RenderState& PeekState() { return Library.MainGraphicsLayer->PeekState(); }
 
-		// Paint a rectangle covering the entire window with the specified color
-		const auto vertices = Renderer::GetFilledRectangle(windowArea);
+	void Fill(const Color color) { Library.MainGraphicsLayer->Fill(color); }
+	void Stroke(const Color color) { Library.MainGraphicsLayer->Stroke(color); }
+	void StrokeWeight(const float strokeWeight) { Library.MainGraphicsLayer->StrokeWeight(strokeWeight); }
 
-		Library.SolidFillBrush->SetColor(color);
-		Library.SolidFillBrush->UploadUniforms(camera);
-		Library.VertexRenderer->Render(vertices, BlendModes::Opaque);
-	}
+	void NoFill() { Library.MainGraphicsLayer->NoFill(); }
+	void NoStroke() { Library.MainGraphicsLayer->NoStroke(); }
 
-	void Ellipse(const float x, const float y, const float width, const float height)
-	{
-		// Create an ellipse centered at (x, y) with the specified width and height
-		const auto radius = Math::Radius::Elliptical(width * 0.5f, height * 0.5f);
-		const auto center = Math::Float2{ x, y };
+	void Blend(const BlendMode& blendMode) { Library.MainGraphicsLayer->Blend(blendMode); }
 
-		// Get the current render state
-		const auto& state = PeekState();
-
-		const auto [windowWidth, windowHeight] = Library.Window->GetSize();
-		const auto camera = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight)), -1.0f, 1.0f);
-
-		// Render the geometry using the fill shape if fill is enabled
-		if (state.IsFillEnabled)
-		{
-			const auto vertices = Renderer::GetFilledEllipse(center, radius, 64);
-
-			Library.SolidFillBrush->SetColor(state.FillColor);
-			Library.SolidFillBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices, state.BlendMode);
-		}
-
-		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
-		{
-			const auto vertices = Renderer::GetOutlinedEllipse(center, radius, state.StrokeWeight, 64);
-		
-			Library.SolidStrokeBrush->SetColor(state.StrokeColor);
-			Library.SolidStrokeBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices, state.BlendMode);
-		}
-	}
-
-	void Circle(const float x, const float y, const float diameter)
-	{
-		Ellipse(x, y, diameter, diameter);
-	}
-
-	void Line(const float x1, const float y1, const float x2, const float y2)
-	{
-		// Get the current render state
-		const auto& state = PeekState();
-
-		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
-		{
-			const auto [windowWidth, windowHeight] = Library.Window->GetSize();
-			const auto camera = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight)), -1.0f, 1.0f);
-			const auto vertices = Renderer::GetLine(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, state.StrokeWeight);
-
-			Library.SolidStrokeBrush->SetColor(state.StrokeColor);
-			Library.SolidStrokeBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices, state.BlendMode);
-		}
-	}
-
-	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3)
-	{
-		// Get the current render state
-		const auto& state = PeekState();
-		const auto [windowWidth, windowHeight] = Library.Window->GetSize();
-		const auto camera = Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(windowWidth), static_cast<float>(windowHeight)), -1.0f, 1.0f);
-
-		// Render the geometry using the fill shape if fill is enabled
-		if (state.IsFillEnabled)
-		{
-			// Create a triangle with the specified vertices
-			const auto v1 = Math::Float2{ x1, y1 };
-			const auto v2 = Math::Float2{ x2, y2 };
-			const auto v3 = Math::Float2{ x3, y3 };
-
-			const auto vertices = Renderer::GetFilledTriangle(v1, v2, v3);
-			Library.SolidFillBrush->SetColor(state.FillColor);
-			Library.SolidFillBrush->UploadUniforms(camera);
-			Library.VertexRenderer->Render(vertices, state.BlendMode);
-		}
-
-		// TODO(Felix): Implement stroke for triangles
-	}
+	void Background(const Color color) { Library.MainGraphicsLayer->Background(color); }
+	void Rect(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Rect(x1, y1, x2, y2); }
+	void Ellipse(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Ellipse(x1, y1, x2, y2); }
+	void Circle(const float x1, const float y1, const float xy2) { Library.MainGraphicsLayer->Circle(x1, y1, xy2); }
+	void Line(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Line(x1, y1, x2, y2); }
+	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { Library.MainGraphicsLayer->Triangle(x1, y1, x2, y2, x3, y3); }
 }

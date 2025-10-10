@@ -103,21 +103,33 @@ export namespace DGL
 export import :BlendMode;
 export import :Color;
 export import :RenderState;
+export import :GraphicsLayer;
+export import :OffscreenGraphicsLayer;
 
 export namespace DGL
 {
+	void Loop();
+	void NoLoop();
+	void ToggleLoop();
+	bool IsLooping();
+
 	void PushState();
 	void PopState();
 	RenderState& PeekState();
+
 	void Fill(Color color);
-	void NoFill();
 	void Stroke(Color color);
-	void NoStroke();
 	void StrokeWeight(float strokeWeight);
+
+	void NoFill();
+	void NoStroke();
+
 	void Blend(const BlendMode& blendMode);
+
 	void Background(Color color);
-	void Ellipse(float x, float y, float width, float height);
-	void Circle(float x, float y, float diameter);
+	void Rect(float x1, float y1, float x2, float y2);
+	void Ellipse(float x1, float y1, float x2, float y2);
+	void Circle(float x1, float y1, float xy2);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 }
@@ -140,6 +152,8 @@ import :RenderStateStack;
 import :WindowStartupTask;
 import :InputListener;
 
+import :MainGraphicsLayer;
+
 enum struct ExitType
 {
 	Quit,
@@ -156,15 +170,15 @@ struct DirectGLLibrary
 	std::shared_ptr<DGL::Logging::AsyncLogger>		Logger;				//!< The logging channel to use
 
 	DGL::InputListener									InputListener;		//!< The input listener to use
-	DGL::RenderStateStack								RenderStateStack;	//!< The render state stack to use
 
-	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidFillBrush;			//!< The default fill brush to use for rendering
-	std::unique_ptr<DGL::Renderer::SolidColorBrush>		SolidStrokeBrush;		//!< The default stroke brush to use for rendering
+	std::unique_ptr<DGL::MainGraphicsLayer>				MainGraphicsLayer;		//!< The main graphics layer to use for rendering
 	std::unique_ptr<DGL::Renderer::VertexRenderer>		VertexRenderer;			//!< The vertex renderer to use
 
 	ExitType										ExitType = ExitType::Quit;	//!< The exit code to return on application shutdown
 	int												ExitCode = 0;				//!< The return code to return on application shutdown
 	bool											CloseRequested = false;		//!< Whether a restart of the application was requested
+	uint64_t										FrameCount = 0;				//!< The number of frames that have been rendered since application start
+	bool											IsPaused = false;			//!< Whether the application is currently paused
 };
 
 module :private;

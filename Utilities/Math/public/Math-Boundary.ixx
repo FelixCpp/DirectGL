@@ -11,6 +11,8 @@ namespace Math
 	export template <typename T>
 	struct Boundary
 	{
+		constexpr Boundary();
+
 		static constexpr Boundary FromLTRB(T left, T top, T right, T bottom);
 		static constexpr Boundary FromLTWH(T left, T top, T width, T height);
 
@@ -43,27 +45,40 @@ namespace Math
 namespace Math
 {
 	template <typename T>
+	constexpr Boundary<T>::Boundary()
+		: Left(T{}), Top(T{}) , Width(T{}) , Height(T{})
+	{
+	}
+
+	template <typename T>
 	constexpr Boundary<T> Boundary<T>::FromLTRB(const T left, const T top, const T right, const T bottom)
 	{
-		return { .Left = left, .Top = top, .Width = right - left, .Height = bottom - top };
+		return FromLTWH(left, top, right - left, bottom - top);
 	}
 
 	template <typename T>
 	constexpr Boundary<T> Boundary<T>::FromLTWH(const T left, const T top, const T width, const T height)
 	{
-		return { .Left = left, .Top = top, .Width = width, .Height = height };
+		Boundary boundary;
+
+		boundary.Left = left;
+		boundary.Top = top;
+		boundary.Width = width;
+		boundary.Height = height;
+
+		return boundary;
 	}
 
 	template <typename T>
 	constexpr Boundary<T> Boundary<T>::WithPosition(const T left, const T top) const
 	{
-		return { .Left = left, .Top = top, .Width = Width, .Height = Height };
+		return FromLTWH(left, top, Width, Height);
 	}
 
 	template <typename T>
 	constexpr Boundary<T> Boundary<T>::WithSize(const T width, const T height) const
 	{
-		return { .Left = Left, .Top = Top, .Width = width, .Height = height };
+		return FromLTWH(Left, Top, width, height);
 	}
 
 	template <typename T>

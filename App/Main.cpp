@@ -28,18 +28,18 @@ public:
 		m_Velocity(100.0f, 0.0f),
 		m_Acceleration(0.0f, 0.0f),
 		m_Position(spawnX, spawnY),
-		m_MaxSpeed(50.0f),
-		m_MaxForce(10.f),
+		m_MaxSpeed(100.0f),
+		m_MaxForce(20.f),
 		m_Size(16.0f),
 		m_TimeAlive(0.0f),
 		m_MaxLifetime(5.0f),
 		m_AttractionFactors {
-			{ Target::Food, Math::Random(MinFactor, MaxFactor) },
-			{ Target::Poison, Math::Random(MinFactor, MaxFactor) }
+			{ Target::Food, 10.0f },
+			{ Target::Poison, -5.0f }
 		},
 		m_PerceptionRadii {
-			{ Target::Food, Math::Random(50.0f, 150.0f) },
-			{ Target::Poison, Math::Random(50.0f, 150.0f) }
+			{ Target::Food, 300.0f },
+			{ Target::Poison, 300.0f }
 		}
 	{
 	}
@@ -257,6 +257,8 @@ struct SpikesGame : DGL::Sketch
 	float m_TimeElapsedSinceLastSpawn = 0.0f;
 	float m_SpawnInterval = 0.15f;
 
+	bool IsDebugModeEnabled = false;
+
 	bool Setup() override
 	{
 		DGL::SetWindowSize(1600, 900);
@@ -288,20 +290,22 @@ struct SpikesGame : DGL::Sketch
 
 	void Event(const System::WindowEvent& event) override
 	{
+		event.Visit(
+			[this](const System::WindowEvent::KeyPressed& keyEvent)
+			{
+				if (keyEvent.Key == DGL::KeyboardKey::P)
+					DGL::ToggleLoop();
+
+				if (keyEvent.Key == DGL::KeyboardKey::D)
+					IsDebugModeEnabled = not IsDebugModeEnabled;
+			},
+			[](const auto&) {}
+		);
 	}
 
 	void Draw() override
 	{
-
-		static bool isDebuggingEnabled = false;
-		if (DGL::IsKeyPressed(DGL::KeyboardKey::D))
-			isDebuggingEnabled = not isDebuggingEnabled;
-
-		static bool isSimulationPaused = false;
-		if (DGL::IsKeyPressed(DGL::KeyboardKey::P))
-			isSimulationPaused = not isSimulationPaused;
-
-		const float gameSpeed = isSimulationPaused ? 0.0f : 1.0f / 60.0f;
+		const float gameSpeed = DGL::IsLooping() ? 1.0f / 60.0f : 0.0f;
 		m_TimeElapsedSinceLastSpawn += gameSpeed;
 
 		// Occasionally add new food and poison
@@ -347,7 +351,7 @@ struct SpikesGame : DGL::Sketch
 		for (size_t i = 0; i < Creatures.size(); ++i)
 		{
 			const bool isHovered = Creatures[i].IsClicked(DGL::GetMousePosition());
-			Creatures[i].Show(isHovered or isDebuggingEnabled);
+			Creatures[i].Show(isHovered or IsDebugModeEnabled);
 		}
 
 		// Remove dead creatures

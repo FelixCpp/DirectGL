@@ -16,6 +16,7 @@ import :Vertices;
 export namespace DGL::Renderer
 {
 	Vertices GetFilledRectangle(const Math::FloatBoundary& boundary);
+	Vertices GetOutlinedRectangle(const Math::FloatBoundary& boundary, float strokeWeight);
 
 	Vertices GetFilledEllipse(Math::Float2 center, Math::Radius radius, uint32_t segments);
 	Vertices GetOutlinedEllipse(Math::Float2 center, Math::Radius radius, float strokeWeight, uint32_t segments);

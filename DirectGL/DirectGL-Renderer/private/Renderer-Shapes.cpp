@@ -27,6 +27,49 @@ namespace DGL::Renderer
 		return vertices;
 	}
 
+	Vertices GetOutlinedRectangle(const Math::FloatBoundary& boundary, const float strokeWeight)
+	{
+		Vertices vertices;
+
+		const float halfStroke = strokeWeight * 0.5f;
+		const auto innerBoundary = Math::FloatBoundary::FromLTWH(boundary.Left + halfStroke, boundary.Top + halfStroke, boundary.Width - strokeWeight, boundary.Height - strokeWeight);
+		const auto outerBoundary = Math::FloatBoundary::FromLTWH(boundary.Left - halfStroke, boundary.Top - halfStroke, boundary.Width + strokeWeight, boundary.Height + strokeWeight);
+
+		vertices.Positions.reserve(8); // Each corner has an inner and outer vertex
+
+		// Inner rectangle vertices
+		vertices.Positions.emplace_back(innerBoundary.Left, innerBoundary.Top);       // 0: Top-left
+		vertices.Positions.emplace_back(innerBoundary.Right(), innerBoundary.Top);    // 1: Top-right
+		vertices.Positions.emplace_back(innerBoundary.Right(), innerBoundary.Bottom()); // 2: Bottom-right
+		vertices.Positions.emplace_back(innerBoundary.Left, innerBoundary.Bottom());   // 3: Bottom-left
+
+		// Outer rectangle vertices
+		vertices.Positions.emplace_back(outerBoundary.Left, outerBoundary.Top);       // 4: Top-left
+		vertices.Positions.emplace_back(outerBoundary.Right(), outerBoundary.Top);    // 5: Top-right
+		vertices.Positions.emplace_back(outerBoundary.Right(), outerBoundary.Bottom()); // 6: Bottom-right
+		vertices.Positions.emplace_back(outerBoundary.Left, outerBoundary.Bottom());   // 7: Bottom-left
+
+		// Generate the indices for the outline (two triangles per side)
+		vertices.Indices.reserve(24); // 4 sides * 2 triangles * 3 indices
+		for (uint32_t i = 0; i < 4; i++)
+		{
+			const uint32_t innerCurrent = i;
+			const uint32_t innerNext = (i + 1) % 4;
+			const uint32_t outerCurrent = i + 4;
+			const uint32_t outerNext = ((i + 1) % 4) + 4;
+			// First triangle of the quad
+			vertices.Indices.emplace_back(innerCurrent);
+			vertices.Indices.emplace_back(outerCurrent);
+			vertices.Indices.emplace_back(innerNext);
+			// Second triangle of the quad
+			vertices.Indices.emplace_back(outerCurrent);
+			vertices.Indices.emplace_back(outerNext);
+			vertices.Indices.emplace_back(innerNext);
+		}
+
+		return vertices;
+	}
+
 	Vertices GetFilledEllipse(const Math::Float2 center, const Math::Radius radius, const uint32_t segments)
 	{
 		Vertices vertices;
