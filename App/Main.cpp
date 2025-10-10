@@ -34,12 +34,12 @@ public:
 		m_TimeAlive(0.0f),
 		m_MaxLifetime(5.0f),
 		m_AttractionFactors {
-			{ Target::Food, 10.0f },
-			{ Target::Poison, -5.0f }
+			{ Target::Food, Math::Random(MinFactor, MaxFactor) },
+			{ Target::Poison, Math::Random(MinFactor, MaxFactor) }
 		},
 		m_PerceptionRadii {
-			{ Target::Food, 300.0f },
-			{ Target::Poison, 300.0f }
+			{ Target::Food, Math::Random(50.0f, 150.0f) },
+			{ Target::Poison, Math::Random(50.0f, 150.0f) }
 		}
 	{
 	}
