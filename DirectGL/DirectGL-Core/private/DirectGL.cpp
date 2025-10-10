@@ -78,6 +78,7 @@ namespace DGL
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
 							Library.MainGraphicsLayer->Resize(resizeEvent.Width, resizeEvent.Height);
+							Redraw(); //!< Request a redraw after the window has been resized.
 							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
 						},
 						[&](const WindowEvent::KeyReleased& keyEvent)
@@ -216,6 +217,16 @@ namespace DGL
 	void PushState() { Library.MainGraphicsLayer->PushState(); }
 	void PopState() { Library.MainGraphicsLayer->PushState(); }
 	RenderState& PeekState() { return Library.MainGraphicsLayer->PeekState(); }
+
+	void PushTransform() { Library.MainGraphicsLayer->PushTransform(); }
+	void PopTransform() { Library.MainGraphicsLayer->PopTransform(); }
+	Math::Matrix4x4& PeekTransform() { return Library.MainGraphicsLayer->PeekTransform(); }
+	void ResetTransform() { Library.MainGraphicsLayer->ResetTransform(); }
+
+	void Translate(const float x, const float y) { Library.MainGraphicsLayer->Translate(x, y); }
+	void Scale(const float x, const float y) { Library.MainGraphicsLayer->Scale(x, y); }
+	void Rotate(const float angleInDegrees) { Library.MainGraphicsLayer->Rotate(angleInDegrees); }
+	void Skew(const float angleXInDegrees, const float angleYInDegrees) { Library.MainGraphicsLayer->Skew(angleXInDegrees, angleYInDegrees); }
 
 	void Fill(const Color color) { Library.MainGraphicsLayer->Fill(color); }
 	void Stroke(const Color color) { Library.MainGraphicsLayer->Stroke(color); }

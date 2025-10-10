@@ -398,11 +398,24 @@ struct SpikesGame : DGL::Sketch
 	void Draw() override
 	{
 		// Clear the background
-		DGL::Background(DGL::Color(51, 51, 51, 150));
-
+		DGL::Background(DGL::Color(51, 51, 51));
+		static float rotation = 0.0f;
 		const float gameSpeed = DGL::IsLooping() ? 1.0f / 60.0f : 0.0f;
 		m_TimeElapsedSinceLastSpawn += gameSpeed;
+		rotation += gameSpeed;
 
+		const auto [width, height] = DGL::GetWindowSize();
+		DGL::NoFill();
+		DGL::Stroke(DGL::Color(255, 0, 255));
+		DGL::StrokeWeight(4.0f);
+		DGL::Rect(0.0f, 0.0f, width, height);
+
+		const auto [mx, my] = DGL::GetMousePosition();
+
+		DGL::ResetTransform();
+		DGL::Translate(mx - width / 2.0f, my - height / 2.0f);
+		DGL::Rotate(rotation * 5.0f);
+		
 		// Occasionally add new food and poison
 		if (m_TimeElapsedSinceLastSpawn > m_SpawnInterval)
 		{

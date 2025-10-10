@@ -12,10 +12,11 @@ inline constexpr auto VERTEX_SOURCE = R"(
 layout (location = 0) in vec2 a_Position;
 
 uniform mat4 u_ProjectionViewMatrix;
+uniform mat4 u_ModelMatrix;
 
 void main()
 {
-	gl_Position = u_ProjectionViewMatrix * vec4(a_Position, 0.0, 1.0);
+	gl_Position = u_ProjectionViewMatrix * u_ModelMatrix * vec4(a_Position, 0.0, 1.0);
 }
 )";
 
@@ -69,7 +70,7 @@ namespace DGL::Renderer
 		return m_Color;
 	}
 
-	void SolidColorBrush::UploadUniforms(const Math::Matrix4x4& projectionViewMatrix)
+	void SolidColorBrush::UploadUniforms(const Math::Matrix4x4& projectionViewMatrix, const Math::Matrix4x4& modelMatrix)
 	{
 		const float red = static_cast<float>(m_Color.R) / 255.0f;
 		const float green = static_cast<float>(m_Color.G) / 255.0f;
@@ -79,6 +80,7 @@ namespace DGL::Renderer
 		// Upload the uniforms by directly setting them in the shader program
 		m_ShaderProgram->UploadFloat4("u_Color", red, green, blue, alpha);
 		m_ShaderProgram->UploadMatrix4x4("u_ProjectionViewMatrix", std::span<const float, 16>(projectionViewMatrix.GetData(), 16));
+		m_ShaderProgram->UploadMatrix4x4("u_ModelMatrix", std::span<const float, 16>(modelMatrix.GetData(), 16));
 
 		// Bind the shader program for rendering
 		ShaderProgram::Activate(m_ShaderProgram.get());

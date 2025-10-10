@@ -33,6 +33,16 @@ export namespace DGL
 		void PopState() override;
 		RenderState& PeekState() override;
 
+		void PushTransform() override;
+		void PopTransform() override;
+		Math::Matrix4x4& PeekTransform() override;
+		void ResetTransform() override;
+
+		void Translate(float x, float y) override;
+		void Scale(float x, float y) override;
+		void Rotate(float angleInDegrees) override;
+		void Skew(float angleXInDegrees, float angleYInDegrees) override;
+
 		void Fill(Color color) override;
 		void Stroke(Color color) override;
 		void StrokeWeight(float strokeWeight) override;

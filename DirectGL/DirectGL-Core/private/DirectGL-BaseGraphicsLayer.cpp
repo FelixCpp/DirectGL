@@ -28,6 +28,50 @@ namespace DGL
 		return m_RenderStates.PeekState();
 	}
 
+	void BaseGraphicsLayer::PushTransform()
+	{
+		PeekState().TransformationStack.PushTransform();
+	}
+
+	void BaseGraphicsLayer::PopTransform()
+	{
+		PeekState().TransformationStack.PopTransform();
+	}
+
+	Math::Matrix4x4& BaseGraphicsLayer::PeekTransform()
+	{
+		return PeekState().TransformationStack.PeekTransform();
+	}
+
+	void BaseGraphicsLayer::ResetTransform()
+	{
+		PeekTransform() = Math::Matrix4x4::Identity;
+	}
+
+	void BaseGraphicsLayer::Translate(const float x, const float y)
+	{
+		auto& transform = PeekTransform();
+		transform *= Math::Matrix4x4::Translation(x, y, 0.0f);
+	}
+
+	void BaseGraphicsLayer::Scale(const float x, const float y)
+	{
+		auto& transform = PeekTransform();
+		transform *= Math::Matrix4x4::Scaling(x, y, 1.0f);
+	}
+
+	void BaseGraphicsLayer::Rotate(const float angleInDegrees)
+	{
+		auto& transform = PeekTransform();
+		transform *= Math::Matrix4x4::Rotation(angleInDegrees);
+	}
+
+	void BaseGraphicsLayer::Skew(const float angleXInDegrees, const float angleYInDegrees)
+	{
+		auto& transform = PeekTransform();
+		transform *= Math::Matrix4x4::Skew(angleXInDegrees, angleYInDegrees);
+	}
+
 	void BaseGraphicsLayer::Fill(const Color color)
 	{
 		RenderState& state = PeekState();
@@ -69,7 +113,7 @@ namespace DGL
 
 		// Render the rectangle with the specified background color
 		m_SolidFillBrush->SetColor(color);
-		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix);
+		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, Math::Matrix4x4::Identity);
 		m_Renderer->Render(vertices, BlendModes::Alpha);
 	}
 
@@ -88,7 +132,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetFilledRectangle(boundary);
 
 			m_SolidFillBrush->SetColor(state.FillColor);
-			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 
@@ -99,7 +143,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetOutlinedRectangle(boundary, state.StrokeWeight);
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
-			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 	}
@@ -120,7 +164,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetFilledEllipse(center, radius, 64);
 
 			m_SolidFillBrush->SetColor(state.FillColor);
-			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 
@@ -131,7 +175,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetOutlinedEllipse(center, radius, 64, state.StrokeWeight);
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
-			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 	}
@@ -150,7 +194,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetFilledEllipse(center, radius, 16);
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
-			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 	}
@@ -167,7 +211,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetLine(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, state.StrokeWeight);
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
-			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 	}
@@ -184,7 +228,7 @@ namespace DGL
 			const auto vertices = m_ShapeFactory->GetFilledTriangle(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, Math::Float2{ x3, y3 });
 
 			m_SolidFillBrush->SetColor(state.FillColor);
-			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix);
+			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->Render(vertices, state.BlendMode);
 		}
 

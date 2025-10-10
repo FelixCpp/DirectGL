@@ -118,6 +118,16 @@ export namespace DGL
 	void PopState();
 	RenderState& PeekState();
 
+	void PushTransform();
+	void PopTransform();
+	Math::Matrix4x4& PeekTransform();
+	void ResetTransform();
+
+	void Translate(float x, float y);
+	void Scale(float x, float y);
+	void Rotate(float angleInDegrees);
+	void Skew(float angleXInDegrees, float angleYInDegrees);
+
 	void Fill(Color color);
 	void Stroke(Color color);
 	void StrokeWeight(float strokeWeight);

@@ -26,7 +26,7 @@ export namespace DGL::Renderer
 		void SetColor(Color color);
 		Color GetColor() const;
 
-		void UploadUniforms(const Math::Matrix4x4& projectionViewMatrix);
+		void UploadUniforms(const Math::Matrix4x4& projectionViewMatrix, const Math::Matrix4x4& modelMatrix);
 
 	private:
 

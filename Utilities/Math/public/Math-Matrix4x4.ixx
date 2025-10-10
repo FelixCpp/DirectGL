@@ -6,10 +6,12 @@
 module;
 
 #include <array>
+#include <cmath>
 
 export module Math:Matrix4x4;
 
 import :Boundary;
+import :Constants;
 
 export namespace Math
 {
@@ -29,9 +31,12 @@ export namespace Math
 		const float* GetData() const;
 
 		Matrix4x4 operator * (const Matrix4x4& other) const;
+		Matrix4x4& operator *=(const Matrix4x4& other);
 
 		static constexpr Matrix4x4 Translation(float x, float y, float z);
 		static constexpr Matrix4x4 Scaling(float x, float y, float z);
+		static Matrix4x4 Rotation(float angleInDegrees);
+		static Matrix4x4 Skew(float angleXInDegrees, float angleYInDegrees);
 		static constexpr Matrix4x4 Orthographic(const FloatBoundary& boundary, float near, float far);
 
 		static const Matrix4x4 Identity;
@@ -99,6 +104,11 @@ namespace Math
 		);
 	}
 
+	Matrix4x4& Matrix4x4::operator*=(const Matrix4x4& other)
+	{
+		return *this = *this * other;
+	}
+
 	constexpr Matrix4x4 Matrix4x4::Translation(const float x, const float y, const float z)
 	{
 		return Matrix4x4(
@@ -115,6 +125,33 @@ namespace Math
 			x, 0.0f, 0.0f, 0.0f,
 			0.0f, y, 0.0f, 0.0f,
 			0.0f, 0.0f, z, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+	}
+
+	Matrix4x4 Matrix4x4::Rotation(const float angleInDegrees)
+	{
+		const float radians = angleInDegrees * (PI / 180.0f);
+		const float cosA = std::cos(radians);
+		const float sinA = std::sin(radians);
+
+		return Matrix4x4(
+			cosA, -sinA, 0.0f, 0.0f,
+			sinA, cosA, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		);
+	}
+
+	Matrix4x4 Matrix4x4::Skew(const float angleXInDegrees, const float angleYInDegrees)
+	{
+		const float tanX = std::tan(angleXInDegrees * (PI / 180.0f));
+		const float tanY = std::tan(angleYInDegrees * (PI / 180.0f));
+
+		return Matrix4x4(
+			1.0f, tanX, 0.0f, 0.0f,
+			tanY, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
 			0.0f, 0.0f, 0.0f, 1.0f
 		);
 	}

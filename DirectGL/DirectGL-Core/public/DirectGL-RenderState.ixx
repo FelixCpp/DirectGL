@@ -9,6 +9,7 @@ export module DirectGL:RenderState;
 
 import :Color;
 import :BlendMode;
+import :TransformationStack;
 
 export namespace DGL
 {
@@ -22,6 +23,8 @@ export namespace DGL
 		bool IsStrokeEnabled;
 
 		BlendMode BlendMode;
+
+		TransformationStack TransformationStack;
 
 		RenderState();
 	};

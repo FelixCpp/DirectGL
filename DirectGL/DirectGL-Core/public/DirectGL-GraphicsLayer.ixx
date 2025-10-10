@@ -5,6 +5,8 @@
 
 export module DirectGL:GraphicsLayer;
 
+import Math;
+
 import :Color;
 import :BlendMode;
 import :RenderState;
@@ -22,6 +24,16 @@ export namespace DGL
 		virtual void PopState() = 0;
 		virtual RenderState& PeekState() = 0;
 
+		virtual void PushTransform() = 0;
+		virtual void PopTransform() = 0;
+		virtual Math::Matrix4x4& PeekTransform() = 0;
+		virtual void ResetTransform() = 0;
+
+		virtual void Translate(float x, float y) = 0;
+		virtual void Scale(float x, float y) = 0;
+		virtual void Rotate(float angleInDegrees) = 0;
+		virtual void Skew(float angleXInDegrees, float angleYInDegrees) = 0;
+		
 		virtual void Fill(Color color) = 0;
 		virtual void Stroke(Color color) = 0;
 		virtual void StrokeWeight(float strokeWeight) = 0;
