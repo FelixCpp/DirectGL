@@ -17,13 +17,15 @@ export module DirectGL;
 
 /// First we export external libraries that are required by the public API
 /// of the library.
-export import Math;
 export import System.Window;
 
+export import :Math;
+
 import LogForge;
-import DirectGL.Renderer;
-import DirectGL.Logging;
+
 import DirectGL.Input;
+import DirectGL.Logging;
+import DirectGL.Renderer;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -42,7 +44,7 @@ export namespace DGL
 		virtual ~Sketch() = default;
 		virtual bool Setup() = 0;
 		virtual void Event(const System::WindowEvent& event) = 0;
-		virtual void Draw() = 0;
+		virtual void Draw(float deltaTime) = 0;
 		virtual void Destroy() = 0;
 	};
 
@@ -81,7 +83,7 @@ export namespace DGL
 	[[nodiscard]] bool IsMouseButtonPressed(MouseButton button);
 	[[nodiscard]] bool IsMouseButtonDown(MouseButton button);
 	[[nodiscard]] bool IsMouseButtonReleased(MouseButton button);
-	[[nodiscard]] Math::Int2 GetMousePosition();
+	[[nodiscard]] Int2 GetMousePosition();
 }
 
 /// <summary>
@@ -89,22 +91,31 @@ export namespace DGL
 /// </summary>
 export namespace DGL
 {
-	void ShowWindow();												  //!< Make the window visible to the user
-	void HideWindow();												  //!< Hide the window from the user
-	bool IsWindowVisible();											  //!< Get whether the window is currently visible to the user
-	void SetWindowSize(int width, int height, bool recenter = true);  //!< Set the window size, optionally recentering it after resize on the primary monitor
-	Math::Uint2 GetWindowSize();									  //!< Get the size of the content-area of the window
-	void SetWindowPosition(int x, int y);							  //!< Set the window position in screen coordinates
-	Math::Int2 GetWindowPosition();									  //!< Get the window position in screen coordinates
-	void SetWindowTitle(std::string_view title);					  //!< Set the window title
-	std::string GetWindowTitle();									  //!< Get the window title
+	void ShowWindow();													//!< Make the window visible to the user
+	void HideWindow();													//!< Hide the window from the user
+	bool IsWindowVisible();												//!< Get whether the window is currently visible to the user
+	void SetWindowSize(int width, int height, bool recenter = true);	//!< Set the window size, optionally recentering it after resize on the primary monitor
+	Uint2 GetWindowSize();												//!< Get the size of the content-area of the window
+	void SetWindowPosition(int x, int y);								//!< Set the window position in screen coordinates
+	Int2 GetWindowPosition();											//!< Get the window position in screen coordinates
+	void SetWindowTitle(std::string_view title);						//!< Set the window title
+	std::string GetWindowTitle();										//!< Get the window title
 }
 
 export import :BlendMode;
 export import :Color;
-export import :RenderState;
+export import :DrawMode;
 export import :GraphicsLayer;
 export import :OffscreenGraphicsLayer;
+export import :RenderState;
+export import :Texture;
+
+export namespace DGL
+{
+	Renderer::ShapeFactory& GetDefaultShapeFactory();
+	Renderer::Renderer& GetDefaultRenderer();
+	GraphicsLayer& GetMainGraphicsLayer();
+}
 
 export namespace DGL
 {
@@ -120,13 +131,13 @@ export namespace DGL
 
 	void PushTransform();
 	void PopTransform();
-	Math::Matrix4x4& PeekTransform();
+	Matrix4x4& PeekTransform();
 	void ResetTransform();
 
 	void Translate(float x, float y);
 	void Scale(float x, float y);
-	void Rotate(float angleInDegrees);
-	void Skew(float angleXInDegrees, float angleYInDegrees);
+	void Rotate(Angle angle);
+	void Skew(Angle angleX, Angle angleY);
 
 	void Fill(Color color);
 	void Stroke(Color color);
@@ -135,15 +146,19 @@ export namespace DGL
 	void NoFill();
 	void NoStroke();
 
-	void Blend(const BlendMode& blendMode);
+	void SetBlend(const BlendMode& blendMode);
+	void SetRectMode(const RectMode& rectMode);
+	void SetEllipseMode(const EllipseMode& ellipseMode);
 
 	void Background(Color color);
 	void Rect(float x1, float y1, float x2, float y2);
+	void Quad(float x1, float y1, float xy2);
 	void Ellipse(float x1, float y1, float x2, float y2);
 	void Circle(float x1, float y1, float xy2);
 	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
+	void Image(const Texture& texture, float x1, float y1, float x2, float y2);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////

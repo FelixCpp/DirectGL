@@ -3,11 +3,11 @@
 // Author       : Felix Busch
 // Created Date : 2025/10/07
 
-export module Math:BorderRadius;
+export module DirectGL.Math:BorderRadius;
 
 import :Radius;
 
-export namespace Math
+export namespace DGL::Math
 {
 	struct BorderRadiusOnly
 	{
@@ -15,6 +15,9 @@ export namespace Math
 		Radius TopRight;
 		Radius BottomRight;
 		Radius BottomLeft;
+
+		constexpr bool operator == (const BorderRadiusOnly&) const = default;
+		constexpr bool operator != (const BorderRadiusOnly&) const = default;
 	};
 
 	class BorderRadius
@@ -40,7 +43,7 @@ export namespace Math
 	};
 }
 
-namespace Math
+namespace DGL::Math
 {
 	constexpr BorderRadius BorderRadius::All(const Radius radius)
 	{

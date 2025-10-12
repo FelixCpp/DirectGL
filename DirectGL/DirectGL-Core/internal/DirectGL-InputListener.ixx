@@ -10,9 +10,9 @@ module;
 export module DirectGL:InputListener;
 
 import DirectGL.Input;
-import System.Window;
+import DirectGL.Math;
 
-import Math;
+import System.Window;
 
 namespace DGL
 {

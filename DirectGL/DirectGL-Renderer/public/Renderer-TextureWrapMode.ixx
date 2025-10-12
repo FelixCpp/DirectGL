@@ -20,6 +20,9 @@ export namespace DGL::Renderer
 		TextureWrapModeId Horizontal;
 		TextureWrapModeId Vertical;
 
+		constexpr bool operator == (const TextureWrapMode&) const = default;
+		constexpr bool operator != (const TextureWrapMode&) const = default;
+
 		static const TextureWrapMode Repeat;
 		static const TextureWrapMode MirroredRepeat;
 		static const TextureWrapMode ClampToEdge;

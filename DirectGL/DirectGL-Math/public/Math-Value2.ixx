@@ -4,16 +4,22 @@ module;
 #include <concepts>
 #include <cmath>
 
-export module Math:Value2;
+export module DirectGL.Math:Value2;
 
-namespace Math
+import :Angle;
+import :Random;
+
+export namespace DGL::Math
 {
-	export template <typename T>
+	template <typename T>
 	struct Value2
 	{
 		constexpr Value2();
 		constexpr Value2(T x, T y);
 		constexpr explicit Value2(T scalar);
+
+		static constexpr Value2 FromAngle(Angle angle);
+		static constexpr Value2 Random();
 
 		template <std::convertible_to<T> U>
 		constexpr explicit Value2(const Value2<U>& other)
@@ -27,6 +33,8 @@ namespace Math
 
 		T Distance(const Value2& other) const;
 		constexpr T DistanceSquared(const Value2& other) const;
+
+		Angle Heading() const;
 
 		Value2 Limited(T maxLength) const;
 		Value2 Normalized() const;
@@ -67,7 +75,7 @@ namespace Math
 	export typedef Value2<uint32_t> Uint2;
 }
 
-namespace Math
+namespace DGL::Math
 {
 	template <typename T>
 	constexpr Value2<T>::Value2()
@@ -90,11 +98,21 @@ namespace Math
 	{
 	}
 
+	template <typename T> constexpr Value2<T> Value2<T>::FromAngle(const Angle angle)
+	{
+		const T radians = static_cast<T>(angle.AsRadians());
+		return Value2{ std::cos(radians), std::sin(radians) };
+	}
+
+	template <typename T> constexpr Value2<T> Value2<T>::Random() { return FromAngle(Degrees(Math::Random(360.0f))); }
+
 	template <typename T> T Value2<T>::Length() const { return static_cast<T>(std::sqrt(LengthSquared())); }
 	template <typename T> constexpr T Value2<T>::LengthSquared() const { return X * X + Y * Y; }
 
 	template <typename T> T Value2<T>::Distance(const Value2& other) const { return (*this - other).Length(); }
 	template <typename T> constexpr T Value2<T>::DistanceSquared(const Value2& other) const { return (*this - other).LengthSquared(); }
+
+	template <typename T> Angle Value2<T>::Heading() const { return Radians(std::atan2(Y, X)); }
 
 	template <typename T> Value2<T> Value2<T>::Limited(const T maxLength) const
 	{

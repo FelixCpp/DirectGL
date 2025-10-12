@@ -2,104 +2,67 @@
 
 #include <glad/gl.h>
 
+#include <type_traits>
+
 module DirectGL;
 
 import :OffscreenGraphicsLayer;
 
 namespace DGL
 {
-	std::unique_ptr<OffscreenGraphicsLayer> OffscreenGraphicsLayer::Create(Math::Uint2 viewportSize, Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory)
+	std::unique_ptr<OffscreenGraphicsLayer> OffscreenGraphicsLayer::Create(const Uint2 viewportSize, Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory)
 	{
-		const auto [width, height] = viewportSize;
-
-		GLuint textureId = 0;
-		glCreateTextures(GL_TEXTURE_2D, 1, &textureId);
-		glTextureStorage2D(textureId, 1, GL_RGBA8, width, height);
-		glTextureSubImage2D(textureId, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-		GLuint renderbufferId = 0;
-		glCreateRenderbuffers(1, &renderbufferId);
-		glNamedRenderbufferStorage(renderbufferId, GL_DEPTH24_STENCIL8, width, height);
-
-		GLuint framebufferId = 0;
-		glCreateFramebuffers(1, &framebufferId);
-		glNamedFramebufferTexture(framebufferId, GL_COLOR_ATTACHMENT0, textureId, 0);
-		glNamedFramebufferRenderbuffer(framebufferId, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, renderbufferId);
-
-		if (glCheckNamedFramebufferStatus(framebufferId, GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			glDeleteTextures(1, &textureId);
-			glDeleteRenderbuffers(1, &renderbufferId);
-			glDeleteFramebuffers(1, &framebufferId);
-			return nullptr;
-		}
-
-		return std::unique_ptr<OffscreenGraphicsLayer>(new OffscreenGraphicsLayer(viewportSize, renderer, shapeFactory, framebufferId, renderbufferId, textureId));
-	}
-
-	OffscreenGraphicsLayer::~OffscreenGraphicsLayer()
-	{
-		if (m_FramebufferId != 0) glDeleteFramebuffers(1, &m_FramebufferId);
-		if (m_RenderbufferId != 0) glDeleteRenderbuffers(1, &m_RenderbufferId);
-		if (m_RenderTextureId != 0) glDeleteTextures(1, &m_RenderTextureId);
+		return std::unique_ptr<OffscreenGraphicsLayer>(new OffscreenGraphicsLayer(viewportSize, renderer, shapeFactory));
 	}
 
 	void OffscreenGraphicsLayer::BeginDraw()
 	{
-		// Call the base class implementation before doing anything on our own
-		BaseGraphicsLayer::BeginDraw();
-
-		// Prevent nested BeginDraw calls
-		if (m_IsDrawing)
-		{
-			Warning("OffscreenGraphicsLayer::BeginDraw() called while already drawing. Nested BeginDraw calls are not allowed.");
-			return;
-		}
-
-		m_IsDrawing = true;
-
-		// Query the current framebuffer binding in order to restore it later.
-		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &m_CachedFramebufferId);
-
-		// Query the current viewport dimensions in order to restore them later.
-		GLint viewport[4];
-		glGetIntegerv(GL_VIEWPORT, viewport);
-		m_CachedViewport = Math::UintBoundary::FromLTWH(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-		// Bind the offscreen framebuffer for rendering
-		glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
-		glViewport(0, 0, m_Viewport.Width, m_Viewport.Height);
+		m_RenderTarget->BeginDraw();
+		m_GraphicsLayerImpl.BeginDraw();
 	}
 
 	void OffscreenGraphicsLayer::EndDraw()
 	{
-		// Prevent EndDraw calls without a preceding BeginDraw call
-		if (not m_IsDrawing)
-		{
-			Warning("OffscreenGraphicsLayer::EndDraw() called without a preceding BeginDraw() call.");
-			return;
-		}
-
-		m_IsDrawing = false;
-
-		// Restore the previously bound framebuffer & viewport
-		glBindFramebuffer(GL_FRAMEBUFFER, m_CachedFramebufferId);
-		glViewport(m_CachedViewport.Left, m_CachedViewport.Top, m_CachedViewport.Width, m_CachedViewport.Height);
+		m_GraphicsLayerImpl.EndDraw();
+		m_RenderTarget->EndDraw();
 	}
 
-	OffscreenGraphicsLayer::OffscreenGraphicsLayer(
-		const Math::Uint2 viewportSize,
-		Renderer::Renderer& renderer,
-		Renderer::ShapeFactory& shapeFactory,
-		const GLuint framebufferId,
-		const GLuint renderbufferId,
-		const GLuint renderTextureId
-	) : BaseGraphicsLayer(viewportSize, renderer, shapeFactory),
-		m_FramebufferId(framebufferId),
-		m_RenderbufferId(renderbufferId),
-		m_RenderTextureId(renderTextureId),
-		m_CachedFramebufferId(0),
-		m_IsDrawing(false)
+	void OffscreenGraphicsLayer::PushState() { m_GraphicsLayerImpl.PushState(); }
+	void OffscreenGraphicsLayer::PopState() { m_GraphicsLayerImpl.PopState(); }
+	RenderState& OffscreenGraphicsLayer::PeekState() { return m_GraphicsLayerImpl.PeekState(); }
+
+	void OffscreenGraphicsLayer::PushTransform() { m_GraphicsLayerImpl.PushTransform(); }
+	void OffscreenGraphicsLayer::PopTransform() { m_GraphicsLayerImpl.PopTransform(); }
+	Matrix4x4& OffscreenGraphicsLayer::PeekTransform() { return m_GraphicsLayerImpl.PeekTransform(); }
+
+	void OffscreenGraphicsLayer::ResetTransform() { m_GraphicsLayerImpl.ResetTransform(); }
+	void OffscreenGraphicsLayer::Translate(const float x, const float y) { m_GraphicsLayerImpl.Translate(x, y); }
+	void OffscreenGraphicsLayer::Scale(const float x, const float y) { m_GraphicsLayerImpl.Scale(x, y); }
+	void OffscreenGraphicsLayer::Rotate(const Angle angle) { m_GraphicsLayerImpl.Rotate(angle); }
+	void OffscreenGraphicsLayer::Skew(const Angle angleX, const Angle angleY) { m_GraphicsLayerImpl.Skew(angleX, angleY); }
+
+	void OffscreenGraphicsLayer::Fill(const Color color) { m_GraphicsLayerImpl.Fill(color); }
+	void OffscreenGraphicsLayer::Stroke(const Color color) { m_GraphicsLayerImpl.Stroke(color); }
+	void OffscreenGraphicsLayer::StrokeWeight(const float strokeWeight) { m_GraphicsLayerImpl.StrokeWeight(strokeWeight); }
+
+	void OffscreenGraphicsLayer::NoFill() { m_GraphicsLayerImpl.NoFill(); }
+	void OffscreenGraphicsLayer::NoStroke() { m_GraphicsLayerImpl.NoStroke(); }
+
+	void OffscreenGraphicsLayer::SetBlendMode(const BlendMode& blendMode) { m_GraphicsLayerImpl.SetBlendMode(blendMode); }
+	void OffscreenGraphicsLayer::RectMode(const DGL::RectMode& rectMode) { m_GraphicsLayerImpl.RectMode(rectMode); }
+	void OffscreenGraphicsLayer::EllipseMode(const DGL::EllipseMode& ellipseMode) { m_GraphicsLayerImpl.EllipseMode(ellipseMode); }
+
+	void OffscreenGraphicsLayer::Background(const Color color) { m_GraphicsLayerImpl.Background(color); }
+	void OffscreenGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Rect(x1, y1, x2, y2); }
+	void OffscreenGraphicsLayer::Ellipse(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Ellipse(x1, y1, x2, y2); }
+	void OffscreenGraphicsLayer::Point(const float x, const float y) { m_GraphicsLayerImpl.Point(x, y); }
+	void OffscreenGraphicsLayer::Line(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Line(x1, y1, x2, y2); }
+	void OffscreenGraphicsLayer::Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { m_GraphicsLayerImpl.Triangle(x1, y1, x2, y2, x3, y3); }
+	void OffscreenGraphicsLayer::Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Image(texture, x1, y1, x2, y2); }
+
+	OffscreenGraphicsLayer::OffscreenGraphicsLayer(const Uint2 viewportSize, Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory) :
+		m_RenderTarget(Renderer::OffscreenRenderTarget::Create(viewportSize)),
+		m_GraphicsLayerImpl(renderer, shapeFactory)
 	{
 	}
 }

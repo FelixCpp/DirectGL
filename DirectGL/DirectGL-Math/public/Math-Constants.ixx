@@ -7,9 +7,9 @@ module;
 
 #include <numbers>
 
-export module Math:Constants;
+export module DirectGL.Math:Constants;
 
-export namespace Math
+export namespace DGL::Math
 {
 	constexpr float PI = std::numbers::pi_v<float>;
 	constexpr float TAU = 2.0f * PI;

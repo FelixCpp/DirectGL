@@ -4,48 +4,76 @@
 // Created Date : 2025/10/10
 
 module;
-
-#include <glad/gl.h>
-
 #include <memory>
 
 export module DirectGL:MainGraphicsLayer;
 
 import DirectGL.Renderer;
-import Math;
+import DirectGL.Math;
 
 import :BaseGraphicsLayer;
 import :RenderStateStack;
 
 export namespace DGL
 {
-	class MainGraphicsLayer : public BaseGraphicsLayer
+	class MainGraphicsLayer : public Renderer::RenderTarget, public GraphicsLayer
 	{
 	public:
 
 		static std::unique_ptr<MainGraphicsLayer> Create(
-			Math::Uint2 viewportSize,
+			Uint2 viewportSize,
 			Renderer::Renderer& renderer,
 			Renderer::ShapeFactory& shapeFactory
 		);
 
-		void Resize(uint32_t width, uint32_t height);
+		void Resize(Uint2 viewportSize);
 
 		void BeginDraw() override;
 		void EndDraw() override;
 
+		void PushState() override;
+		void PopState() override;
+		RenderState& PeekState() override;
+
+		void PushTransform() override;
+		void PopTransform() override;
+		Matrix4x4& PeekTransform() override;
+
+		void ResetTransform() override;
+		void Translate(float x, float y) override;
+		void Scale(float x, float y) override;
+		void Rotate(Angle angle) override;
+		void Skew(Angle angleX, Angle angleY) override;
+
+		void Fill(Color color) override;
+		void Stroke(Color color) override;
+		void StrokeWeight(float strokeWeight) override;
+
+		void NoFill() override;
+		void NoStroke() override;
+
+		void SetBlendMode(const BlendMode& blendMode) override;
+		void RectMode(const DGL::RectMode& rectMode) override;
+		void EllipseMode(const DGL::EllipseMode& ellipseMode) override;
+
+		void Background(Color color) override;
+		void Rect(float x1, float y1, float x2, float y2) override;
+		void Ellipse(float x1, float y1, float x2, float y2) override;
+		void Point(float x, float y) override;
+		void Line(float x1, float y1, float x2, float y2) override;
+		void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
+		void Image(const Texture& texture, float x1, float y1, float x2, float y2) override;
+
 	private:
 
 		explicit MainGraphicsLayer(
-			Math::Uint2 viewportSize,
+			Uint2 viewportSize,
 			Renderer::Renderer& renderer,
 			Renderer::ShapeFactory& shapeFactory
 		);
 
-		GLint m_CachedFramebufferId;
-		Math::UintBoundary m_CachedViewport;
-
-		bool m_IsDrawing;
+		std::unique_ptr<Renderer::MainRenderTarget> m_MainRenderTarget;
+		BaseGraphicsLayer m_GraphicsLayer;
 
 	};
 }

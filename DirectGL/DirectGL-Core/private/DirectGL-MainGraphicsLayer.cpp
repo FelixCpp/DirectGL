@@ -1,77 +1,71 @@
-﻿
-module;
-
-#include <glad/gl.h>
-
-module DirectGL;
+﻿module DirectGL;
 
 import :MainGraphicsLayer;
 
 namespace DGL
 {
 	std::unique_ptr<MainGraphicsLayer> MainGraphicsLayer::Create(
-		const Math::Uint2 viewportSize,
+		const Uint2 viewportSize,
 		Renderer::Renderer& renderer,
 		Renderer::ShapeFactory& shapeFactory
 	) {
 		return std::unique_ptr<MainGraphicsLayer>(new MainGraphicsLayer(viewportSize, renderer, shapeFactory));
 	}
 
-	void MainGraphicsLayer::Resize(const uint32_t width, const uint32_t height)
+	void MainGraphicsLayer::Resize(const Uint2 viewportSize)
 	{
-		m_Viewport = Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height));
-		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(m_Viewport, -1.0f, 1.0f);
-		glViewport(0, 0, width, height);
+		m_MainRenderTarget->SetViewport(UintBoundary::FromLTWH(0, 0, viewportSize.X, viewportSize.Y));
+		m_GraphicsLayer.SetViewport(FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(viewportSize.X), static_cast<float>(viewportSize.Y)));
 	}
 
 	void MainGraphicsLayer::BeginDraw()
 	{
-		// Call the base class implementation before doing anything on our own
-		BaseGraphicsLayer::BeginDraw();
-
-		// Prevent nested BeginDraw calls
-		if (m_IsDrawing)
-		{
-			Warning("MainGraphicsLayer::BeginDraw() called while already drawing. Nested BeginDraw calls are not allowed.");
-			return;
-		}
-
-		m_IsDrawing = true; 
-
-		// Query the current framebuffer binding in order to restore it later.
-		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &m_CachedFramebufferId);
-
-		// Query the current viewport dimensions in order to restore them later.
-		GLint viewport[4];
-		glGetIntegerv(GL_VIEWPORT, viewport);
-		m_CachedViewport = Math::UintBoundary::FromLTWH(viewport[0], viewport[1], viewport[2], viewport[3]);
-
-		// Bind the offscreen framebuffer for rendering
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(0, 0, m_Viewport.Width, m_Viewport.Height);
+		m_MainRenderTarget->BeginDraw();
+		m_GraphicsLayer.BeginDraw();
 	}
 
 	void MainGraphicsLayer::EndDraw()
 	{
-		// Prevent EndDraw calls without a preceding BeginDraw call
-		if (not m_IsDrawing)
-		{
-			Warning("MainGraphicsLayer::EndDraw() called without a preceding BeginDraw() call.");
-			return;
-		}
-
-		m_IsDrawing = false;
-
-		// Restore the previously bound framebuffer & viewport
-		glBindFramebuffer(GL_FRAMEBUFFER, m_CachedFramebufferId);
-		glViewport(m_CachedViewport.Left, m_CachedViewport.Top, m_CachedViewport.Width, m_CachedViewport.Height);
+		m_GraphicsLayer.EndDraw();
+		m_MainRenderTarget->EndDraw();
 	}
 
-	MainGraphicsLayer::MainGraphicsLayer(const Math::Uint2 viewportSize, Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory) :
-		BaseGraphicsLayer(viewportSize, renderer, shapeFactory),
-		m_CachedFramebufferId(0),
-		m_CachedViewport(Math::UintBoundary::Zero),
-		m_IsDrawing(false)
+	void MainGraphicsLayer::PushState() { m_GraphicsLayer.PushState(); }
+	void MainGraphicsLayer::PopState() { m_GraphicsLayer.PopState(); }
+	RenderState& MainGraphicsLayer::PeekState() { return m_GraphicsLayer.PeekState(); }
+
+	void MainGraphicsLayer::PushTransform() { m_GraphicsLayer.PushTransform(); }
+	void MainGraphicsLayer::PopTransform() { m_GraphicsLayer.PopTransform(); }
+	Matrix4x4& MainGraphicsLayer::PeekTransform() { return m_GraphicsLayer.PeekTransform(); }
+
+	void MainGraphicsLayer::ResetTransform() { m_GraphicsLayer.ResetTransform(); }
+	void MainGraphicsLayer::Translate(const float x, const float y) { m_GraphicsLayer.Translate(x, y); }
+	void MainGraphicsLayer::Scale(const float x, const float y) { m_GraphicsLayer.Scale(x, y); }
+	void MainGraphicsLayer::Rotate(const Angle angle) { m_GraphicsLayer.Rotate(angle); }
+	void MainGraphicsLayer::Skew(const Angle angleX, const Angle angleY) { m_GraphicsLayer.Skew(angleX, angleY); }
+
+	void MainGraphicsLayer::Fill(const Color color) { m_GraphicsLayer.Fill(color); }
+	void MainGraphicsLayer::Stroke(const Color color) { m_GraphicsLayer.Stroke(color); }
+	void MainGraphicsLayer::StrokeWeight(const float strokeWeight) { m_GraphicsLayer.StrokeWeight(strokeWeight); }
+
+	void MainGraphicsLayer::NoFill() { m_GraphicsLayer.NoFill(); }
+	void MainGraphicsLayer::NoStroke() { m_GraphicsLayer.NoStroke(); }
+
+	void MainGraphicsLayer::SetBlendMode(const BlendMode& blendMode) { m_GraphicsLayer.SetBlendMode(blendMode); }
+	void MainGraphicsLayer::RectMode(const DGL::RectMode& rectMode) { m_GraphicsLayer.RectMode(rectMode); }
+	void MainGraphicsLayer::EllipseMode(const DGL::EllipseMode& ellipseMode) { m_GraphicsLayer.EllipseMode(ellipseMode); }
+
+	void MainGraphicsLayer::Background(const Color color) { m_GraphicsLayer.Background(color); }
+	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Rect(x1, y1, x2, y2); }
+	void MainGraphicsLayer::Ellipse(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Ellipse(x1, y1, x2, y2); }
+	void MainGraphicsLayer::Point(const float x, const float y) { m_GraphicsLayer.Point(x, y); }
+	void MainGraphicsLayer::Line(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Line(x1, y1, x2, y2); }
+	void MainGraphicsLayer::Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { m_GraphicsLayer.Triangle(x1, y1, x2, y2, x3, y3); }
+	void MainGraphicsLayer::Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Image(texture, x1, y1, x2, y2); }
+
+	MainGraphicsLayer::MainGraphicsLayer(const Uint2 viewportSize, Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory):
+		m_MainRenderTarget(Renderer::MainRenderTarget::Create(UintBoundary::FromLTWH(0, 0, viewportSize.X, viewportSize.Y))),
+		m_GraphicsLayer(renderer, shapeFactory)
 	{
 	}
 }

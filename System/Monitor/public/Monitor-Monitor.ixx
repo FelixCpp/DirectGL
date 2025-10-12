@@ -4,15 +4,15 @@ module;
 
 export module System.Monitor:Monitor;
 
-import Math;
+import DirectGL.Math;
 
 export namespace System
 {
 	struct Monitor
 	{
 		std::string Name;
-		Math::IntBoundary WorkArea;
-		Math::IntBoundary Area;
+		DGL::Math::IntBoundary WorkArea;
+		DGL::Math::IntBoundary Area;
 		bool IsPrimary;
 	};
 }

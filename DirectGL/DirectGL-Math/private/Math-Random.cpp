@@ -2,9 +2,9 @@ module;
 
 #include <random>
 
-module Math;
+module DirectGL.Math;
 
-namespace Math
+namespace DGL::Math
 {
 	thread_local std::mt19937 engine{ std::random_device{}() };
 	thread_local std::uniform_real_distribution distribution{ 0.0f, 1.0f };

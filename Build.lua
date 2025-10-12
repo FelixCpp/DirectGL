@@ -20,7 +20,6 @@ workspace("DirectGL")
 
     group("Utilities")
         include("Utilities/Logging/Build-LogForge.lua")
-        include("Utilities/Math/Build-Math.lua")
         include("Utilities/Preconditions/Build-Preconditions.lua")
         include("Utilities/Premake/Build-Premake.lua")
         include("Utilities/Startup/Build-Startup.lua")
@@ -33,6 +32,7 @@ workspace("DirectGL")
         include("DirectGL/DirectGL-Core/Build-Core.lua")
         include("DirectGL/DirectGL-Input/Build-Input.lua")
         include("DirectGL/DirectGL-Logging/Build-Logging.lua")
+        include("DirectGL/DirectGL-Math/Build-Math.lua")
         include("DirectGL/DirectGL-Renderer/Build-Renderer.lua")
 
     group("") -- Root group

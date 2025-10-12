@@ -3,9 +3,9 @@
 // Author       : Felix Busch
 // Created Date : 2025/10/07
 
-export module Math:Radius;
+export module DirectGL.Math:Radius;
 
-export namespace Math
+export namespace DGL::Math
 {
 	class Radius
 	{
@@ -29,7 +29,7 @@ export namespace Math
 	};
 }
 
-namespace Math
+namespace DGL::Math
 {
 	constexpr Radius Radius::Circular(const float radius)
 	{

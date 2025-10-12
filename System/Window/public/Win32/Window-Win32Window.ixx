@@ -41,28 +41,28 @@ namespace System
 		/// (0, 0) being the top-left corner of the screen.
 		///
 		/// @param size The new position of the window.
-		void SetPosition(const Math::Int2& size) override;
+		void SetPosition(const DGL::Math::Int2& size) override;
 
 		/// Get the current position of the window on the screen.
 		/// The coordinates are given in pixels, with
 		/// (0, 0) being the top-left corner of the screen.
 		///
 		/// @return The current position of the window.
-		Math::Int2 GetPosition() const override;
+		DGL::Math::Int2 GetPosition() const override;
 
 		/// Set the size of the window's client area.
 		/// The size is given in pixels, excluding window decorations
 		/// such as title bars and borders.
 		/// 
 		/// @param size The new size of the window's client area.
-		void SetSize(const Math::Uint2& size) override;
+		void SetSize(const DGL::Math::Uint2& size) override;
 
 		/// Get the current size of the window's client area.
 		/// The size is given in pixels, excluding window decorations
 		/// such as title bars and borders.
 		///
 		/// @return The current size of the window's client area.
-		Math::Uint2 GetSize() const override;
+		DGL::Math::Uint2 GetSize() const override;
 
 		/// Set the title of the window displayed in the title bar.
 		/// 
@@ -143,7 +143,7 @@ namespace System
 		bool m_IsMouseInside;
 
 		WCHAR m_HighSurrogate;
-		Math::Uint2 m_LastSize;
+		DGL::Math::Uint2 m_LastSize;
 
 	};
 }

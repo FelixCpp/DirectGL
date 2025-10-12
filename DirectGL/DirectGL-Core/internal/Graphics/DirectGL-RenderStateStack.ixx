@@ -17,19 +17,16 @@ namespace DGL
 	{
 	public:
 
-		RenderStateStack();
-
 		void PushState();
 		void PopState();
 		void Clear();
 
-		RenderState& PeekState() const;
+		RenderState& PeekState();
 
 	private:
 
 		std::stack<RenderState> m_RenderStates;
 		RenderState m_DefaultState;
-		RenderState* m_CurrentState;
 
 	};
 }

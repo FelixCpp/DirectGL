@@ -8,12 +8,12 @@ module;
 #include <array>
 #include <cmath>
 
-export module Math:Matrix4x4;
+export module DirectGL.Math:Matrix4x4;
 
 import :Boundary;
 import :Constants;
 
-export namespace Math
+export namespace DGL::Math
 {
 	class Matrix4x4
 	{
@@ -35,8 +35,8 @@ export namespace Math
 
 		static constexpr Matrix4x4 Translation(float x, float y, float z);
 		static constexpr Matrix4x4 Scaling(float x, float y, float z);
-		static Matrix4x4 Rotation(float angleInDegrees);
-		static Matrix4x4 Skew(float angleXInDegrees, float angleYInDegrees);
+		static Matrix4x4 Rotation(Angle angle);
+		static Matrix4x4 Skew(Angle angleX, Angle angleY);
 		static constexpr Matrix4x4 Orthographic(const FloatBoundary& boundary, float near, float far);
 
 		static const Matrix4x4 Identity;
@@ -48,7 +48,7 @@ export namespace Math
 	};
 }
 
-namespace Math
+namespace DGL::Math
 {
 	constexpr Matrix4x4::Matrix4x4():
 		m_Data({
@@ -129,9 +129,9 @@ namespace Math
 		);
 	}
 
-	Matrix4x4 Matrix4x4::Rotation(const float angleInDegrees)
+	Matrix4x4 Matrix4x4::Rotation(const Angle angle)
 	{
-		const float radians = angleInDegrees * (PI / 180.0f);
+		const float radians = angle.AsRadians();
 		const float cosA = std::cos(radians);
 		const float sinA = std::sin(radians);
 
@@ -143,10 +143,10 @@ namespace Math
 		);
 	}
 
-	Matrix4x4 Matrix4x4::Skew(const float angleXInDegrees, const float angleYInDegrees)
+	Matrix4x4 Matrix4x4::Skew(const Angle angleX, const Angle angleY)
 	{
-		const float tanX = std::tan(angleXInDegrees * (PI / 180.0f));
-		const float tanY = std::tan(angleYInDegrees * (PI / 180.0f));
+		const float tanX = std::tan(angleX.AsRadians());
+		const float tanY = std::tan(angleY.AsRadians());
 
 		return Matrix4x4(
 			1.0f, tanX, 0.0f, 0.0f,

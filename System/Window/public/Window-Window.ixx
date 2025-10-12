@@ -13,10 +13,10 @@ module;
 
 export module System.Window:Window;
 
+import DirectGL.Math;
+
 import :NativeWindowHandle;
 import :WindowEvent;
-
-import Math;
 
 namespace System
 {
@@ -43,28 +43,28 @@ namespace System
 		/// (0, 0) being the top-left corner of the screen.
 		///
 		/// @param position The new position of the window.
-		virtual void SetPosition(const Math::Int2& position) = 0;
+		virtual void SetPosition(const DGL::Math::Int2& position) = 0;
 
 		/// Get the current position of the window on the screen.
 		/// The coordinates are given in pixels, with
 		/// (0, 0) being the top-left corner of the screen.
 		///
 		/// @return The current position of the window.
-		virtual Math::Int2 GetPosition() const = 0;
+		virtual DGL::Math::Int2 GetPosition() const = 0;
 
 		/// Set the size of the window's client area.
 		/// The size is given in pixels, excluding window decorations
 		/// such as title bars and borders.
 		/// 
 		/// @param size The new size of the window's client area.
-		virtual void SetSize(const Math::Uint2& size) = 0;
+		virtual void SetSize(const DGL::Math::Uint2& size) = 0;
 
 		/// Get the current size of the window's client area.
 		/// The size is given in pixels, excluding window decorations
 		/// such as title bars and borders.
 		///
 		/// @return The current size of the window's client area.
-		virtual Math::Uint2 GetSize() const = 0;
+		virtual DGL::Math::Uint2 GetSize() const = 0;
 
 		/// Set the title of the window displayed in the title bar.
 		/// 
@@ -118,8 +118,8 @@ namespace System
 	/// This structure contains properties for creating a new window.
 	export struct CreateWindowProperties
 	{
-		Math::Uint2 Size;
-		Math::Int2 Position;
+		DGL::Math::Uint2 Size;
+		DGL::Math::Int2 Position;
 		std::string_view Title;
 		bool IsVisible;
 		OnErrorCallback OnError;

@@ -9,7 +9,7 @@ module;
 
 export module DirectGL.Renderer:Color;
 
-import Math;
+import DirectGL.Math;
 
 export namespace DGL::Renderer
 {
@@ -23,6 +23,8 @@ export namespace DGL::Renderer
 		constexpr bool operator != (Color other) const;
 
 		constexpr Color Lerp(Color other, float t) const;
+		constexpr Color WithAlpha(uint8_t alpha) const;
+		constexpr Color WithOpacity(float opacity) const;
 
 		uint8_t R, G, B, A;
 	};
@@ -48,15 +50,8 @@ namespace DGL::Renderer
 	{
 	}
 
-	constexpr bool Color::operator==(const Color other) const
-	{
-		return (R == other.R) && (G == other.G) && (B == other.B) && (A == other.A);
-	}
-
-	constexpr bool Color::operator!=(const Color other) const
-	{
-		return !(*this == other);
-	}
+	constexpr bool Color::operator==(const Color other) const { return (R == other.R) && (G == other.G) && (B == other.B) && (A == other.A); }
+	constexpr bool Color::operator!=(const Color other) const { return !(*this == other); }
 
 	constexpr Color Color::Lerp(const Color other, const float t) const
 	{
@@ -67,6 +62,9 @@ namespace DGL::Renderer
 			static_cast<uint8_t>(Math::Lerp(A, other.A, t))
 		);
 	}
+
+	constexpr Color Color::WithAlpha(const uint8_t alpha) const { return Color(R, G, B, alpha); }
+	constexpr Color Color::WithOpacity(const float opacity) const { return WithAlpha(static_cast<uint8_t>(Math::Constrain(opacity * 255.0f, 0.0f, 255.0f))); }
 }
 
 export namespace DGL::Renderer::Colors

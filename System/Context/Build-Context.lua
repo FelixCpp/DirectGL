@@ -16,6 +16,8 @@ project("Context")
 	})
 
 	links({
+		"DirectGL-Math",
+
 		"Glad",
 		"Window",
 	})

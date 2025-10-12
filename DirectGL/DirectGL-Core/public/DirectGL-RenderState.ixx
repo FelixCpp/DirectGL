@@ -8,8 +8,10 @@ module;
 export module DirectGL:RenderState;
 
 import :Color;
+import :DrawMode;
 import :BlendMode;
 import :TransformationStack;
+import :DrawMode;
 
 export namespace DGL
 {
@@ -23,6 +25,8 @@ export namespace DGL
 		bool IsStrokeEnabled;
 
 		BlendMode BlendMode;
+		RectMode RectMode;
+		EllipseMode EllipseMode;
 
 		TransformationStack TransformationStack;
 
@@ -37,7 +41,10 @@ namespace DGL
 		StrokeColor(255, 255, 255),
 		StrokeWeight(1.0f),
 		IsFillEnabled(true),
-		IsStrokeEnabled(true)
+		IsStrokeEnabled(true),
+		BlendMode(BlendModes::Alpha),
+		RectMode(RectModeLTWH()),
+		EllipseMode(EllipseModeCenterDiameter())
 	{
 	}
 }

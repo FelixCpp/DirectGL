@@ -236,7 +236,7 @@ namespace System
 		return std::nullopt;
 	}
 
-	void Win32Window::SetPosition(const Math::Int2& size)
+	void Win32Window::SetPosition(const DGL::Math::Int2& size)
 	{
 		if (not SetWindowPos(m_Handle, nullptr, size.X, size.Y, 0, 0, SWP_NOSIZE | SWP_NOZORDER))
 		{
@@ -244,19 +244,19 @@ namespace System
 		}
 	}
 
-	Math::Int2 Win32Window::GetPosition() const
+	DGL::Math::Int2 Win32Window::GetPosition() const
 	{
 		RECT rect;
 		if (not GetWindowRect(m_Handle, &rect))
 		{
 			LogError("Couldn't retrieve window position.");
-			return Math::Int2::Zero;
+			return DGL::Math::Int2::Zero;
 		}
 
-		return Math::Int2{ rect.left, rect.top };
+		return DGL::Math::Int2{ rect.left, rect.top };
 	}
 
-	void Win32Window::SetSize(const Math::Uint2& size)
+	void Win32Window::SetSize(const DGL::Math::Uint2& size)
 	{
 		const DWORD dwStyle = GetWindowLongW(m_Handle, GWL_STYLE);
 		const DWORD dwExStyle = GetWindowLongW(m_Handle, GWL_EXSTYLE);
@@ -272,16 +272,16 @@ namespace System
 		SetWindowPos(m_Handle, nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
 	}
 
-	Math::Uint2 Win32Window::GetSize() const
+	DGL::Math::Uint2 Win32Window::GetSize() const
 	{
 		RECT rect;
 		if (not GetClientRect(m_Handle, &rect))
 		{
 			LogError("Couldn't retrieve window size.");
-			return Math::Uint2::Zero;
+			return DGL::Math::Uint2::Zero;
 		}
 
-		return Math::Uint2{ static_cast<uint32_t>(rect.right - rect.left), static_cast<uint32_t>(rect.bottom - rect.top) };
+		return DGL::Math::Uint2{ static_cast<uint32_t>(rect.right - rect.left), static_cast<uint32_t>(rect.bottom - rect.top) };
 	}
 
 	void Win32Window::SetTitle(const std::string_view title)
@@ -619,7 +619,7 @@ namespace System
 			case WM_SIZE:
 			{
 				// Ignore minimize events or if we're currently resizing
-				const Math::Uint2 newSize = GetSize();
+				const auto newSize = GetSize();
 
 				if (wParam != SIZE_MINIMIZED and not m_IsResizing and m_LastSize != newSize)
 				{
@@ -640,7 +640,7 @@ namespace System
 			{
 				// We're only interested in resize operations
 				// Early out if the size has not changed
-				const Math::Uint2 newSize = GetSize();
+				const auto newSize = GetSize();
 
 				if (m_LastSize != newSize)
 				{

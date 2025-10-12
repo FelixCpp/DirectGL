@@ -17,7 +17,7 @@ project("Monitor")
 	})
 
 	links({
-		"Math"
+		"DirectGL-Math"
 	})
 
 	filter("system:windows")

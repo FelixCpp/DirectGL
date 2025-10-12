@@ -1,11 +1,10 @@
 ﻿module;
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <string_view>
 #include <filesystem>
-
-#include <glad/gl.h>
 
 module DirectGL;
 
@@ -44,6 +43,14 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
+			Library.ShapeFactory = std::make_unique<Renderer::DefaultShapeFactory>();
+			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
+			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
+				Library.Window->GetSize(),
+				*Library.VertexRenderer,
+				*Library.ShapeFactory
+			);
+
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
 			{
@@ -53,14 +60,8 @@ namespace DGL
 
 			Library.Window->SetVisible(true);
 
-			Library.ShapeFactory = std::make_unique<Renderer::DefaultShapeFactory>();
-			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
-			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
-				Library.Window->GetSize(),
-				*Library.VertexRenderer,
-				*Library.ShapeFactory
-			);
-
+			std::chrono::duration<float> deltaTime{ 0.0f };
+			auto lastFrameTime = std::chrono::high_resolution_clock::now();
 			while (not Library.CloseRequested)
 			{
 				// Before we process events, we need to update the input listener
@@ -77,7 +78,7 @@ namespace DGL
 						},
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
-							Library.MainGraphicsLayer->Resize(resizeEvent.Width, resizeEvent.Height);
+							Library.MainGraphicsLayer->Resize({ resizeEvent.Width, resizeEvent.Height });
 							Redraw(); //!< Request a redraw after the window has been resized.
 							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
 						},
@@ -109,12 +110,15 @@ namespace DGL
 					Library.UserRequestedRedraw = false;
 
 					Library.MainGraphicsLayer->BeginDraw();
-					Library.Sketch->Draw();
+					Library.Sketch->Draw(deltaTime.count());
 					Library.MainGraphicsLayer->EndDraw();
 
 					// Present the rendered frame on screen
 					Library.Context->Flush();
 
+					const auto now = std::chrono::high_resolution_clock::now();
+					deltaTime = now - lastFrameTime;
+					lastFrameTime = now;
 				}
 
 				// Increment the number of frames processed
@@ -199,11 +203,18 @@ namespace DGL
 		}
 	}
 
-	Math::Uint2 GetWindowSize()	{ return Library.Window->GetSize(); }
+	Uint2 GetWindowSize()	{ return Library.Window->GetSize(); }
 	void SetWindowPosition(const int x, const int y) { Library.Window->SetPosition({ x, y }); }
-	Math::Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
+	Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
 	void SetWindowTitle(const std::string_view title) { Library.Window->SetTitle(title); }
 	std::string GetWindowTitle() { return Library.Window->GetTitle(); }
+}
+
+namespace DGL
+{
+	Renderer::Renderer& GetDefaultRenderer() { return *Library.VertexRenderer; }
+	Renderer::ShapeFactory& GetDefaultShapeFactory() { return *Library.ShapeFactory; }
+	GraphicsLayer& GetMainGraphicsLayer() { return *Library.MainGraphicsLayer; }
 }
 
 namespace DGL
@@ -215,18 +226,18 @@ namespace DGL
 	void Redraw() { Library.UserRequestedRedraw = true; }
 
 	void PushState() { Library.MainGraphicsLayer->PushState(); }
-	void PopState() { Library.MainGraphicsLayer->PushState(); }
+	void PopState() { Library.MainGraphicsLayer->PopState(); }
 	RenderState& PeekState() { return Library.MainGraphicsLayer->PeekState(); }
 
 	void PushTransform() { Library.MainGraphicsLayer->PushTransform(); }
 	void PopTransform() { Library.MainGraphicsLayer->PopTransform(); }
-	Math::Matrix4x4& PeekTransform() { return Library.MainGraphicsLayer->PeekTransform(); }
+	Matrix4x4& PeekTransform() { return Library.MainGraphicsLayer->PeekTransform(); }
 	void ResetTransform() { Library.MainGraphicsLayer->ResetTransform(); }
 
 	void Translate(const float x, const float y) { Library.MainGraphicsLayer->Translate(x, y); }
 	void Scale(const float x, const float y) { Library.MainGraphicsLayer->Scale(x, y); }
-	void Rotate(const float angleInDegrees) { Library.MainGraphicsLayer->Rotate(angleInDegrees); }
-	void Skew(const float angleXInDegrees, const float angleYInDegrees) { Library.MainGraphicsLayer->Skew(angleXInDegrees, angleYInDegrees); }
+	void Rotate(const Angle angle) { Library.MainGraphicsLayer->Rotate(angle); }
+	void Skew(const Angle angleX, const Angle angleY) { Library.MainGraphicsLayer->Skew(angleX, angleY); }
 
 	void Fill(const Color color) { Library.MainGraphicsLayer->Fill(color); }
 	void Stroke(const Color color) { Library.MainGraphicsLayer->Stroke(color); }
@@ -235,13 +246,17 @@ namespace DGL
 	void NoFill() { Library.MainGraphicsLayer->NoFill(); }
 	void NoStroke() { Library.MainGraphicsLayer->NoStroke(); }
 
-	void Blend(const BlendMode& blendMode) { Library.MainGraphicsLayer->Blend(blendMode); }
+	void SetBlend(const BlendMode& blendMode) { Library.MainGraphicsLayer->SetBlendMode(blendMode); }
+	void SetRectMode(const RectMode& rectMode) { Library.MainGraphicsLayer->RectMode(rectMode); }
+	void SetEllipseMode(const EllipseMode& ellipseMode) { Library.MainGraphicsLayer->EllipseMode(ellipseMode); }
 
 	void Background(const Color color) { Library.MainGraphicsLayer->Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Rect(x1, y1, x2, y2); }
+	void Quad(const float x1, const float y1, const float xy2) { Rect(x1, y1, xy2, xy2); }
 	void Ellipse(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Ellipse(x1, y1, x2, y2); }
 	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
 	void Point(const float x, const float y) { Library.MainGraphicsLayer->Point(x, y); }
 	void Line(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Line(x1, y1, x2, y2); }
 	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { Library.MainGraphicsLayer->Triangle(x1, y1, x2, y2, x3, y3); }
+	void Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Image(texture, x1, y1, x2, y2); }
 }

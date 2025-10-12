@@ -1,11 +1,40 @@
 ﻿module;
 
 #include <cmath>
+#include <limits>
+#include <algorithm>
 
 module DirectGL.Renderer;
 
 namespace DGL::Renderer
 {
+	inline void AddTextureCoords(Vertices& vertices)
+	{
+		float minX = std::numeric_limits<float>::max();
+		float minY = std::numeric_limits<float>::max();
+		float maxX = std::numeric_limits<float>::min();
+		float maxY = std::numeric_limits<float>::min();
+
+		for (const Math::Float2& position : vertices.Positions)
+		{
+			minX = std::min(minX, position.X);
+			minY = std::min(minY, position.Y);
+			maxX = std::max(maxX, position.X);
+			maxY = std::max(maxY, position.Y);
+		}
+
+		const float width = maxX - minX;
+		const float height = maxY - minY;
+
+		vertices.TexCoords.resize(vertices.Positions.size());
+		for (size_t i = 0; i < vertices.Positions.size(); ++i)
+		{
+			const Math::Float2& position = vertices.Positions[i];
+			vertices.TexCoords[i].X = (position.X - minX) / width;
+			vertices.TexCoords[i].Y = 1.0f - (position.Y - minY) / height;
+		}
+	}
+
 	Vertices DefaultShapeFactory::GetFilledRectangle(const Math::FloatBoundary& boundary)
 	{
 		Vertices vertices;
@@ -23,6 +52,8 @@ namespace DGL::Renderer
 		vertices.Indices.emplace_back(2);
 		vertices.Indices.emplace_back(3);
 		vertices.Indices.emplace_back(0);
+
+		AddTextureCoords(vertices);
 
 		return vertices;
 	}

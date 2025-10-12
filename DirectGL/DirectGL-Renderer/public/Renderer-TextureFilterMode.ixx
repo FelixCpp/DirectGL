@@ -18,6 +18,9 @@ export namespace DGL::Renderer
 		TextureFilterModeId Minification;
 		TextureFilterModeId Magnification;
 
+		constexpr bool operator == (const TextureFilterMode&) const = default;
+		constexpr bool operator != (const TextureFilterMode&) const = default;
+
 		static const TextureFilterMode Nearest;
 		static const TextureFilterMode Linear;
 	};

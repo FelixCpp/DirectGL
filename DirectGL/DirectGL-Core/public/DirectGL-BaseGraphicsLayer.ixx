@@ -9,10 +9,9 @@ module;
 
 export module DirectGL:BaseGraphicsLayer;
 
-import Math;
-
 import :RenderStateStack;
 import :GraphicsLayer;
+import :Math;
 
 export namespace DGL
 {
@@ -21,13 +20,15 @@ export namespace DGL
 	public:
 
 		explicit BaseGraphicsLayer(
-			Math::Uint2 viewportSize,
 			Renderer::Renderer& renderer,
 			Renderer::ShapeFactory& shapeFactory
 		);
 
-		void BeginDraw() override;
-		void EndDraw() override;
+		void SetViewport(FloatBoundary viewport);
+		const FloatBoundary& GetViewport() const;
+
+		void BeginDraw();
+		void EndDraw();
 
 		void PushState() override;
 		void PopState() override;
@@ -35,13 +36,13 @@ export namespace DGL
 
 		void PushTransform() override;
 		void PopTransform() override;
-		Math::Matrix4x4& PeekTransform() override;
+		Matrix4x4& PeekTransform() override;
 		void ResetTransform() override;
 
 		void Translate(float x, float y) override;
 		void Scale(float x, float y) override;
-		void Rotate(float angleInDegrees) override;
-		void Skew(float angleXInDegrees, float angleYInDegrees) override;
+		void Rotate(Angle angle) override;
+		void Skew(Angle angleX, Angle angleY) override;
 
 		void Fill(Color color) override;
 		void Stroke(Color color) override;
@@ -50,7 +51,9 @@ export namespace DGL
 		void NoFill() override;
 		void NoStroke() override;
 
-		void Blend(const BlendMode& blendMode) override;
+		void SetBlendMode(const BlendMode& blendMode) override;
+		void RectMode(const DGL::RectMode& rectMode) override;
+		void EllipseMode(const DGL::EllipseMode& ellipseMode) override;
 
 		void Background(Color color) override;
 		void Rect(float x1, float y1, float x2, float y2) override;
@@ -58,8 +61,9 @@ export namespace DGL
 		void Point(float x, float y) override;
 		void Line(float x1, float y1, float x2, float y2) override;
 		void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
+		void Image(const Texture& texture, float x1, float y1, float x2, float y2) override;
 
-	protected:
+	private:
 
 		Renderer::Renderer* m_Renderer;
 		Renderer::ShapeFactory* m_ShapeFactory;
@@ -67,12 +71,12 @@ export namespace DGL
 		std::unique_ptr<Renderer::SolidColorBrush> m_SolidFillBrush;
 		std::unique_ptr<Renderer::SolidColorBrush> m_SolidStrokeBrush;
 
-		Math::FloatBoundary m_Viewport;
-		Math::Matrix4x4 m_ProjectionMatrix;
+		std::unique_ptr<Renderer::TextureBrush> m_TextureFillBrush;
 
 		RenderStateStack m_RenderStates;
 
-		bool m_IsDrawing;
+		FloatBoundary m_Viewport;
+		Matrix4x4 m_ProjectionMatrix;
 
 	};
 }

@@ -32,6 +32,7 @@ export namespace DGL::Renderer
 		explicit VertexRenderer(
 			GLuint vertexArrayId,
 			GLuint vertexBufferId,
+			GLuint textureBufferId,
 			GLuint indexBufferId
 		);
 
@@ -39,6 +40,7 @@ export namespace DGL::Renderer
 
 		GLuint m_VertexArrayId;
 		GLuint m_VertexBufferId;
+		GLuint m_TextureBufferId;
 		GLuint m_IndexBufferId;
 
 	};

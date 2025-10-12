@@ -1,14 +1,17 @@
-project("Math")
+project("DirectGL-Math")
 	kind("StaticLib")
 	language("C++")
 	cppdialect("C++23")
-	targetdir("%{wks.location}/build/bin/" .. OutputDir .. "/%{prj.name}")
-	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
-
+	targetdir ("%{wks.location}/build/bin/" .. OutputDir .. "/%{prj.name}")
+	objdir ("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
+	
 	files({
 		"public/**.ixx",
 		"private/**.cpp",
 	})
+
+	filter("system:windows")
+		systemversion("latest")
 
 	filter("configurations:Debug")
 		runtime("Debug")

@@ -7,11 +7,11 @@ module;
 
 #include <cstdint>
 
-export module Math:Value4;
+export module DirectGL.Math:Value4;
 
 import :Value2;
 
-export namespace Math
+export namespace DGL::Math
 {
 	template <typename T>
 	struct Value4
@@ -31,7 +31,7 @@ export namespace Math
 	typedef Value4<uint32_t> Uint4;
 }
 
-namespace Math
+namespace DGL::Math
 {
 	template <typename T>
 	constexpr Value4<T>::Value4():

@@ -7,9 +7,9 @@ module;
 
 #include <cstdint>
 
-export module Math:Random;
+export module DirectGL.Math:Random;
 
-export namespace Math
+export namespace DGL::Math
 {
 	void SetRNGSeed(uint32_t seed);
 	float Random(float min, float max);

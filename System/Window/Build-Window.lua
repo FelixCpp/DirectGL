@@ -15,7 +15,7 @@ project("Window")
 
 	links({
 		"DirectGL-Input",
-		"Math"
+		"DirectGL-Math"
 	})
 
 	filter("system:windows")

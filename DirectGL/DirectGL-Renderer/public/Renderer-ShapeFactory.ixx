@@ -11,7 +11,7 @@ export module DirectGL.Renderer:ShapeFactory;
 
 import :Vertices;
 
-import Math;
+import DirectGL.Math;
 
 export namespace DGL::Renderer
 {

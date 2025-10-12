@@ -2,16 +2,25 @@ module;
 
 #include <cstdint>
 
-export module Math:Boundary;
+export module DirectGL.Math:Boundary;
 
 import :Value2;
 
-namespace Math
+namespace DGL::Math
 {
 	export template <typename T>
 	struct Boundary
 	{
 		constexpr Boundary();
+
+		template <std::convertible_to<T> U>
+		constexpr explicit Boundary(const Boundary<U>& other):
+			Left(static_cast<T>(other.Left)),
+			Top(static_cast<T>(other.Top)),
+			Width(static_cast<T>(other.Width)),
+			Height(static_cast<T>(other.Height))
+		{
+		}
 
 		static constexpr Boundary FromLTRB(T left, T top, T right, T bottom);
 		static constexpr Boundary FromLTWH(T left, T top, T width, T height);
@@ -30,6 +39,7 @@ namespace Math
 		[[nodiscard]] constexpr Value2<T> BottomLeft() const;
 		[[nodiscard]] constexpr Value2<T> BottomRight() const;
 		[[nodiscard]] constexpr Value2<T> Center() const;
+		[[nodiscard]] constexpr Value2<T> Size() const;
 
 		static const Boundary Zero;
 
@@ -44,7 +54,7 @@ namespace Math
 	export typedef Boundary<uint32_t> UintBoundary;
 }
 
-namespace Math
+namespace DGL::Math
 {
 	template <typename T>
 	constexpr Boundary<T>::Boundary()
@@ -123,6 +133,12 @@ namespace Math
 	constexpr Value2<T> Boundary<T>::Center() const
 	{
 		return { Left + Width / 2, Top + Height / 2 };
+	}
+
+	template <typename T>
+	constexpr Value2<T> Boundary<T>::Size() const
+	{
+		return { Width, Height };
 	}
 
 	template <typename T> inline constexpr Boundary<T> Boundary<T>::Zero = Boundary<T>{};

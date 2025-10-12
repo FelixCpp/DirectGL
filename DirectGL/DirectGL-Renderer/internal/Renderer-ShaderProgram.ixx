@@ -26,6 +26,8 @@ namespace DGL::Renderer
 
 		~ShaderProgram();
 
+		void UploadTexture(std::string_view name, GLuint textureUnit);
+
 		void UploadFloat1(std::string_view name, float x);
 		void UploadFloat2(std::string_view name, float x, float y);
 		void UploadFloat3(std::string_view name, float x, float y, float z);

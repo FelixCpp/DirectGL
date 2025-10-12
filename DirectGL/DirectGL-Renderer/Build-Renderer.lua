@@ -17,9 +17,9 @@ project("DirectGL-Renderer")
 
 	links({
 		"DirectGL-Logging",
+		"DirectGL-Math",
 
 		"Glad",
-		"Math",
 		"Preconditions",
 	})
 

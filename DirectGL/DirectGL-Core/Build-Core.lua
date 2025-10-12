@@ -17,11 +17,11 @@ project("DirectGL-Core")
         -- DirectGL
         "DirectGL-Renderer",
         "DirectGL-Logging",
+        "DirectGL-Math",
 
         -- Utilities
         "LogForge",
         "Startup",
-        "Math",
         "Preconditions",
 
         -- System

@@ -13,7 +13,7 @@ export module DirectGL.Renderer:SolidColorBrush;
 import :Color;
 import :ShaderProgram;
 
-import Math;
+import DirectGL.Math;
 
 export namespace DGL::Renderer
 {

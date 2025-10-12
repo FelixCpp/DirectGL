@@ -96,6 +96,14 @@ namespace DGL::Renderer
 		}
 	}
 
+	void ShaderProgram::UploadTexture(const std::string_view name, const GLuint textureUnit)
+	{
+		if (const auto location = GetUniformLocation(name); location != -1)
+		{
+			glProgramUniform1i(m_RendererId, location, static_cast<GLint>(textureUnit));
+		}
+	}
+
 	void ShaderProgram::UploadFloat1(const std::string_view name, const float x)
 	{
 		if (const auto location = GetUniformLocation(name); location != -1)

@@ -100,3 +100,115 @@ namespace DGL::Renderer
 		return !(*this == other);
 	}
 }
+
+
+export namespace DGL::Renderer::BlendModes
+{
+	inline constexpr auto Alpha = BlendMode(
+		BlendMode::Factor::SrcAlpha,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::One,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Additive = BlendMode(
+		BlendMode::Factor::SrcAlpha,
+		BlendMode::Factor::One,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Subtractive = BlendMode(
+		BlendMode::Factor::Zero,
+		BlendMode::Factor::OneMinusSrcColor,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::Zero,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Dividing = BlendMode(
+		BlendMode::Factor::DstColor,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::DstAlpha,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Multiply = BlendMode(
+		BlendMode::Factor::DstColor,
+		BlendMode::Factor::Zero,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::DstAlpha,
+		BlendMode::Factor::Zero,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Screen = BlendMode(
+		BlendMode::Factor::One,
+		BlendMode::Factor::OneMinusSrcColor,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::One,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Opaque = BlendMode(
+		BlendMode::Factor::One,
+		BlendMode::Factor::Zero,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::One,
+		BlendMode::Factor::Zero,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Invert = BlendMode(
+		BlendMode::Factor::OneMinusDstColor,
+		BlendMode::Factor::Zero,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::OneMinusDstAlpha,
+		BlendMode::Factor::Zero,
+		BlendMode::Equation::Add
+	);
+
+	inline constexpr auto Darken = BlendMode(
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::Min,
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::Min
+	);
+
+	inline constexpr auto Lighten = BlendMode(
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::Max,
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::Max
+	);
+
+	inline constexpr auto Difference = BlendMode(
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::ReverseSubtract,
+		BlendMode::Factor::One,
+		BlendMode::Factor::One,
+		BlendMode::Equation::ReverseSubtract
+	);
+
+	inline constexpr auto Exclusion = BlendMode(
+		BlendMode::Factor::OneMinusDstAlpha,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add,
+		BlendMode::Factor::OneMinusDstAlpha,
+		BlendMode::Factor::OneMinusSrcAlpha,
+		BlendMode::Equation::Add
+	);
+}

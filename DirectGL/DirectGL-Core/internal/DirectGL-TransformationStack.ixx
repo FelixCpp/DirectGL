@@ -9,7 +9,7 @@ module;
 
 export module DirectGL:TransformationStack;
 
-import Math;
+import DirectGL.Math;
 
 namespace DGL
 {
@@ -19,15 +19,14 @@ namespace DGL
 
 		void PushTransform();
 		void PopTransform();
-		Math::Matrix4x4& PeekTransform() const;
-
 		void Clear();
+
+		Math::Matrix4x4& PeekTransform();
 
 	private:
 
 		std::stack<Math::Matrix4x4> m_Transforms;
 		Math::Matrix4x4 m_DefaultTransform;
-		Math::Matrix4x4* m_CurrentTransform = &m_DefaultTransform;
 
 	};
 }

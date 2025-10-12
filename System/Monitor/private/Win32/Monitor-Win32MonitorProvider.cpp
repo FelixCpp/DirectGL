@@ -9,9 +9,9 @@ module System.Monitor;
 
 namespace System
 {
-	constexpr Math::IntBoundary RectToBoundary(const RECT& rect)
+	constexpr DGL::Math::IntBoundary RectToBoundary(const RECT& rect)
 	{
-		return Math::IntBoundary::FromLTRB(
+		return DGL::Math::IntBoundary::FromLTRB(
 			static_cast<int32_t>(rect.left),
 			static_cast<int32_t>(rect.top),
 			static_cast<int32_t>(rect.right),
