@@ -17,7 +17,9 @@ export namespace DGL::Renderer
 	{
 		constexpr Color();
 		constexpr Color(uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 255);
-		constexpr explicit Color(uint32_t rgba);
+		
+		static Color FromHSL(float hue, float saturation, float lightness, uint8_t alpha = 255);
+		static Color FromHSV(float hue, float saturation, float value, uint8_t alpha = 255);
 
 		constexpr bool operator == (Color other) const;
 		constexpr bool operator != (Color other) const;
@@ -25,6 +27,9 @@ export namespace DGL::Renderer
 		constexpr Color Lerp(Color other, float t) const;
 		constexpr Color WithAlpha(uint8_t alpha) const;
 		constexpr Color WithOpacity(float opacity) const;
+
+		constexpr Color Lightened(float amount) const;
+		constexpr Color Darkened(float amount) const;
 
 		uint8_t R, G, B, A;
 	};
@@ -39,14 +44,6 @@ namespace DGL::Renderer
 
 	constexpr Color::Color(const uint8_t red, const uint8_t green, const uint8_t blue, const uint8_t alpha):
 		R(red), G(green), B(blue), A(alpha)
-	{
-	}
-
-	constexpr Color::Color(const uint32_t rgba):
-		R((rgba & 0xFF000000) >> 24),
-		G((rgba & 0x00FF0000) >> 16),
-		B((rgba & 0x0000FF00) >> 8),
-		A((rgba & 0x000000FF) >> 0)
 	{
 	}
 
@@ -65,6 +62,30 @@ namespace DGL::Renderer
 
 	constexpr Color Color::WithAlpha(const uint8_t alpha) const { return Color(R, G, B, alpha); }
 	constexpr Color Color::WithOpacity(const float opacity) const { return WithAlpha(static_cast<uint8_t>(Math::Constrain(opacity * 255.0f, 0.0f, 255.0f))); }
+	constexpr Color Color::Lightened(float amount) const
+	{
+		amount = Math::Constrain(amount, 0.0f, 1.0f);
+
+		return Color(
+			static_cast<uint8_t>(Math::Lerp(R, 255.0f, amount)),
+			static_cast<uint8_t>(Math::Lerp(G, 255.0f, amount)),
+			static_cast<uint8_t>(Math::Lerp(B, 255.0f, amount)),
+			A
+		);
+	}
+
+	constexpr Color Color::Darkened(float amount) const
+	{
+		amount = Math::Constrain(amount, 0.0f, 1.0f);
+
+		return Color(
+			static_cast<uint8_t>(Math::Lerp(R, 0.0f, amount)),
+			static_cast<uint8_t>(Math::Lerp(G, 0.0f, amount)),
+			static_cast<uint8_t>(Math::Lerp(B, 0.0f, amount)),
+			A
+		);
+	}
+
 }
 
 export namespace DGL::Renderer::Colors

@@ -34,6 +34,8 @@ export namespace DGL::Math
 		T Distance(const Value2& other) const;
 		constexpr T DistanceSquared(const Value2& other) const;
 
+		constexpr T Dot(const Value2& other) const;
+
 		Angle Heading() const;
 
 		Value2 Limited(T maxLength) const;
@@ -111,6 +113,8 @@ namespace DGL::Math
 
 	template <typename T> T Value2<T>::Distance(const Value2& other) const { return (*this - other).Length(); }
 	template <typename T> constexpr T Value2<T>::DistanceSquared(const Value2& other) const { return (*this - other).LengthSquared(); }
+
+	template <typename T> constexpr T Value2<T>::Dot(const Value2& other) const { return X * other.X + Y * other.Y; }
 
 	template <typename T> Angle Value2<T>::Heading() const { return Radians(std::atan2(Y, X)); }
 

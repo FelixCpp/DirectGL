@@ -2,68 +2,84 @@
 
 namespace DGL
 {
-	RectMode RectModeLTWH()
+	const RectMode& RectModeLTWH()
 	{
-		return [](const float x, const float y, const float width, const float height) {
+		static EllipseMode mode = [](const float x, const float y, const float width, const float height) {
 			return FloatBoundary::FromLTWH(x, y, width, height);
 		};
+
+		return mode;
 	}
 
-	RectMode RectModeLTRB()
+	const RectMode& RectModeLTRB()
 	{
-		return [](const float left, const float top, const float right, const float bottom) {
+		static EllipseMode mode = [](const float left, const float top, const float right, const float bottom) {
 			return FloatBoundary::FromLTRB(left, top, right, bottom);
 		};
+
+		return mode;
 	}
 
-	RectMode RectModeCenterWH()
+	const RectMode& RectModeCenterWH()
 	{
-		return [](const float centerX, const float centerY, const float width, const float height) {
+		static EllipseMode mode = [](const float centerX, const float centerY, const float width, const float height) {
 			const float halfWidth = width * 0.5f;
 			const float halfHeight = height * 0.5f;
 			return FloatBoundary::FromLTRB(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight);
 		};
+
+		return mode;
 	}
 }
 
 namespace DGL
 {
-	EllipseMode EllipseModeLTRB()
+	const EllipseMode& EllipseModeLTRB()
 	{
-		return [](const float left, const float top, const float right, const float bottom) {
+		static EllipseMode mode = [](const float left, const float top, const float right, const float bottom) {
 			return FloatBoundary::FromLTRB(left, top, right, bottom);
-			};
+		};
+
+		return mode;
 	}
 
-	EllipseMode EllipseModeLTWH()
+	const EllipseMode& EllipseModeLTWH()
 	{
-		return [](const float x, const float y, const float width, const float height) {
+		static EllipseMode mode = [](const float x, const float y, const float width, const float height) {
 			return FloatBoundary::FromLTWH(x, y, width, height);
 		};
+
+		return mode;
 	}
 
-	EllipseMode EllipseModeCenterWH()
+	const EllipseMode& EllipseModeCenterWH()
 	{
-		return [](const float centerX, const float centerY, const float width, const float height) {
+		static EllipseMode mode = [](const float centerX, const float centerY, const float width, const float height) {
 			const float halfWidth = width * 0.5f;
 			const float halfHeight = height * 0.5f;
 			return FloatBoundary::FromLTRB(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight);
 		};
+
+		return mode;
 	}
 
-	EllipseMode EllipseModeCenterRadius()
+	const EllipseMode& EllipseModeCenterRadius()
 	{
-		return [](const float centerX, const float centerY, const float radiusX, const float radiusY) {
+		static EllipseMode mode = [](const float centerX, const float centerY, const float radiusX, const float radiusY) {
 			return FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
 		};
+
+		return mode;
 	}
 
-	EllipseMode EllipseModeCenterDiameter()
+	const EllipseMode& EllipseModeCenterDiameter()
 	{
-		return [](const float centerX, const float centerY, const float diameterX, const float diameterY) {
+		static EllipseMode mode = [](const float centerX, const float centerY, const float diameterX, const float diameterY) {
 			const float radiusX = diameterX * 0.5f;
 			const float radiusY = diameterY * 0.5f;
 			return FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
 		};
+
+		return mode;
 	}
 }

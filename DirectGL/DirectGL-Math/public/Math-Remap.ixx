@@ -33,12 +33,12 @@ namespace DGL::Math
 
 	constexpr float Min(const float value, const float min)
 	{
-		return std::max(value, min);
+		return std::min(value, min);
 	}
 
 	constexpr float Max(const float value, const float max)
 	{
-		return std::min(value, max);
+		return std::max(value, max);
 	}
 
 	constexpr float Lerp(const float start, const float end, const float t)

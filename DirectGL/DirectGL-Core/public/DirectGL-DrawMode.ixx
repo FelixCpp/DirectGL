@@ -15,18 +15,18 @@ export namespace DGL
 {
 	using RectMode = std::function<FloatBoundary(float, float, float, float)>;
 
-	RectMode RectModeLTWH();
-	RectMode RectModeLTRB();
-	RectMode RectModeCenterWH();
+	const RectMode& RectModeLTWH();
+	const RectMode& RectModeLTRB();
+	const RectMode& RectModeCenterWH();
 }
 
 export namespace DGL
 {
 	using EllipseMode = std::function<FloatBoundary(float, float, float, float)>;
 
-	EllipseMode EllipseModeLTRB();
-	EllipseMode EllipseModeLTWH();
-	EllipseMode EllipseModeCenterWH();
-	EllipseMode EllipseModeCenterRadius();
-	EllipseMode EllipseModeCenterDiameter();
+	const EllipseMode& EllipseModeLTRB();
+	const EllipseMode& EllipseModeLTWH();
+	const EllipseMode& EllipseModeCenterWH();
+	const EllipseMode& EllipseModeCenterRadius();
+	const EllipseMode& EllipseModeCenterDiameter();
 }
