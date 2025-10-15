@@ -5,6 +5,8 @@
 
 export module DirectGL.Math:Radius;
 
+import :Remap;
+
 export namespace DGL::Math
 {
 	class Radius
@@ -18,6 +20,9 @@ export namespace DGL::Math
 
 		[[nodiscard]] static constexpr Radius Circular(float radius);
 		[[nodiscard]] static constexpr Radius Elliptical(float radiusX, float radiusY);
+
+		constexpr float Max() const;
+		constexpr float Min() const;
 
 		constexpr bool operator == (Radius other) const;
 		constexpr bool operator != (Radius other) const;
@@ -40,6 +45,9 @@ namespace DGL::Math
 	{
 		return Radius{ radiusX, radiusY };
 	}
+
+	constexpr float Radius::Max() const { return Math::Max(X, Y); }
+	constexpr float Radius::Min() const { return Math::Min(X, Y); }
 
 	constexpr Radius::Radius(const float radiusX, const float radiusY) :
 		X(radiusX), Y(radiusY)

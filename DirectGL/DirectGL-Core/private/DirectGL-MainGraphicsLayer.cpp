@@ -52,8 +52,9 @@ namespace DGL
 	void MainGraphicsLayer::NoStroke() { m_GraphicsLayer.NoStroke(); }
 
 	void MainGraphicsLayer::SetBlendMode(const BlendMode& blendMode) { m_GraphicsLayer.SetBlendMode(blendMode); }
-	void MainGraphicsLayer::RectMode(const DGL::RectMode& rectMode) { m_GraphicsLayer.RectMode(rectMode); }
-	void MainGraphicsLayer::EllipseMode(const DGL::EllipseMode& ellipseMode) { m_GraphicsLayer.EllipseMode(ellipseMode); }
+	void MainGraphicsLayer::SetRectMode(const DGL::RectMode& rectMode) { m_GraphicsLayer.SetRectMode(rectMode); }
+	void MainGraphicsLayer::SetEllipseMode(const DGL::EllipseMode& ellipseMode) { m_GraphicsLayer.SetEllipseMode(ellipseMode); }
+	void MainGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayer.SetSegmentCountMode(segmentCountMode); }
 
 	void MainGraphicsLayer::Background(const Color color) { m_GraphicsLayer.Background(color); }
 	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Rect(x1, y1, x2, y2); }

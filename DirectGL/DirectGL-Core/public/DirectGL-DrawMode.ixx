@@ -30,3 +30,11 @@ export namespace DGL
 	const EllipseMode& EllipseModeCenterRadius();
 	const EllipseMode& EllipseModeCenterDiameter();
 }
+
+export namespace DGL
+{
+	using SegmentCountMode = std::function<size_t(Radius)>;
+
+	const SegmentCountMode& SegmentCountModeFixed(size_t count);
+	const SegmentCountMode& SegmentCountModeSmooth(float error = 0.5f);
+}

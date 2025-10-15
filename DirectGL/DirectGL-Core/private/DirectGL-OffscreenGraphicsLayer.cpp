@@ -49,8 +49,9 @@ namespace DGL
 	void OffscreenGraphicsLayer::NoStroke() { m_GraphicsLayerImpl.NoStroke(); }
 
 	void OffscreenGraphicsLayer::SetBlendMode(const BlendMode& blendMode) { m_GraphicsLayerImpl.SetBlendMode(blendMode); }
-	void OffscreenGraphicsLayer::RectMode(const DGL::RectMode& rectMode) { m_GraphicsLayerImpl.RectMode(rectMode); }
-	void OffscreenGraphicsLayer::EllipseMode(const DGL::EllipseMode& ellipseMode) { m_GraphicsLayerImpl.EllipseMode(ellipseMode); }
+	void OffscreenGraphicsLayer::SetRectMode(const RectMode& rectMode) { m_GraphicsLayerImpl.SetRectMode(rectMode); }
+	void OffscreenGraphicsLayer::SetEllipseMode(const EllipseMode& ellipseMode) { m_GraphicsLayerImpl.SetEllipseMode(ellipseMode); }
+	void OffscreenGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayerImpl.SetSegmentCountMode(segmentCountMode); }
 
 	void OffscreenGraphicsLayer::Background(const Color color) { m_GraphicsLayerImpl.Background(color); }
 	void OffscreenGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Rect(x1, y1, x2, y2); }

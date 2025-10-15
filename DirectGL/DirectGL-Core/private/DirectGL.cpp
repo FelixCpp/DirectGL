@@ -247,8 +247,9 @@ namespace DGL
 	void NoStroke() { Library.MainGraphicsLayer->NoStroke(); }
 
 	void SetBlend(const BlendMode& blendMode) { Library.MainGraphicsLayer->SetBlendMode(blendMode); }
-	void SetRectMode(const RectMode& rectMode) { Library.MainGraphicsLayer->RectMode(rectMode); }
-	void SetEllipseMode(const EllipseMode& ellipseMode) { Library.MainGraphicsLayer->EllipseMode(ellipseMode); }
+	void SetRectMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetRectMode(rectMode); }
+	void SetEllipseMode(const EllipseMode& ellipseMode) { Library.MainGraphicsLayer->SetEllipseMode(ellipseMode); }
+	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { Library.MainGraphicsLayer->SetSegmentCountMode(segmentCountMode); }
 
 	void Background(const Color color) { Library.MainGraphicsLayer->Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Rect(x1, y1, x2, y2); }

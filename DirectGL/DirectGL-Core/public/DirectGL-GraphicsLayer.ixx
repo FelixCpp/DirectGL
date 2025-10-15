@@ -40,8 +40,9 @@ export namespace DGL
 		virtual void NoStroke() = 0;
 
 		virtual void SetBlendMode(const BlendMode& blendMode) = 0;
-		virtual void RectMode(const RectMode& rectMode) = 0;
-		virtual void EllipseMode(const EllipseMode& ellipseMode) = 0;
+		virtual void SetRectMode(const RectMode& rectMode) = 0;
+		virtual void SetEllipseMode(const EllipseMode& ellipseMode) = 0;
+		virtual void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) = 0;
 
 		virtual void Background(Color color) = 0;
 		virtual void Rect(float x1, float y1, float x2, float y2) = 0;

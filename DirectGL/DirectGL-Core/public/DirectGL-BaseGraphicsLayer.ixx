@@ -52,8 +52,9 @@ export namespace DGL
 		void NoStroke() override;
 
 		void SetBlendMode(const BlendMode& blendMode) override;
-		void RectMode(const DGL::RectMode& rectMode) override;
-		void EllipseMode(const DGL::EllipseMode& ellipseMode) override;
+		void SetRectMode(const DGL::RectMode& rectMode) override;
+		void SetEllipseMode(const DGL::EllipseMode& ellipseMode) override;
+		void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) override;
 
 		void Background(Color color) override;
 		void Rect(float x1, float y1, float x2, float y2) override;

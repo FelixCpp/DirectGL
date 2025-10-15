@@ -149,6 +149,7 @@ export namespace DGL
 	void SetBlend(const BlendMode& blendMode);
 	void SetRectMode(const RectMode& rectMode);
 	void SetEllipseMode(const EllipseMode& ellipseMode);
+	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode);
 
 	void Background(Color color);
 	void Rect(float x1, float y1, float x2, float y2);

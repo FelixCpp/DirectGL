@@ -1,4 +1,8 @@
-﻿module DirectGL;
+﻿module;
+
+#include <cstdio>
+
+module DirectGL;
 
 import :BaseGraphicsLayer;
 
@@ -115,14 +119,19 @@ namespace DGL
 		PeekState().BlendMode = blendMode;
 	}
 
-	void BaseGraphicsLayer::RectMode(const DGL::RectMode& rectMode)
+	void BaseGraphicsLayer::SetRectMode(const DGL::RectMode& rectMode)
 	{
 		PeekState().RectMode = rectMode;
 	}
 
-	void BaseGraphicsLayer::EllipseMode(const DGL::EllipseMode& ellipseMode)
+	void BaseGraphicsLayer::SetEllipseMode(const DGL::EllipseMode& ellipseMode)
 	{
 		PeekState().EllipseMode = ellipseMode;
+	}
+
+	void BaseGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode)
+	{
+		PeekState().SegmentCountMode = segmentCountMode;
 	}
 
 	void BaseGraphicsLayer::Background(const Color color)
@@ -178,12 +187,14 @@ namespace DGL
 		// Compute the center and radius of the ellipse
 		const auto center = boundary.Center();
 		const auto radius = Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
+		const auto segments = state.SegmentCountMode(radius);
+		if (segments <= 0) return;
 
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
 		{
 			// Compute the vertices for a filled ellipse.
-			const auto vertices = m_ShapeFactory->GetFilledEllipse(center, radius, 64);
+			const auto vertices = m_ShapeFactory->GetFilledEllipse(center, radius, segments);
 
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
@@ -194,7 +205,7 @@ namespace DGL
 		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
 		{
 			// Compute the vertices for an outlined ellipse.
-			const auto vertices = m_ShapeFactory->GetOutlinedEllipse(center, radius, 64, state.StrokeWeight);
+			const auto vertices = m_ShapeFactory->GetOutlinedEllipse(center, radius, segments, state.StrokeWeight);
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());

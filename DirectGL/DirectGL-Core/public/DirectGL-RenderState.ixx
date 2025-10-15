@@ -27,6 +27,7 @@ export namespace DGL
 		BlendMode BlendMode;
 		RectMode RectMode;
 		EllipseMode EllipseMode;
+		SegmentCountMode SegmentCountMode;
 
 		TransformationStack TransformationStack;
 
@@ -44,7 +45,8 @@ namespace DGL
 		IsStrokeEnabled(true),
 		BlendMode(BlendModes::Alpha),
 		RectMode(RectModeLTWH()),
-		EllipseMode(EllipseModeCenterDiameter())
+		EllipseMode(EllipseModeCenterDiameter()),
+		SegmentCountMode(SegmentCountModeSmooth())
 	{
 	}
 }

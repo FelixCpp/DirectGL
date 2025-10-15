@@ -1,4 +1,10 @@
-﻿module DirectGL;
+﻿module;
+
+#include <cmath>
+
+module DirectGL;
+
+import :Math;
 
 namespace DGL
 {
@@ -78,6 +84,37 @@ namespace DGL
 			const float radiusX = diameterX * 0.5f;
 			const float radiusY = diameterY * 0.5f;
 			return FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
+		};
+
+		return mode;
+	}
+}
+
+namespace DGL
+{
+	const SegmentCountMode& SegmentCountModeFixed(const size_t count)
+	{
+		static SegmentCountMode mode = [count](const Radius) {
+			return count;
+		};
+
+		return mode;
+	}
+
+	const SegmentCountMode& SegmentCountModeSmooth(const float error)
+	{
+		static SegmentCountMode mode = [error](const Radius radius) -> size_t {
+			constexpr float MAX_POINT_ACCURACY = 200.0f;
+			constexpr float MIN_POINT_ACCURACY = 20.0f;
+			
+			const float targetRadius = radius.Max();
+			if (error <= 0.0f or targetRadius <= 0.0f) return 0;
+
+			const float angle = std::acosf(1.0f - Constrain(error / targetRadius, 0.0f, 1.0f));
+			if (angle <= 0.0f) return 0;
+			const float segments = std::ceilf(PI / angle);
+
+			return Constrain(segments, MIN_POINT_ACCURACY, MAX_POINT_ACCURACY);
 		};
 
 		return mode;
