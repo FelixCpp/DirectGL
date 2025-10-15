@@ -56,6 +56,7 @@ export namespace DGL
 
 		void SetBlendMode(const BlendMode& blendMode) override;
 		void SetRectMode(const DGL::RectMode& rectMode) override;
+		void SetImageMode(const DGL::RectMode& imageMode) override;
 		void SetEllipseMode(const DGL::EllipseMode& ellipseMode) override;
 		void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) override;
 

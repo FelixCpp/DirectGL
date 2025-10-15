@@ -50,6 +50,7 @@ namespace DGL
 
 	void OffscreenGraphicsLayer::SetBlendMode(const BlendMode& blendMode) { m_GraphicsLayerImpl.SetBlendMode(blendMode); }
 	void OffscreenGraphicsLayer::SetRectMode(const RectMode& rectMode) { m_GraphicsLayerImpl.SetRectMode(rectMode); }
+	void OffscreenGraphicsLayer::SetImageMode(const RectMode& imageMode) { m_GraphicsLayerImpl.SetImageMode(imageMode); }
 	void OffscreenGraphicsLayer::SetEllipseMode(const EllipseMode& ellipseMode) { m_GraphicsLayerImpl.SetEllipseMode(ellipseMode); }
 	void OffscreenGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayerImpl.SetSegmentCountMode(segmentCountMode); }
 

@@ -53,6 +53,7 @@ namespace DGL
 
 	void MainGraphicsLayer::SetBlendMode(const BlendMode& blendMode) { m_GraphicsLayer.SetBlendMode(blendMode); }
 	void MainGraphicsLayer::SetRectMode(const DGL::RectMode& rectMode) { m_GraphicsLayer.SetRectMode(rectMode); }
+	void MainGraphicsLayer::SetImageMode(const DGL::RectMode& imageMode) { m_GraphicsLayer.SetImageMode(imageMode); }
 	void MainGraphicsLayer::SetEllipseMode(const DGL::EllipseMode& ellipseMode) { m_GraphicsLayer.SetEllipseMode(ellipseMode); }
 	void MainGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayer.SetSegmentCountMode(segmentCountMode); }
 

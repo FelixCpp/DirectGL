@@ -8,7 +8,9 @@ export module DirectGL:RendererFacade;
 import DirectGL.Math;
 import DirectGL.Renderer;
 import DirectGL.ShapeRenderer;
+import DirectGL.TextureRenderer;
 
+import :Texture;
 import :DepthProvider;
 
 namespace DGL
@@ -23,6 +25,7 @@ namespace DGL
 	public:
 
 		explicit RendererFacade(
+			TextureRenderer::TextureRenderer& textureRenderer,
 			ShapeRenderer::ShapeRenderer& shapeRenderer,
 			ShapeRenderer::ShapeFactory& shapeFactory,
 			DepthProvider& depthProvider
@@ -36,11 +39,13 @@ namespace DGL
 
 		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c);
 		void DrawLine(const Math::Float2& start, const Math::Float2& end, float strokeWeight);
+		void Image(const Math::FloatBoundary& boundary);
 
 	private:
 
 		float IncrementAndGetDepth() const;
 
+		TextureRenderer::TextureRenderer& m_TextureRenderer;
 		ShapeRenderer::ShapeRenderer& m_ShapeRenderer;
 		ShapeRenderer::ShapeFactory& m_ShapeFactory;
 

@@ -25,6 +25,7 @@ export namespace DGL
 		bool IsStrokeEnabled;
 
 		BlendMode BlendMode;
+		RectMode ImageMode;
 		RectMode RectMode;
 		EllipseMode EllipseMode;
 		SegmentCountMode SegmentCountMode;
@@ -44,6 +45,7 @@ namespace DGL
 		IsFillEnabled(true),
 		IsStrokeEnabled(true),
 		BlendMode(BlendModes::Alpha),
+		ImageMode(RectModeLTWH()),
 		RectMode(RectModeLTWH()),
 		EllipseMode(EllipseModeCenterDiameter()),
 		SegmentCountMode(SegmentCountModeSmooth())

@@ -41,6 +41,7 @@ export namespace DGL
 
 		virtual void SetBlendMode(const BlendMode& blendMode) = 0;
 		virtual void SetRectMode(const RectMode& rectMode) = 0;
+		virtual void SetImageMode(const RectMode& imageMode) = 0;
 		virtual void SetEllipseMode(const EllipseMode& ellipseMode) = 0;
 		virtual void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) = 0;
 

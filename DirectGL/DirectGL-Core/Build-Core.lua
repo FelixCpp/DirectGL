@@ -17,6 +17,7 @@ project("DirectGL-Core")
         -- DirectGL
         "DirectGL-Renderer",
         "DirectGL-ShapeRenderer",
+        "DirectGL-TextureRenderer",
         "DirectGL-Logging",
         "DirectGL-Math",
 

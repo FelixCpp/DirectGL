@@ -47,9 +47,11 @@ namespace DGL
 		{
 			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
 			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
+			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create(500);
 			Library.DepthProvider = std::make_unique<IncrementalDepthProvider>(0.0f, 1.0f / 20'000.f);
 
 			Library.RendererFacade = std::make_unique<RendererFacade>(
+				*Library.TextureRenderer,
 				*Library.ShapeRenderer,
 				*Library.ShapeFactory,
 				*Library.DepthProvider
@@ -259,6 +261,7 @@ namespace DGL
 
 	void SetBlend(const BlendMode& blendMode) { Library.MainGraphicsLayer->SetBlendMode(blendMode); }
 	void SetRectMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetRectMode(rectMode); }
+	void SetImageMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetImageMode(rectMode); }
 	void SetEllipseMode(const EllipseMode& ellipseMode) { Library.MainGraphicsLayer->SetEllipseMode(ellipseMode); }
 	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { Library.MainGraphicsLayer->SetSegmentCountMode(segmentCountMode); }
 

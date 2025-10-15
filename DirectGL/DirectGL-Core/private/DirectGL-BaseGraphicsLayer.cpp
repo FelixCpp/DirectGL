@@ -124,6 +124,11 @@ namespace DGL
 		PeekState().RectMode = rectMode;
 	}
 
+	void BaseGraphicsLayer::SetImageMode(const DGL::RectMode& imageMode)
+	{
+		PeekState().ImageMode = imageMode;
+	}
+
 	void BaseGraphicsLayer::SetEllipseMode(const DGL::EllipseMode& ellipseMode)
 	{
 		PeekState().EllipseMode = ellipseMode;
@@ -252,18 +257,15 @@ namespace DGL
 
 	void BaseGraphicsLayer::Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2)
 	{
-		//// Get the current render state
-		//auto& state = PeekState();
+		// Get the current render state
+		auto& state = PeekState();
 
-		//// Compute the boundary of the image
-		//const auto boundary = FloatBoundary::FromLTWH(x1, y1, x2, y2);
+		// Compute the boundary of the image
+		const auto boundary = state.ImageMode(x1, y1, x2, y2);
 
-		//// Compute the vertices for a textured rectangle.
-		//const auto vertices = m_ShapeFactory->GetFilledRectangle(boundary);
-
-		//m_TextureFillBrush->SetTexture(&texture);
-		//m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-		//m_Renderer->Render(vertices, state.BlendMode);
+		m_TextureFillBrush->SetTexture(&texture);
+		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
+		m_Renderer->Image(boundary);
 	}
 
 	BaseGraphicsLayer::BaseGraphicsLayer(RendererFacade& renderer, ShapeRenderer::ShapeFactory& shapeFactory) :

@@ -3,7 +3,12 @@
 namespace DGL
 {
 	
-	RendererFacade::RendererFacade(ShapeRenderer::ShapeRenderer& shapeRenderer, ShapeRenderer::ShapeFactory& shapeFactory, DepthProvider& depthProvider):
+	RendererFacade::RendererFacade(
+		TextureRenderer::TextureRenderer& textureRenderer,
+		ShapeRenderer::ShapeRenderer& shapeRenderer,
+		ShapeRenderer::ShapeFactory& shapeFactory,
+		DepthProvider& depthProvider
+	):	m_TextureRenderer(textureRenderer),
 		m_ShapeRenderer(shapeRenderer),
 		m_ShapeFactory(shapeFactory),
 		m_DepthProvider(&depthProvider)
@@ -44,6 +49,11 @@ namespace DGL
 	{
 		const auto vertices = m_ShapeFactory.GetLine(start, end, strokeWeight, IncrementAndGetDepth());
 		m_ShapeRenderer.Render(vertices);
+	}
+
+	void RendererFacade::Image(const FloatBoundary& boundary)
+	{
+		m_TextureRenderer.Render(boundary.Left, boundary.Top, boundary.Width, boundary.Height, IncrementAndGetDepth());
 	}
 
 	float RendererFacade::IncrementAndGetDepth() const
