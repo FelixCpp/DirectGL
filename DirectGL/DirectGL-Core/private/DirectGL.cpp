@@ -6,6 +6,8 @@
 #include <string_view>
 #include <filesystem>
 
+#include <Glad/gl.h>
+
 module DirectGL;
 
 import System.Monitor;
@@ -44,14 +46,15 @@ namespace DGL
 		startup.Run([&factory]
 		{
 			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
-			//Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
 			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
+			Library.DepthProvider = std::make_unique<IncrementalDepthProvider>(0.0f, 1.0f / 20'000.f);
+
 			Library.RendererFacade = std::make_unique<RendererFacade>(
 				*Library.ShapeRenderer,
-				*Library.ShapeFactory
-				//*Library.VertexRenderer,
-				//*Library.ShapeRenderer
+				*Library.ShapeFactory,
+				*Library.DepthProvider
 			);
+
 			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
 				Library.Window->GetSize(),
 				*Library.RendererFacade,
@@ -116,6 +119,7 @@ namespace DGL
 					// Note that this needs to happen before we call the Draw function
 					Library.UserRequestedRedraw = false;
 
+					Library.DepthProvider->ResetDepth();
 					Library.MainGraphicsLayer->BeginDraw();
 					Library.Sketch->Draw(deltaTime.count());
 					Library.MainGraphicsLayer->EndDraw();

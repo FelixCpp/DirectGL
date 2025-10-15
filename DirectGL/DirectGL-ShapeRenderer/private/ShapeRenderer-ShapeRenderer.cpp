@@ -42,7 +42,7 @@ namespace DGL::ShapeRenderer
 		glNamedBufferSubData(m_PositionBufferId, 0, positions.size_bytes(), positions.data());
 		glNamedBufferSubData(m_IndexBufferId, 0, indices.size_bytes(), indices.data());
 		glBindVertexArray(m_VertexArrayId);
-		glDrawElements(GL_POINTS, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
 	}
 
 	void ShapeRenderer::Render(const Vertices& vertices)

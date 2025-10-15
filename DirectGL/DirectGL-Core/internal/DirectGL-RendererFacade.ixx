@@ -5,8 +5,11 @@
 
 export module DirectGL:RendererFacade;
 
+import DirectGL.Math;
 import DirectGL.Renderer;
 import DirectGL.ShapeRenderer;
+
+import :DepthProvider;
 
 namespace DGL
 {
@@ -21,22 +24,27 @@ namespace DGL
 
 		explicit RendererFacade(
 			ShapeRenderer::ShapeRenderer& shapeRenderer,
-			ShapeRenderer::ShapeFactory& shapeFactory
+			ShapeRenderer::ShapeFactory& shapeFactory,
+			DepthProvider& depthProvider
 		);
 
-		void FillRectangle(const Math::FloatBoundary& boundary, float depth);
-		void DrawRectangle(const Math::FloatBoundary& boundary, float strokeWeight, float depth);
+		void FillRectangle(const Math::FloatBoundary& boundary);
+		void DrawRectangle(const Math::FloatBoundary& boundary, float strokeWeight);
 
-		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float depth);
-		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float strokeWeight, float depth);
+		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments);
+		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float strokeWeight);
 
-		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c, float depth);
-		void DrawLine(const Math::Float2& start, const Math::Float2& end, float strokeWeight, float depth);
+		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c);
+		void DrawLine(const Math::Float2& start, const Math::Float2& end, float strokeWeight);
 
 	private:
 
+		float IncrementAndGetDepth() const;
+
 		ShapeRenderer::ShapeRenderer& m_ShapeRenderer;
 		ShapeRenderer::ShapeFactory& m_ShapeFactory;
+
+		DepthProvider* m_DepthProvider;
 
 	};
 }

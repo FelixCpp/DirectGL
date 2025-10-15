@@ -11,7 +11,7 @@ namespace DGL
 	void BaseGraphicsLayer::SetViewport(const FloatBoundary viewport)
 	{
 		m_Viewport = viewport;
-		m_ProjectionMatrix = Matrix4x4::Orthographic(m_Viewport, -1.0f, 1.0f);
+		m_ProjectionMatrix = Matrix4x4::Orthographic(m_Viewport, 1.0f, -1.0f);
 	}
 
 	const FloatBoundary& BaseGraphicsLayer::GetViewport() const
@@ -139,7 +139,7 @@ namespace DGL
 		// Render the rectangle with the specified background color
 		m_SolidFillBrush->SetColor(color);
 		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, Matrix4x4::Identity);
-		m_Renderer->FillRectangle(m_Viewport, 0.0f);
+		m_Renderer->FillRectangle(m_Viewport);
 	}
 
 	void BaseGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2)
@@ -155,7 +155,7 @@ namespace DGL
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillRectangle(boundary, 0.0f);
+			m_Renderer->FillRectangle(boundary);
 		}
 
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
@@ -163,7 +163,7 @@ namespace DGL
 		{
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->DrawRectangle(boundary, state.StrokeWeight, 0.0f);
+			m_Renderer->DrawRectangle(boundary, state.StrokeWeight);
 		}
 	}
 
@@ -186,7 +186,7 @@ namespace DGL
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillEllipse(center, radius, segments, 0.0f);
+			m_Renderer->FillEllipse(center, radius, segments);
 		}
 
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
@@ -194,7 +194,7 @@ namespace DGL
 		{
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->DrawEllipse(center, radius, segments, state.StrokeWeight, 0.0f);
+			m_Renderer->DrawEllipse(center, radius, segments, state.StrokeWeight);
 		}
 	}
 
@@ -216,7 +216,7 @@ namespace DGL
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillEllipse(center, radius, segments, 0.0f);
+			m_Renderer->FillEllipse(center, radius, segments);
 		}
 	}
 
@@ -230,7 +230,7 @@ namespace DGL
 		{
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->DrawLine({ x1, y1 }, { x2, y2 }, state.StrokeWeight, 0.0f);
+			m_Renderer->DrawLine({ x1, y1 }, { x2, y2 }, state.StrokeWeight);
 		}
 	}
 
@@ -244,7 +244,7 @@ namespace DGL
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillTriangle(Float2{ x1, y1 }, Float2{ x2, y2 }, Float2{ x3, y3 }, 0.0f);
+			m_Renderer->FillTriangle(Float2{ x1, y1 }, Float2{ x2, y2 }, Float2{ x3, y3 });
 		}
 
 		// TODO(Felix): Implement outlined triangle rendering.

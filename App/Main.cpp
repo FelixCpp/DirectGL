@@ -19,7 +19,11 @@ struct DirectGLGame : DGL::Sketch
 	void Draw(const float deltaTime) override
 	{
 		DGL::Background(DGL::Color(21, 21, 21));
-
+		DGL::Fill(DGL::Color(255, 0, 0));
+		DGL::Stroke(DGL::Color(0, 255, 0));
+		DGL::StrokeWeight(3.0f);
+		DGL::SetRectMode(DGL::RectModeCenterWH());
+		DGL::Rect(DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
 	}
 
 	void Destroy() override
