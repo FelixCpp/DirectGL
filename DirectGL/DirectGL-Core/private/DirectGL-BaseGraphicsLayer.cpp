@@ -136,13 +136,10 @@ namespace DGL
 
 	void BaseGraphicsLayer::Background(const Color color)
 	{
-		// Generate vertices for a rectangle covering the entire viewport
-		const auto vertices = m_ShapeFactory->GetFilledRectangle(m_Viewport);
-
 		// Render the rectangle with the specified background color
 		m_SolidFillBrush->SetColor(color);
 		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, Matrix4x4::Identity);
-		m_Renderer->Render(vertices, BlendModes::Alpha);
+		m_Renderer->FillRectangle(m_Viewport, 0.0f);
 	}
 
 	void BaseGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2)
@@ -156,23 +153,17 @@ namespace DGL
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
 		{
-			// Compute the vertices for a filled rectangle.
-			const auto vertices = m_ShapeFactory->GetFilledRectangle(boundary);
-
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->FillRectangle(boundary, 0.0f);
 		}
 
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
 		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
 		{
-			// Compute the vertices for an outlined rectangle.
-			const auto vertices = m_ShapeFactory->GetOutlinedRectangle(boundary, state.StrokeWeight);
-
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->DrawRectangle(boundary, state.StrokeWeight, 0.0f);
 		}
 	}
 
@@ -193,23 +184,17 @@ namespace DGL
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
 		{
-			// Compute the vertices for a filled ellipse.
-			const auto vertices = m_ShapeFactory->GetFilledEllipse(center, radius, segments);
-
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->FillEllipse(center, radius, segments, 0.0f);
 		}
 
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
 		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
 		{
-			// Compute the vertices for an outlined ellipse.
-			const auto vertices = m_ShapeFactory->GetOutlinedEllipse(center, radius, segments, state.StrokeWeight);
-
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->DrawEllipse(center, radius, segments, state.StrokeWeight, 0.0f);
 		}
 	}
 
@@ -227,11 +212,11 @@ namespace DGL
 			// Compute the vertices for a point rendered as a small filled circle.
 			const auto radius = Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
 			const auto center = boundary.Center();
-			const auto vertices = m_ShapeFactory->GetFilledEllipse(center, radius, 16);
+			const auto segments = state.SegmentCountMode(radius);
 
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->FillEllipse(center, radius, segments, 0.0f);
 		}
 	}
 
@@ -243,12 +228,9 @@ namespace DGL
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
 		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
 		{
-			// Compute the vertices for a line with the specified stroke weight.
-			const auto vertices = m_ShapeFactory->GetLine(Float2{ x1, y1 }, Float2{ x2, y2 }, state.StrokeWeight);
-
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->DrawLine({ x1, y1 }, { x2, y2 }, state.StrokeWeight, 0.0f);
 		}
 	}
 
@@ -260,12 +242,9 @@ namespace DGL
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
 		{
-			// Compute the vertices for a filled triangle.
-			const auto vertices = m_ShapeFactory->GetFilledTriangle(Float2{ x1, y1 }, Float2{ x2, y2 }, Float2{ x3, y3 });
-
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Render(vertices, state.BlendMode);
+			m_Renderer->FillTriangle(Float2{ x1, y1 }, Float2{ x2, y2 }, Float2{ x3, y3 }, 0.0f);
 		}
 
 		// TODO(Felix): Implement outlined triangle rendering.
@@ -273,21 +252,21 @@ namespace DGL
 
 	void BaseGraphicsLayer::Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2)
 	{
-		// Get the current render state
-		auto& state = PeekState();
+		//// Get the current render state
+		//auto& state = PeekState();
 
-		// Compute the boundary of the image
-		const auto boundary = FloatBoundary::FromLTWH(x1, y1, x2, y2);
+		//// Compute the boundary of the image
+		//const auto boundary = FloatBoundary::FromLTWH(x1, y1, x2, y2);
 
-		// Compute the vertices for a textured rectangle.
-		const auto vertices = m_ShapeFactory->GetFilledRectangle(boundary);
+		//// Compute the vertices for a textured rectangle.
+		//const auto vertices = m_ShapeFactory->GetFilledRectangle(boundary);
 
-		m_TextureFillBrush->SetTexture(&texture);
-		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-		m_Renderer->Render(vertices, state.BlendMode);
+		//m_TextureFillBrush->SetTexture(&texture);
+		//m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
+		//m_Renderer->Render(vertices, state.BlendMode);
 	}
 
-	BaseGraphicsLayer::BaseGraphicsLayer(Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory) :
+	BaseGraphicsLayer::BaseGraphicsLayer(RendererFacade& renderer, ShapeRenderer::ShapeFactory& shapeFactory) :
 		m_Renderer(&renderer),
 		m_ShapeFactory(&shapeFactory),
 		m_SolidFillBrush(Renderer::SolidColorBrush::Create(Colors::White)),

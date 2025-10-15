@@ -26,6 +26,7 @@ import LogForge;
 import DirectGL.Input;
 import DirectGL.Logging;
 import DirectGL.Renderer;
+import DirectGL.ShapeRenderer;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -112,9 +113,9 @@ export import :Texture;
 
 export namespace DGL
 {
-	Renderer::ShapeFactory& GetDefaultShapeFactory();
+	/*Renderer::ShapeFactory& GetDefaultShapeFactory();
 	Renderer::Renderer& GetDefaultRenderer();
-	GraphicsLayer& GetMainGraphicsLayer();
+	GraphicsLayer& GetMainGraphicsLayer();*/
 }
 
 export namespace DGL
@@ -181,6 +182,7 @@ import :WindowStartupTask;
 import :InputListener;
 
 import :MainGraphicsLayer;
+import :RendererFacade;
 
 enum struct ExitType
 {
@@ -199,8 +201,10 @@ struct DirectGLLibrary
 
 	DGL::InputListener									InputListener;		//!< The input listener to use
 
-	std::unique_ptr<DGL::Renderer::ShapeFactory>		ShapeFactory;			//!< The shape factory to use
-	std::unique_ptr<DGL::Renderer::VertexRenderer>		VertexRenderer;			//!< The vertex renderer to use
+	//std::unique_ptr<DGL::Renderer::VertexRenderer>		VertexRenderer;			//!< The vertex renderer to use
+	std::unique_ptr<DGL::ShapeRenderer::ShapeFactory>	ShapeFactory;			//!< The shape factory to use
+	std::unique_ptr<DGL::ShapeRenderer::ShapeRenderer>	ShapeRenderer;			//!< The shape renderer to use for primitive drawing
+	std::unique_ptr<DGL::RendererFacade> 				RendererFacade;		//!< The renderer facade to use for rendering
 	std::unique_ptr<DGL::MainGraphicsLayer>				MainGraphicsLayer;		//!< The main graphics layer to use for rendering
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown

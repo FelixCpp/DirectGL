@@ -43,11 +43,18 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
-			Library.ShapeFactory = std::make_unique<Renderer::DefaultShapeFactory>();
-			Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
+			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
+			//Library.VertexRenderer = Renderer::VertexRenderer::Create(10'000);
+			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
+			Library.RendererFacade = std::make_unique<RendererFacade>(
+				*Library.ShapeRenderer,
+				*Library.ShapeFactory
+				//*Library.VertexRenderer,
+				//*Library.ShapeRenderer
+			);
 			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
 				Library.Window->GetSize(),
-				*Library.VertexRenderer,
+				*Library.RendererFacade,
 				*Library.ShapeFactory
 			);
 
@@ -212,9 +219,9 @@ namespace DGL
 
 namespace DGL
 {
-	Renderer::Renderer& GetDefaultRenderer() { return *Library.VertexRenderer; }
+	/*Renderer::Renderer& GetDefaultRenderer() { return *Library.VertexRenderer; }
 	Renderer::ShapeFactory& GetDefaultShapeFactory() { return *Library.ShapeFactory; }
-	GraphicsLayer& GetMainGraphicsLayer() { return *Library.MainGraphicsLayer; }
+	GraphicsLayer& GetMainGraphicsLayer() { return *Library.MainGraphicsLayer; }*/
 }
 
 namespace DGL

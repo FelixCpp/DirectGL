@@ -9,6 +9,7 @@ module;
 
 export module DirectGL:BaseGraphicsLayer;
 
+import :RendererFacade;
 import :RenderStateStack;
 import :GraphicsLayer;
 import :Math;
@@ -20,8 +21,8 @@ export namespace DGL
 	public:
 
 		explicit BaseGraphicsLayer(
-			Renderer::Renderer& renderer,
-			Renderer::ShapeFactory& shapeFactory
+			RendererFacade& renderer,
+			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
 		void SetViewport(FloatBoundary viewport);
@@ -66,8 +67,8 @@ export namespace DGL
 
 	private:
 
-		Renderer::Renderer* m_Renderer;
-		Renderer::ShapeFactory* m_ShapeFactory;
+		RendererFacade* m_Renderer;
+		ShapeRenderer::ShapeFactory* m_ShapeFactory;
 
 		std::unique_ptr<Renderer::SolidColorBrush> m_SolidFillBrush;
 		std::unique_ptr<Renderer::SolidColorBrush> m_SolidStrokeBrush;

@@ -16,6 +16,7 @@ project("DirectGL-Core")
     links({
         -- DirectGL
         "DirectGL-Renderer",
+        "DirectGL-ShapeRenderer",
         "DirectGL-Logging",
         "DirectGL-Math",
 

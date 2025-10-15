@@ -10,4 +10,5 @@ export import :Radius;
 export import :Random;
 export import :Remap;
 export import :Value2;
+export import :Value3;
 export import :Value4;

@@ -6,8 +6,8 @@ namespace DGL
 {
 	std::unique_ptr<MainGraphicsLayer> MainGraphicsLayer::Create(
 		const Uint2 viewportSize,
-		Renderer::Renderer& renderer,
-		Renderer::ShapeFactory& shapeFactory
+		RendererFacade& renderer,
+		ShapeRenderer::ShapeFactory& shapeFactory
 	) {
 		return std::unique_ptr<MainGraphicsLayer>(new MainGraphicsLayer(viewportSize, renderer, shapeFactory));
 	}
@@ -64,7 +64,7 @@ namespace DGL
 	void MainGraphicsLayer::Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { m_GraphicsLayer.Triangle(x1, y1, x2, y2, x3, y3); }
 	void MainGraphicsLayer::Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Image(texture, x1, y1, x2, y2); }
 
-	MainGraphicsLayer::MainGraphicsLayer(const Uint2 viewportSize, Renderer::Renderer& renderer, Renderer::ShapeFactory& shapeFactory):
+	MainGraphicsLayer::MainGraphicsLayer(const Uint2 viewportSize, RendererFacade& renderer, ShapeRenderer::ShapeFactory& shapeFactory):
 		m_MainRenderTarget(Renderer::MainRenderTarget::Create(UintBoundary::FromLTWH(0, 0, viewportSize.X, viewportSize.Y))),
 		m_GraphicsLayer(renderer, shapeFactory)
 	{

@@ -9,10 +9,12 @@ module;
 export module DirectGL:MainGraphicsLayer;
 
 import DirectGL.Renderer;
+import DirectGL.ShapeRenderer;
 import DirectGL.Math;
 
 import :BaseGraphicsLayer;
 import :RenderStateStack;
+import :RendererFacade;
 
 export namespace DGL
 {
@@ -22,8 +24,8 @@ export namespace DGL
 
 		static std::unique_ptr<MainGraphicsLayer> Create(
 			Uint2 viewportSize,
-			Renderer::Renderer& renderer,
-			Renderer::ShapeFactory& shapeFactory
+			RendererFacade& renderer,
+			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
 		void Resize(Uint2 viewportSize);
@@ -69,8 +71,8 @@ export namespace DGL
 
 		explicit MainGraphicsLayer(
 			Uint2 viewportSize,
-			Renderer::Renderer& renderer,
-			Renderer::ShapeFactory& shapeFactory
+			RendererFacade& renderer,
+			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
 		std::unique_ptr<Renderer::MainRenderTarget> m_MainRenderTarget;

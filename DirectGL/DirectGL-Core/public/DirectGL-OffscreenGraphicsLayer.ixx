@@ -23,8 +23,8 @@ export namespace DGL
 
 		static std::unique_ptr<OffscreenGraphicsLayer> Create(
 			Uint2 viewportSize,
-			Renderer::Renderer& renderer,
-			Renderer::ShapeFactory& shapeFactory
+			RendererFacade& renderer,
+			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
 		void BeginDraw() override;
@@ -68,8 +68,8 @@ export namespace DGL
 
 		explicit OffscreenGraphicsLayer(
 			Uint2 viewportSize,
-			Renderer::Renderer& renderer,
-			Renderer::ShapeFactory& shapeFactory
+			RendererFacade& renderer,
+			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
 		std::unique_ptr<Renderer::OffscreenRenderTarget> m_RenderTarget;
