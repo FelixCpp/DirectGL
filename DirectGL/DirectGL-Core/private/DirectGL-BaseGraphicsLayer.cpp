@@ -156,6 +156,8 @@ namespace DGL
 		// Compute the boundary of the rectangle
 		const auto boundary = state.RectMode(x1, y1, x2, y2);
 
+		m_BlendModeActivator->Activate(state.BlendMode);
+
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
 		{

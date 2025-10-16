@@ -43,8 +43,14 @@ struct DirectGLGame : DGL::Sketch
 		DGL::SetImageMode(DGL::RectModeCenterWH());
 		//DGL::Image(*texture, DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
 
+		DGL::SetBlend(DGL::Blending::BlendModes::Exclusion);
 		DGL::SetRectMode(DGL::RectModeCenterWH());
-		DGL::NoFill();
+		DGL::Fill(DGL::Renderer::Color(255, 0, 0, 100));
+		DGL::Stroke(DGL::Renderer::Color(0, 255, 0));
+		DGL::StrokeWeight(3.0f);
+		DGL::Rect(300.0f, 300.0f, 300.0f, 300.0f);
+
+		DGL::Fill(DGL::Renderer::Color(255, 0, 0));
 		DGL::Stroke(DGL::Renderer::Color(0, 255, 0));
 		DGL::StrokeWeight(3.0f);
 		DGL::Rect(DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
