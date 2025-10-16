@@ -7,9 +7,9 @@ module;
 
 export module DirectGL:RenderState;
 
-import :Color;
-import :DrawMode;
-import :BlendMode;
+import DirectGL.Renderer;
+import DirectGL.Blending;
+
 import :TransformationStack;
 import :DrawMode;
 
@@ -17,14 +17,14 @@ export namespace DGL
 {
 	struct RenderState
 	{
-		Color FillColor;
-		Color StrokeColor;
+		Renderer::Color FillColor;
+		Renderer::Color StrokeColor;
 		float StrokeWeight;
 
 		bool IsFillEnabled;
 		bool IsStrokeEnabled;
 
-		BlendMode BlendMode;
+		Blending::BlendMode BlendMode;
 		RectMode ImageMode;
 		RectMode RectMode;
 		EllipseMode EllipseMode;
@@ -44,7 +44,7 @@ namespace DGL
 		StrokeWeight(1.0f),
 		IsFillEnabled(true),
 		IsStrokeEnabled(true),
-		BlendMode(BlendModes::Alpha),
+		BlendMode(Blending::BlendModes::Alpha),
 		ImageMode(RectModeLTWH()),
 		RectMode(RectModeLTWH()),
 		EllipseMode(EllipseModeCenterDiameter()),

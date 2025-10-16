@@ -11,7 +11,7 @@ namespace DGL
 	const RectMode& RectModeLTWH()
 	{
 		static EllipseMode mode = [](const float x, const float y, const float width, const float height) {
-			return FloatBoundary::FromLTWH(x, y, width, height);
+			return Math::FloatBoundary::FromLTWH(x, y, width, height);
 		};
 
 		return mode;
@@ -20,7 +20,7 @@ namespace DGL
 	const RectMode& RectModeLTRB()
 	{
 		static EllipseMode mode = [](const float left, const float top, const float right, const float bottom) {
-			return FloatBoundary::FromLTRB(left, top, right, bottom);
+			return Math::FloatBoundary::FromLTRB(left, top, right, bottom);
 		};
 
 		return mode;
@@ -31,7 +31,7 @@ namespace DGL
 		static EllipseMode mode = [](const float centerX, const float centerY, const float width, const float height) {
 			const float halfWidth = width * 0.5f;
 			const float halfHeight = height * 0.5f;
-			return FloatBoundary::FromLTRB(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight);
+			return Math::FloatBoundary::FromLTRB(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight);
 		};
 
 		return mode;
@@ -43,7 +43,7 @@ namespace DGL
 	const EllipseMode& EllipseModeLTRB()
 	{
 		static EllipseMode mode = [](const float left, const float top, const float right, const float bottom) {
-			return FloatBoundary::FromLTRB(left, top, right, bottom);
+			return Math::FloatBoundary::FromLTRB(left, top, right, bottom);
 		};
 
 		return mode;
@@ -52,7 +52,7 @@ namespace DGL
 	const EllipseMode& EllipseModeLTWH()
 	{
 		static EllipseMode mode = [](const float x, const float y, const float width, const float height) {
-			return FloatBoundary::FromLTWH(x, y, width, height);
+			return Math::FloatBoundary::FromLTWH(x, y, width, height);
 		};
 
 		return mode;
@@ -63,7 +63,7 @@ namespace DGL
 		static EllipseMode mode = [](const float centerX, const float centerY, const float width, const float height) {
 			const float halfWidth = width * 0.5f;
 			const float halfHeight = height * 0.5f;
-			return FloatBoundary::FromLTRB(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight);
+			return Math::FloatBoundary::FromLTRB(centerX - halfWidth, centerY - halfHeight, centerX + halfWidth, centerY + halfHeight);
 		};
 
 		return mode;
@@ -72,7 +72,7 @@ namespace DGL
 	const EllipseMode& EllipseModeCenterRadius()
 	{
 		static EllipseMode mode = [](const float centerX, const float centerY, const float radiusX, const float radiusY) {
-			return FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
+			return Math::FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
 		};
 
 		return mode;
@@ -83,7 +83,7 @@ namespace DGL
 		static EllipseMode mode = [](const float centerX, const float centerY, const float diameterX, const float diameterY) {
 			const float radiusX = diameterX * 0.5f;
 			const float radiusY = diameterY * 0.5f;
-			return FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
+			return Math::FloatBoundary::FromLTRB(centerX - radiusX, centerY - radiusY, centerX + radiusX, centerY + radiusY);
 		};
 
 		return mode;
@@ -94,7 +94,7 @@ namespace DGL
 {
 	const SegmentCountMode& SegmentCountModeFixed(const size_t count)
 	{
-		static SegmentCountMode mode = [count](const Radius) {
+		static SegmentCountMode mode = [count](const Math::Radius) {
 			return count;
 		};
 
@@ -103,7 +103,7 @@ namespace DGL
 
 	const SegmentCountMode& SegmentCountModeSmooth(const float error)
 	{
-		static SegmentCountMode mode = [error](const Radius radius) -> size_t {
+		static SegmentCountMode mode = [error](const Math::Radius radius) -> size_t {
 			constexpr float MAX_POINT_ACCURACY = 200.0f;
 			constexpr float MIN_POINT_ACCURACY = 20.0f;
 			
@@ -114,7 +114,7 @@ namespace DGL
 			if (angle <= 0.0f) return 0;
 			const float segments = std::ceilf(PI / angle);
 
-			return Constrain(segments, MIN_POINT_ACCURACY, MAX_POINT_ACCURACY);
+			return static_cast<size_t>(Math::Constrain(segments, MIN_POINT_ACCURACY, MAX_POINT_ACCURACY));
 		};
 
 		return mode;

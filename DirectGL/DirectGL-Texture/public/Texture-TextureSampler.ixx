@@ -1,5 +1,5 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-TextureSampler.ixx
+﻿// Project Name : DirectGL-Texture
+// File Name    : Texture-TextureSampler.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/11
 
@@ -9,12 +9,12 @@ module;
 
 #include <memory>
 
-export module DirectGL.Renderer:TextureSampler;
+export module DirectGL.Texture:TextureSampler;
 
 import :TextureFilterMode;
 import :TextureWrapMode;
 
-export namespace DGL::Renderer
+export namespace DGL::Texture
 {
 	class TextureSampler
 	{

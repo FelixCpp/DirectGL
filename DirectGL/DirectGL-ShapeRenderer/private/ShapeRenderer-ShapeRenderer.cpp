@@ -4,6 +4,7 @@ module;
 
 #include <algorithm>
 #include <bit>
+
 module DirectGL.ShapeRenderer;
 
 namespace DGL::ShapeRenderer

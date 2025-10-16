@@ -5,7 +5,7 @@
 #include <string>
 #include <format>
 
-module DirectGL.Renderer;
+module DirectGL.Brushes;
 
 import DirectGL.Logging;
 
@@ -14,7 +14,7 @@ import :ShaderProgram;
 
 import Preconditions;
 
-namespace DGL::Renderer
+namespace DGL::Brushes
 {
 	std::unique_ptr<ShaderProgram> ShaderProgram::Create(const Shader& vertexShader, const Shader& fragmentShader)
 	{

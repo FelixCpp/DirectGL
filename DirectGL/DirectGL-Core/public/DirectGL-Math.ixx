@@ -16,12 +16,12 @@ import DirectGL.Math;
 export namespace DGL
 {
 	// Types
-	using Math::Angle; using Math::Degrees; using Math::Radians;
-	using Math::Radius, Math::BorderRadius, Math::BorderRadiusOnly;
-	using Math::Boundary, Math::FloatBoundary, Math::IntBoundary, Math::UintBoundary;
-	using Math::Matrix4x4;
-	using Math::Value2, Math::Float2, Math::Int2, Math::Uint2;
-	using Math::Value4, Math::Float4, Math::Int4, Math::Uint4;
+	//using Math::Angle; using Math::Degrees; using Math::Radians;
+	//using Math::Radius, Math::BorderRadius, Math::BorderRadiusOnly;
+	//using Math::Boundary, Math::FloatBoundary, Math::IntBoundary, Math::UintBoundary;
+	//using Math::Matrix4x4;
+	//using Math::Value2, Math::Float2, Math::Int2, Math::Uint2;
+	//using Math::Value4, Math::Float4, Math::Int4, Math::Uint4;
 
 	// Constants
 	using Math::PI;

@@ -8,13 +8,13 @@ import :BaseGraphicsLayer;
 
 namespace DGL
 {
-	void BaseGraphicsLayer::SetViewport(const FloatBoundary viewport)
+	void BaseGraphicsLayer::SetViewport(const Math::FloatBoundary viewport)
 	{
 		m_Viewport = viewport;
-		m_ProjectionMatrix = Matrix4x4::Orthographic(m_Viewport, 1.0f, -1.0f);
+		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(m_Viewport, 1.0f, -1.0f);
 	}
 
-	const FloatBoundary& BaseGraphicsLayer::GetViewport() const
+	const Math::FloatBoundary& BaseGraphicsLayer::GetViewport() const
 	{
 		return m_Viewport;
 	}
@@ -55,44 +55,44 @@ namespace DGL
 		PeekState().TransformationStack.PopTransform();
 	}
 
-	Matrix4x4& BaseGraphicsLayer::PeekTransform()
+	Math::Matrix4x4& BaseGraphicsLayer::PeekTransform()
 	{
 		return PeekState().TransformationStack.PeekTransform();
 	}
 
 	void BaseGraphicsLayer::ResetTransform()
 	{
-		PeekTransform() = Matrix4x4::Identity;
+		PeekTransform() = Math::Matrix4x4::Identity;
 	}
 
 	void BaseGraphicsLayer::Translate(const float x, const float y)
 	{
-		PeekTransform() *= Matrix4x4::Translation(x, y, 0.0f);
+		PeekTransform() *= Math::Matrix4x4::Translation(x, y, 0.0f);
 	}
 
 	void BaseGraphicsLayer::Scale(const float x, const float y)
 	{
-		PeekTransform() *= Matrix4x4::Scaling(x, y, 1.0f);
+		PeekTransform() *= Math::Matrix4x4::Scaling(x, y, 1.0f);
 	}
 
-	void BaseGraphicsLayer::Rotate(const Angle angle)
+	void BaseGraphicsLayer::Rotate(const Math::Angle angle)
 	{
-		PeekTransform() *= Matrix4x4::Rotation(angle);
+		PeekTransform() *= Math::Matrix4x4::Rotation(angle);
 	}
 
-	void BaseGraphicsLayer::Skew(const Angle angleX, const Angle angleY)
+	void BaseGraphicsLayer::Skew(const Math::Angle angleX, const Math::Angle angleY)
 	{
-		PeekTransform() *= Matrix4x4::Skew(angleX, angleY);
+		PeekTransform() *= Math::Matrix4x4::Skew(angleX, angleY);
 	}
 
-	void BaseGraphicsLayer::Fill(const Color color)
+	void BaseGraphicsLayer::Fill(const Renderer::Color color)
 	{
 		RenderState& state = PeekState();
 		state.FillColor = color;
 		state.IsFillEnabled = true;
 	}
 
-	void BaseGraphicsLayer::Stroke(const Color color)
+	void BaseGraphicsLayer::Stroke(const Renderer::Color color)
 	{
 		RenderState& state = PeekState();
 		state.StrokeColor = color;
@@ -114,7 +114,7 @@ namespace DGL
 		PeekState().IsStrokeEnabled = false;
 	}
 
-	void BaseGraphicsLayer::SetBlendMode(const BlendMode& blendMode)
+	void BaseGraphicsLayer::SetBlendMode(const Blending::BlendMode& blendMode)
 	{
 		PeekState().BlendMode = blendMode;
 	}
@@ -139,11 +139,12 @@ namespace DGL
 		PeekState().SegmentCountMode = segmentCountMode;
 	}
 
-	void BaseGraphicsLayer::Background(const Color color)
+	void BaseGraphicsLayer::Background(const Renderer::Color color)
 	{
 		// Render the rectangle with the specified background color
+		m_BlendModeActivator->Activate(Blending::BlendModes::Opaque);
 		m_SolidFillBrush->SetColor(color);
-		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, Matrix4x4::Identity);
+		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, Math::Matrix4x4::Identity);
 		m_Renderer->FillRectangle(m_Viewport);
 	}
 
@@ -182,9 +183,11 @@ namespace DGL
 
 		// Compute the center and radius of the ellipse
 		const auto center = boundary.Center();
-		const auto radius = Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
+		const auto radius = Math::Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
 		const auto segments = state.SegmentCountMode(radius);
 		if (segments <= 0) return;
+
+		m_BlendModeActivator->Activate(state.BlendMode);
 
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
@@ -215,10 +218,11 @@ namespace DGL
 			const auto boundary = state.EllipseMode(x, y, state.StrokeWeight, state.StrokeWeight);
 
 			// Compute the vertices for a point rendered as a small filled circle.
-			const auto radius = Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
+			const auto radius = Math::Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
 			const auto center = boundary.Center();
 			const auto segments = state.SegmentCountMode(radius);
 
+			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->FillEllipse(center, radius, segments);
@@ -233,9 +237,10 @@ namespace DGL
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
 		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
 		{
+			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->DrawLine({ x1, y1 }, { x2, y2 }, state.StrokeWeight);
+			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight);
 		}
 	}
 
@@ -244,18 +249,20 @@ namespace DGL
 		// Get the current render state
 		auto& state = PeekState();
 
+		m_BlendModeActivator->Activate(state.BlendMode);
+
 		// Only render if the fill is enabled
 		if (state.IsFillEnabled)
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillTriangle(Float2{ x1, y1 }, Float2{ x2, y2 }, Float2{ x3, y3 });
+			m_Renderer->FillTriangle(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, Math::Float2{ x3, y3 });
 		}
 
 		// TODO(Felix): Implement outlined triangle rendering.
 	}
 
-	void BaseGraphicsLayer::Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2)
+	void BaseGraphicsLayer::Image(const Texture::Texture& texture, const float x1, const float y1, const float x2, const float y2)
 	{
 		// Get the current render state
 		auto& state = PeekState();
@@ -263,17 +270,19 @@ namespace DGL
 		// Compute the boundary of the image
 		const auto boundary = state.ImageMode(x1, y1, x2, y2);
 
+		m_BlendModeActivator->Activate(state.BlendMode);
 		m_TextureFillBrush->SetTexture(&texture);
 		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 		m_Renderer->Image(boundary);
 	}
 
-	BaseGraphicsLayer::BaseGraphicsLayer(RendererFacade& renderer, ShapeRenderer::ShapeFactory& shapeFactory) :
+	BaseGraphicsLayer::BaseGraphicsLayer(RendererFacade& renderer, ShapeRenderer::ShapeFactory& shapeFactory, Blending::BlendModeActivator& blendModeActivator) :
 		m_Renderer(&renderer),
 		m_ShapeFactory(&shapeFactory),
-		m_SolidFillBrush(Renderer::SolidColorBrush::Create(Colors::White)),
-		m_SolidStrokeBrush(Renderer::SolidColorBrush::Create(Colors::White)),
-		m_TextureFillBrush(Renderer::TextureBrush::Create())
+		m_BlendModeActivator(&blendModeActivator),
+		m_SolidFillBrush(Brushes::SolidColorBrush::Create(Colors::White)),
+		m_SolidStrokeBrush(Brushes::SolidColorBrush::Create(Colors::White)),
+		m_TextureFillBrush(Brushes::TextureBrush::Create())
 	{
 	}
 }

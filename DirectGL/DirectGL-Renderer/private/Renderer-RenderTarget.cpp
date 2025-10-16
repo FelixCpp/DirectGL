@@ -98,7 +98,7 @@ namespace DGL::Renderer
 			return nullptr;
 		}
 
-		auto renderTexture = Texture::Create(viewportSize, nullptr);
+		auto renderTexture = Texture::Texture::Create(viewportSize, nullptr);
 		if (renderTexture == nullptr)
 		{
 			Logging::Error("Failed to create render texture for OffscreenRenderTarget.");
@@ -157,12 +157,12 @@ namespace DGL::Renderer
 		}
 	}
 
-	const Texture& OffscreenRenderTarget::GetRenderTexture() const
+	const Texture::Texture& OffscreenRenderTarget::GetRenderTexture() const
 	{
 		return *m_RenderTexture;
 	}
 
-	OffscreenRenderTarget::OffscreenRenderTarget(const Math::Uint2 viewportSize, const GLuint framebufferId, const GLuint renderbufferId, std::unique_ptr<Texture> renderTexture):
+	OffscreenRenderTarget::OffscreenRenderTarget(const Math::Uint2 viewportSize, const GLuint framebufferId, const GLuint renderbufferId, std::unique_ptr<Texture::Texture> renderTexture):
 		m_FramebufferId(framebufferId),
 		m_RenderbufferId(renderbufferId),
 		m_RenderTexture(std::move(renderTexture)),

@@ -1,5 +1,5 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-ShaderProgram.ixx
+﻿// Project Name : DirectGL-Brushes
+// File Name    : Brushes-ShaderProgram.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/08
 
@@ -12,11 +12,11 @@ module;
 #include <unordered_map>
 #include <span>
 
-export module DirectGL.Renderer:ShaderProgram;
+export module DirectGL.Brushes:ShaderProgram;
 
 import :Shader;
 
-namespace DGL::Renderer
+namespace DGL::Brushes
 {
 	class ShaderProgram
 	{

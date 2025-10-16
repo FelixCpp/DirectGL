@@ -1,5 +1,5 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-SolidColorBrush.ixx
+﻿// Project Name : DirectGL-Brushes
+// File Name    : Brushes-SolidColorBrush.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/07
 
@@ -8,23 +8,23 @@ module;
 #include <glad/gl.h>
 #include <memory>
 
-export module DirectGL.Renderer:SolidColorBrush;
+export module DirectGL.Brushes:SolidColorBrush;
 
-import :Color;
 import :ShaderProgram;
 
+import DirectGL.Renderer;
 import DirectGL.Math;
 
-export namespace DGL::Renderer
+export namespace DGL::Brushes
 {
 	class SolidColorBrush
 	{
 	public:
 
-		static std::unique_ptr<SolidColorBrush> Create(Color color);
+		static std::unique_ptr<SolidColorBrush> Create(Renderer::Color color);
 
-		void SetColor(Color color);
-		Color GetColor() const;
+		void SetColor(Renderer::Color color);
+		Renderer::Color GetColor() const;
 
 		void UploadUniforms(const Math::Matrix4x4& projectionViewMatrix, const Math::Matrix4x4& modelMatrix);
 
@@ -32,10 +32,10 @@ export namespace DGL::Renderer
 
 		explicit SolidColorBrush(
 			std::unique_ptr<ShaderProgram> shaderProgram,
-			Color color
+			Renderer::Color color
 		);
 
-		Color m_Color;
+		Renderer::Color m_Color;
 		std::unique_ptr<ShaderProgram> m_ShaderProgram;
 
 	};

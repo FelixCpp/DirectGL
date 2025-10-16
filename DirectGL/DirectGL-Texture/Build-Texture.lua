@@ -1,4 +1,4 @@
-project("DirectGL-TextureRenderer")
+project("DirectGL-Texture")
 	kind("StaticLib")
 	language("C++")
 	cppdialect("C++23")
@@ -6,20 +6,23 @@ project("DirectGL-TextureRenderer")
 	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
 	
 	files({
-		"public/**.ixx",
 		"private/**.cpp",
-	})
-
-	includedirs({
-		"%{wks.location}/Libraries/Glad/include",
+		"public/**.ixx",
 	})
 
 	links({
+		"DirectGL-Math",
+
 		"Glad",
+		"Preconditions",
+	})
+
+	includedirs({
+		"%{wks.location}/Libraries/Glad/include"
 	})
 
 	filter("system:windows")
-		systemversion "latest"
+		systemversion("latest")
 
 	filter("configurations:Debug")
 		runtime("Debug")

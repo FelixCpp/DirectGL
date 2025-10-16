@@ -45,6 +45,8 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
+			const auto defaultActivator = std::make_unique<Blending::DefaultBlendModeActivator>();
+			Library.BlendModeActivator = std::make_unique<Blending::CachingBlendModeActivator>(*defaultActivator);
 			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
 			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
 			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create(500);
@@ -60,7 +62,8 @@ namespace DGL
 			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
 				Library.Window->GetSize(),
 				*Library.RendererFacade,
-				*Library.ShapeFactory
+				*Library.ShapeFactory,
+				*Library.BlendModeActivator
 			);
 
 			Library.Sketch = factory();
@@ -216,9 +219,9 @@ namespace DGL
 		}
 	}
 
-	Uint2 GetWindowSize()	{ return Library.Window->GetSize(); }
+	Math::Uint2 GetWindowSize()	{ return Library.Window->GetSize(); }
 	void SetWindowPosition(const int x, const int y) { Library.Window->SetPosition({ x, y }); }
-	Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
+	Math::Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
 	void SetWindowTitle(const std::string_view title) { Library.Window->SetTitle(title); }
 	std::string GetWindowTitle() { return Library.Window->GetTitle(); }
 }
@@ -244,28 +247,28 @@ namespace DGL
 
 	void PushTransform() { Library.MainGraphicsLayer->PushTransform(); }
 	void PopTransform() { Library.MainGraphicsLayer->PopTransform(); }
-	Matrix4x4& PeekTransform() { return Library.MainGraphicsLayer->PeekTransform(); }
+	Math::Matrix4x4& PeekTransform() { return Library.MainGraphicsLayer->PeekTransform(); }
 	void ResetTransform() { Library.MainGraphicsLayer->ResetTransform(); }
 
 	void Translate(const float x, const float y) { Library.MainGraphicsLayer->Translate(x, y); }
 	void Scale(const float x, const float y) { Library.MainGraphicsLayer->Scale(x, y); }
-	void Rotate(const Angle angle) { Library.MainGraphicsLayer->Rotate(angle); }
-	void Skew(const Angle angleX, const Angle angleY) { Library.MainGraphicsLayer->Skew(angleX, angleY); }
+	void Rotate(const Math::Angle angle) { Library.MainGraphicsLayer->Rotate(angle); }
+	void Skew(const Math::Angle angleX, const Math::Angle angleY) { Library.MainGraphicsLayer->Skew(angleX, angleY); }
 
-	void Fill(const Color color) { Library.MainGraphicsLayer->Fill(color); }
-	void Stroke(const Color color) { Library.MainGraphicsLayer->Stroke(color); }
+	void Fill(const Renderer::Color color) { Library.MainGraphicsLayer->Fill(color); }
+	void Stroke(const Renderer::Color color) { Library.MainGraphicsLayer->Stroke(color); }
 	void StrokeWeight(const float strokeWeight) { Library.MainGraphicsLayer->StrokeWeight(strokeWeight); }
 
 	void NoFill() { Library.MainGraphicsLayer->NoFill(); }
 	void NoStroke() { Library.MainGraphicsLayer->NoStroke(); }
 
-	void SetBlend(const BlendMode& blendMode) { Library.MainGraphicsLayer->SetBlendMode(blendMode); }
+	void SetBlend(const Blending::BlendMode& blendMode) { Library.MainGraphicsLayer->SetBlendMode(blendMode); }
 	void SetRectMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetRectMode(rectMode); }
 	void SetImageMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetImageMode(rectMode); }
 	void SetEllipseMode(const EllipseMode& ellipseMode) { Library.MainGraphicsLayer->SetEllipseMode(ellipseMode); }
 	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { Library.MainGraphicsLayer->SetSegmentCountMode(segmentCountMode); }
 
-	void Background(const Color color) { Library.MainGraphicsLayer->Background(color); }
+	void Background(const Renderer::Color color) { Library.MainGraphicsLayer->Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Rect(x1, y1, x2, y2); }
 	void Quad(const float x1, const float y1, const float xy2) { Rect(x1, y1, xy2, xy2); }
 	void Ellipse(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Ellipse(x1, y1, x2, y2); }
@@ -273,5 +276,5 @@ namespace DGL
 	void Point(const float x, const float y) { Library.MainGraphicsLayer->Point(x, y); }
 	void Line(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Line(x1, y1, x2, y2); }
 	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { Library.MainGraphicsLayer->Triangle(x1, y1, x2, y2, x3, y3); }
-	void Image(const Texture& texture, const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Image(texture, x1, y1, x2, y2); }
+	void Image(const Texture::Texture& texture, const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Image(texture, x1, y1, x2, y2); }
 }

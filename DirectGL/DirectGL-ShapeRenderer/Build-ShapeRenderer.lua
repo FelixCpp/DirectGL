@@ -7,7 +7,6 @@ project("DirectGL-ShapeRenderer")
 
 	files({
 		"public/**.ixx",
-		"internal/**.ixx",
 		"private/**.cpp",
 	})
 
@@ -16,9 +15,7 @@ project("DirectGL-ShapeRenderer")
 	})
 
 	links({
-		"DirectGL-Logging",
 		"DirectGL-Math",
-		"DirectGL-Renderer",
 		"Glad",
 	})
 

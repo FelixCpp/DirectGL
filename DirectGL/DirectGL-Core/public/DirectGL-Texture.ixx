@@ -5,9 +5,9 @@
 
 export module DirectGL:Texture;
 
-import DirectGL.Renderer;
+import DirectGL.Texture;
 
 export namespace DGL
 {
-	using Texture = Renderer::Texture;
+	//using Texture2D = Texture::Texture;
 }

@@ -1,11 +1,11 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-TextureWrapMode.ixx
+﻿// Project Name : DirectGL-Texture
+// File Name    : Texture-TextureWrapMode.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/07
 
-export module DirectGL.Renderer:TextureWrapMode;
+export module DirectGL.Texture:TextureWrapMode;
 
-export namespace DGL::Renderer
+export namespace DGL::Texture
 {
 	enum class TextureWrapModeId
 	{
@@ -30,7 +30,7 @@ export namespace DGL::Renderer
 	};
 }
 
-namespace DGL::Renderer
+namespace DGL::Texture
 {
 	inline constexpr TextureWrapMode TextureWrapMode::Repeat = { .Horizontal = TextureWrapModeId::Repeat, .Vertical = TextureWrapModeId::Repeat };
 	inline constexpr TextureWrapMode TextureWrapMode::MirroredRepeat = { .Horizontal = TextureWrapModeId::MirroredRepeat, .Vertical = TextureWrapModeId::MirroredRepeat };

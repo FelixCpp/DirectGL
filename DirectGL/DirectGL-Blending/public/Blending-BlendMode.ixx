@@ -1,11 +1,11 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-BlendMode.ixx
+﻿// Project Name : DirectGL-Blending
+// File Name    : Blending-BlendMode.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/08
 
-export module DirectGL.Renderer:BlendMode;
+export module DirectGL.Blending:BlendMode;
 
-export namespace DGL::Renderer
+export namespace DGL::Blending
 {
 	struct BlendMode
 	{
@@ -53,7 +53,7 @@ export namespace DGL::Renderer
 	};
 }
 
-namespace DGL::Renderer
+namespace DGL::Blending
 {
 	constexpr BlendMode::BlendMode()
 		: SourceFactorRGB(Factor::One)
@@ -102,7 +102,7 @@ namespace DGL::Renderer
 }
 
 
-export namespace DGL::Renderer::BlendModes
+export namespace DGL::Blending::BlendModes
 {
 	inline constexpr auto Alpha = BlendMode(
 		BlendMode::Factor::SrcAlpha,

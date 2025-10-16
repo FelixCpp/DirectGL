@@ -10,7 +10,6 @@ import DirectGL.Renderer;
 import DirectGL.ShapeRenderer;
 import DirectGL.TextureRenderer;
 
-import :Texture;
 import :DepthProvider;
 
 namespace DGL
@@ -38,7 +37,7 @@ namespace DGL
 		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float strokeWeight);
 
 		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c);
-		void DrawLine(const Math::Float2& start, const Math::Float2& end, float strokeWeight);
+		void Line(const Math::Float2& start, const Math::Float2& end, float strokeWeight);
 		void Image(const Math::FloatBoundary& boundary);
 
 	private:

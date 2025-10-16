@@ -2,11 +2,11 @@
 
 #include <glad/gl.h>
 
-module DirectGL.Renderer;
+module DirectGL.Texture;
 
 import Preconditions;
 
-namespace DGL::Renderer
+namespace DGL::Texture
 {
 	constexpr GLenum FilterModeToGlId(const TextureFilterModeId filterMode)
 	{
@@ -91,9 +91,5 @@ namespace DGL::Renderer
 		m_WrapMode(wrapMode),
 		m_SamplerId(samplerId)
 	{
-		
 	}
-
-
-
 }

@@ -1,5 +1,5 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-Texture.ixx
+﻿// Project Name : DirectGL-Texture
+// File Name    : Texture-Texture.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/11
 
@@ -8,13 +8,12 @@ module;
 #include <glad/gl.h>
 
 #include <memory>
-//#include <span>
 
-export module DirectGL.Renderer:Texture;
+export module DirectGL.Texture:Texture;
 
 import DirectGL.Math;
 
-export namespace DGL::Renderer
+export namespace DGL::Texture
 {
 	class Texture
 	{

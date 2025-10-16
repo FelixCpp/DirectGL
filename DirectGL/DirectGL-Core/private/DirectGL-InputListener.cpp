@@ -60,7 +60,7 @@ namespace DGL
 	bool InputListener::IsMouseButtonPressed(const Input::MouseButton button) const { return GetMouseButtonState(button).Pressed; }
 	bool InputListener::IsMouseButtonDown(const Input::MouseButton button) const { return GetMouseButtonState(button).Down; }
 	bool InputListener::IsMouseButtonReleased(const Input::MouseButton button) const { return GetMouseButtonState(button).Released; }
-	Int2 InputListener::GetMousePosition() const { return m_MousePosition; }
+	Math::Int2 InputListener::GetMousePosition() const { return m_MousePosition; }
 
 	InputListener::State InputListener::GetKeyState(const Input::KeyboardKey key) const
 	{

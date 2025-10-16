@@ -1,11 +1,11 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-TextureFilterMode.ixx
+﻿// Project Name : DirectGL-Texture
+// File Name    : Texture-TextureFilterMode.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/07
 
-export module DirectGL.Renderer:TextureFilterMode;
+export module DirectGL.Texture:TextureFilterMode;
 
-export namespace DGL::Renderer
+export namespace DGL::Texture
 {
 	enum class TextureFilterModeId
 	{
@@ -26,7 +26,7 @@ export namespace DGL::Renderer
 	};
 }
 
-namespace DGL::Renderer
+namespace DGL::Texture
 {
 	inline constexpr TextureFilterMode TextureFilterMode::Nearest = { .Minification = TextureFilterModeId::Nearest, .Magnification = TextureFilterModeId::Nearest };
 	inline constexpr TextureFilterMode TextureFilterMode::Linear = { .Minification = TextureFilterModeId::Linear, .Magnification = TextureFilterModeId::Linear };

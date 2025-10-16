@@ -4,14 +4,14 @@
 
 #include <format>
 
-module DirectGL.Renderer;
+module DirectGL.Brushes;
 
 import DirectGL.Logging;
 import Preconditions;
 
 import :Shader;
 
-namespace DGL::Renderer
+namespace DGL::Brushes
 {
 	constexpr GLenum GetShaderTypeId(const ShaderType type)
 	{

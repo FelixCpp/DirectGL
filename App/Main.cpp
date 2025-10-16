@@ -23,7 +23,7 @@ static uint8_t* GetData()
 
 struct DirectGLGame : DGL::Sketch
 {
-	std::unique_ptr<DGL::Texture> texture = DGL::Texture::Create(DGL::Uint2(800, 800), GetData());
+	//std::unique_ptr<DGL::Texture::Texture> texture = DGL::Texture::Texture::Create(DGL::Math::Uint2(800, 800), GetData());
 	bool Setup() override
 	{
 		DGL::SetWindowSize(1600, 900);
@@ -38,14 +38,14 @@ struct DirectGLGame : DGL::Sketch
 
 	void Draw(const float deltaTime) override
 	{
-		DGL::Background(DGL::Color(21, 21, 21));
+		DGL::Background(DGL::Renderer::Color(21, 21, 21));
 
 		DGL::SetImageMode(DGL::RectModeCenterWH());
-		DGL::Image(*texture, DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
+		//DGL::Image(*texture, DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
 
 		DGL::SetRectMode(DGL::RectModeCenterWH());
 		DGL::NoFill();
-		DGL::Stroke(DGL::Color(0, 255, 0));
+		DGL::Stroke(DGL::Renderer::Color(0, 255, 0));
 		DGL::StrokeWeight(3.0f);
 		DGL::Rect(DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
 	}

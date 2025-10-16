@@ -2,9 +2,9 @@
 
 #include <glad/gl.h>
 
-module DirectGL.Renderer;
+module DirectGL.Texture;
 
-namespace DGL::Renderer
+namespace DGL::Texture
 {
 	std::unique_ptr<Texture> Texture::Create(const Math::Uint2 size, const uint8_t* data)
 	{

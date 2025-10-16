@@ -5,7 +5,7 @@
 
 export module DirectGL:BlendMode;
 
-import DirectGL.Renderer;
+import DirectGL.Blending;
 
 /// @brief This namespace wraps all blend mode related functionality of the DirectGL-Renderer library
 ///		   and re-exports it into the DirectGL namespace for easier access.
@@ -15,21 +15,21 @@ import DirectGL.Renderer;
 /// while still keeping the implementation details hidden.
 export namespace DGL
 {
-	using Renderer::BlendMode;
+	//using Renderer::BlendMode;
 }
 
 export namespace DGL::BlendModes
 {
-	using Renderer::BlendModes::Alpha;
-	using Renderer::BlendModes::Additive;
-	using Renderer::BlendModes::Subtractive;
-	using Renderer::BlendModes::Dividing;
-	using Renderer::BlendModes::Multiply;
-	using Renderer::BlendModes::Screen;
-	using Renderer::BlendModes::Opaque;
-	using Renderer::BlendModes::Invert;
-	using Renderer::BlendModes::Darken;
-	using Renderer::BlendModes::Lighten;
-	using Renderer::BlendModes::Difference;
-	using Renderer::BlendModes::Exclusion;
+	using Blending::BlendModes::Alpha;
+	using Blending::BlendModes::Additive;
+	using Blending::BlendModes::Subtractive;
+	using Blending::BlendModes::Dividing;
+	using Blending::BlendModes::Multiply;
+	using Blending::BlendModes::Screen;
+	using Blending::BlendModes::Opaque;
+	using Blending::BlendModes::Invert;
+	using Blending::BlendModes::Darken;
+	using Blending::BlendModes::Lighten;
+	using Blending::BlendModes::Difference;
+	using Blending::BlendModes::Exclusion;
 }

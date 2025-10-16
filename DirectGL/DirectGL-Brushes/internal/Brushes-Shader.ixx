@@ -1,18 +1,18 @@
-﻿// Project Name : DirectGL-Renderer
-// File Name    : Renderer-Shader.ixx
+﻿// Project Name : DirectGL-Brushes
+// File Name    : Brushes-Shader.ixx
 // Author       : Felix Busch
 // Created Date : 2025/10/08
 
 module;
 
-#include <glad/gl.h>
+#include <Glad/gl.h>
 
 #include <memory>
 #include <string_view>
 
-export module DirectGL.Renderer:Shader;
+export module DirectGL.Brushes:Shader;
 
-namespace DGL::Renderer
+namespace DGL::Brushes
 {
 	enum class ShaderType
 	{

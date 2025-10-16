@@ -36,6 +36,9 @@ workspace("DirectGL")
         include("DirectGL/DirectGL-Renderer/Build-Renderer.lua")
         include("DirectGL/DirectGL-ShapeRenderer/Build-ShapeRenderer.lua")
         include("DirectGL/DirectGL-TextureRenderer/Build-TextureRenderer.lua")
+        include("DirectGL/DirectGL-Brushes/Build-Brushes.lua")
+        include("DirectGL/DirectGL-Texture/Build-Texture.lua")
+        include("DirectGL/DirectGL-Blending/Build-Blending.lua")
 
     group("") -- Root group
         include("App/Build-App.lua")

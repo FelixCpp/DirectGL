@@ -9,11 +9,11 @@ module;
 
 export module DirectGL:DrawMode;
 
-import :Math;
+import DirectGL.Math;
 
 export namespace DGL
 {
-	using RectMode = std::function<FloatBoundary(float, float, float, float)>;
+	using RectMode = std::function<Math::FloatBoundary(float, float, float, float)>;
 
 	const RectMode& RectModeLTWH();
 	const RectMode& RectModeLTRB();
@@ -22,7 +22,7 @@ export namespace DGL
 
 export namespace DGL
 {
-	using EllipseMode = std::function<FloatBoundary(float, float, float, float)>;
+	using EllipseMode = std::function<Math::FloatBoundary(float, float, float, float)>;
 
 	const EllipseMode& EllipseModeLTRB();
 	const EllipseMode& EllipseModeLTWH();
@@ -33,7 +33,7 @@ export namespace DGL
 
 export namespace DGL
 {
-	using SegmentCountMode = std::function<size_t(Radius)>;
+	using SegmentCountMode = std::function<size_t(Math::Radius)>;
 
 	const SegmentCountMode& SegmentCountModeFixed(size_t count);
 	const SegmentCountMode& SegmentCountModeSmooth(float error = 0.5f);

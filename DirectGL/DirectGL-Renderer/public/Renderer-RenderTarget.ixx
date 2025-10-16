@@ -13,8 +13,7 @@ module;
 export module DirectGL.Renderer:RenderTarget;
 
 import DirectGL.Math;
-
-import :Texture;
+import DirectGL.Texture;
 
 export namespace DGL::Renderer
 {
@@ -84,7 +83,7 @@ export namespace DGL::Renderer
 
 		void BeginDraw() override;
 		void EndDraw() override;
-		const Texture& GetRenderTexture() const;
+		const Texture::Texture& GetRenderTexture() const;
 
 	private:
 
@@ -92,12 +91,12 @@ export namespace DGL::Renderer
 			Math::Uint2 viewportSize,
 			GLuint framebufferId,
 			GLuint renderbufferId,
-			std::unique_ptr<Texture> renderTexture
+			std::unique_ptr<Texture::Texture> renderTexture
 		);
 
 		GLuint m_FramebufferId;
 		GLuint m_RenderbufferId;
-		std::unique_ptr<Texture> m_RenderTexture;
+		std::unique_ptr<Texture::Texture> m_RenderTexture;
 
 		Math::Uint2 m_ViewportSize;
 

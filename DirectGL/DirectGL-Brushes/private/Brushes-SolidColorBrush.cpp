@@ -1,9 +1,9 @@
 ﻿module;
 
-#include <glad/gl.h>
+#include <Glad/gl.h>
 #include <format>
 
-module DirectGL.Renderer;
+module DirectGL.Brushes;
 import DirectGL.Logging;
 
 inline constexpr auto VERTEX_SOURCE = R"(
@@ -32,9 +32,9 @@ void main() {
 }
 )";
 
-namespace DGL::Renderer
+namespace DGL::Brushes
 {
-	std::unique_ptr<SolidColorBrush> SolidColorBrush::Create(const Color color)
+	std::unique_ptr<SolidColorBrush> SolidColorBrush::Create(const Renderer::Color color)
 	{
 		const auto vertexShader = Shader::Create(VERTEX_SOURCE, ShaderType::Vertex);
 		if (vertexShader == nullptr)
@@ -60,12 +60,12 @@ namespace DGL::Renderer
 		return std::unique_ptr<SolidColorBrush>(new SolidColorBrush(std::move(shaderProgram), color));
 	}
 
-	void SolidColorBrush::SetColor(const Color color)
+	void SolidColorBrush::SetColor(const Renderer::Color color)
 	{
 		m_Color = color;
 	}
 
-	Color SolidColorBrush::GetColor() const
+	Renderer::Color SolidColorBrush::GetColor() const
 	{
 		return m_Color;
 	}
@@ -86,7 +86,7 @@ namespace DGL::Renderer
 		ShaderProgram::Activate(m_ShaderProgram.get());
 	}
 
-	SolidColorBrush::SolidColorBrush(std::unique_ptr<ShaderProgram> shaderProgram, const Color color) :
+	SolidColorBrush::SolidColorBrush(std::unique_ptr<ShaderProgram> shaderProgram, const Renderer::Color color) :
 		m_Color(color),
 		m_ShaderProgram(std::move(shaderProgram))
 	{

@@ -4,8 +4,7 @@
 
 #include <type_traits>
 
-module DirectGL.Renderer;
-
+module DirectGL.Brushes;
 import DirectGL.Logging;
 
 inline static constexpr auto VERTEX_SOURCE = R"(
@@ -38,7 +37,7 @@ void main() {
 }
 )";
 
-namespace DGL::Renderer
+namespace DGL::Brushes
 {
 	std::unique_ptr<TextureBrush> TextureBrush::Create()
 	{
@@ -66,32 +65,32 @@ namespace DGL::Renderer
 		return std::unique_ptr<TextureBrush>(new TextureBrush(std::move(shaderProgram)));
 	}
 
-	void TextureBrush::SetTexture(const Texture* texture)
+	void TextureBrush::SetTexture(const Texture::Texture* texture)
 	{
 		m_Texture = texture;
 	}
 
-	const Texture* TextureBrush::GetTexture() const
+	const Texture::Texture* TextureBrush::GetTexture() const
 	{
 		return m_Texture;
 	}
 
-	void TextureBrush::SetFilterMode(const TextureFilterMode filterMode)
+	void TextureBrush::SetFilterMode(const Texture::TextureFilterMode filterMode)
 	{
 		m_TextureSampler->SetFilterMode(filterMode);
 	}
 
-	TextureFilterMode TextureBrush::GetFilterMode() const
+	Texture::TextureFilterMode TextureBrush::GetFilterMode() const
 	{
 		return m_TextureSampler->GetFilterMode();
 	}
 
-	void TextureBrush::SetWrapMode(const TextureWrapMode wrapMode)
+	void TextureBrush::SetWrapMode(const Texture::TextureWrapMode wrapMode)
 	{
 		m_TextureSampler->SetWrapMode(wrapMode);
 	}
 
-	TextureWrapMode TextureBrush::GetWrapMode() const
+	Texture::TextureWrapMode TextureBrush::GetWrapMode() const
 	{
 		return m_TextureSampler->GetWrapMode();
 	}
@@ -115,7 +114,7 @@ namespace DGL::Renderer
 
 	TextureBrush::TextureBrush(std::unique_ptr<ShaderProgram> shaderProgram):
 		m_ShaderProgram(std::move(shaderProgram)),
-		m_TextureSampler(TextureSampler::Create()),
+		m_TextureSampler(Texture::TextureSampler::Create()),
 		m_Texture(nullptr)
 	{
 	}
