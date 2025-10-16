@@ -1,59 +1,43 @@
 #include <memory>
+#include <array>
 
 import DirectGL;
-
-static uint8_t* GetData()
-{
-	constexpr size_t width = 800;
-	constexpr size_t height = 800;
-	static uint8_t data[width * height * 4];
-	for (size_t y = 0; y < height; ++y)
-	{
-		for (size_t x = 0; x < width; ++x)
-		{
-			const size_t index = (y * width + x) * 4;
-			data[index + 0] = x;
-			data[index + 1] = 100;
-			data[index + 2] = 50;
-			data[index + 3] = 255; // A
-		}
-	}
-	return data;
-}
+import DirectGL.Math;
 
 struct DirectGLGame : DGL::Sketch
 {
-	//std::unique_ptr<DGL::Texture::Texture> texture = DGL::Texture::Texture::Create(DGL::Math::Uint2(800, 800), GetData());
+	std::array<DGL::Math::Float2, 120> points{};
+	int frameCount = 0;
+
 	bool Setup() override
 	{
-		DGL::SetWindowSize(1600, 900);
+		DGL::SetWindowSize(640 * 2, 360 * 2);
+		DGL::SetBlend(DGL::Blending::BlendModes::Alpha);
+		DGL::NoStroke();
+		DGL::Fill(DGL::Renderer::Color(255, 255, 255, 153));
 
 		return true;
 	}
 
 	void Event(const System::WindowEvent& event) override
 	{
-		
+
 	}
 
 	void Draw(const float deltaTime) override
 	{
-		DGL::Background(DGL::Renderer::Color(21, 21, 21));
+		DGL::Background(DGL::Renderer::Color(51, 51, 51));
 
-		DGL::SetImageMode(DGL::RectModeCenterWH());
-		//DGL::Image(*texture, DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
+		const size_t index = frameCount % points.size();
+		points[index] = static_cast<DGL::Math::Float2>(DGL::GetMousePosition());
 
-		DGL::SetBlend(DGL::Blending::BlendModes::Exclusion);
-		DGL::SetRectMode(DGL::RectModeCenterWH());
-		DGL::Fill(DGL::Renderer::Color(255, 0, 0, 100));
-		DGL::Stroke(DGL::Renderer::Color(0, 255, 0));
-		DGL::StrokeWeight(3.0f);
-		DGL::Rect(300.0f, 300.0f, 300.0f, 300.0f);
+		for (size_t i = 0; i < points.size(); ++i)
+		{
+			const size_t n = (index + 1 + i) % points.size();
+			DGL::Circle(points[n].X, points[n].Y, i);
+		}
 
-		DGL::Fill(DGL::Renderer::Color(255, 0, 0));
-		DGL::Stroke(DGL::Renderer::Color(0, 255, 0));
-		DGL::StrokeWeight(3.0f);
-		DGL::Rect(DGL::GetMousePosition().X, DGL::GetMousePosition().Y, 300.0f, 300.0f);
+		++frameCount;
 	}
 
 	void Destroy() override
