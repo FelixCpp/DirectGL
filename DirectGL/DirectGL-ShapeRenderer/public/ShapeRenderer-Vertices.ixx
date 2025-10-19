@@ -11,11 +11,14 @@ export module DirectGL.ShapeRenderer:Vertices;
 
 import DirectGL.Math;
 
+import :PrimitiveType;
+
 export namespace DGL::ShapeRenderer
 {
 	struct Vertices
 	{
-		std::vector<Math::Float3> Positions; // x, y, z
-		std::vector<uint32_t> Indices;
+		std::vector<Math::Float3>	Positions;	//!< List of vertex positions
+		std::vector<uint32_t>		Indices;	//!< Indices into positions
+		PrimitiveType				Type;		//!< Primitive type
 	};
 }

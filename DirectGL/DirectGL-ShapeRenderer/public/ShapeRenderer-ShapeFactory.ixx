@@ -16,6 +16,6 @@ export namespace DGL::ShapeRenderer
 		Vertices GetFilledEllipse(Math::Float2 center, Math::Radius radius, size_t segments, float depth);
 		Vertices GetOutlinedEllipse(Math::Float2 center, Math::Radius radius, size_t segments, float strokeWeight, float depth);
 		Vertices GetFilledTriangle(Math::Float2 a, Math::Float2 b, Math::Float2 c, float depth);
-		Vertices GetLine(Math::Float2 start, Math::Float2 end, float strokeWeight, float depth);
+		Vertices GetLine(Math::Float2 start, Math::Float2 end, float strokeWeight, LineCapStyle startCap, LineCapStyle endCap, float depth);
 	};
 }

@@ -19,6 +19,11 @@ export namespace DGL::Math
 		[[nodiscard]] constexpr bool operator == (Angle other) const;
 		[[nodiscard]] constexpr bool operator != (Angle other) const;
 
+		constexpr Angle operator + (Angle other) const;
+		constexpr Angle operator - (Angle other) const;
+		constexpr Angle operator * (float scalar) const;
+		constexpr Angle operator / (float scalar) const;
+
 		static const Angle Zero;
 
 	private:
@@ -46,6 +51,11 @@ namespace DGL::Math
 
 	constexpr bool Angle::operator==(const Angle other) const { return m_Degrees == other.m_Degrees; }
 	constexpr bool Angle::operator!=(const Angle other) const { return m_Degrees != other.m_Degrees; }
+
+	constexpr Angle Angle::operator+(const Angle other) const { return Angle{ m_Degrees + other.m_Degrees }; }
+	constexpr Angle Angle::operator-(const Angle other) const { return Angle{ m_Degrees - other.m_Degrees }; }
+	constexpr Angle Angle::operator*(const float scalar) const { return Angle{ m_Degrees * scalar }; }
+	constexpr Angle Angle::operator/(const float scalar) const { return Angle{ m_Degrees / scalar }; }
 
 	constexpr Angle::Angle(const float degrees): m_Degrees(degrees) { }
 

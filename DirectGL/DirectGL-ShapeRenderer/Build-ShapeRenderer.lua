@@ -15,6 +15,7 @@ project("DirectGL-ShapeRenderer")
 	})
 
 	links({
+		"Preconditions",
 		"DirectGL-Math",
 		"Glad",
 	})

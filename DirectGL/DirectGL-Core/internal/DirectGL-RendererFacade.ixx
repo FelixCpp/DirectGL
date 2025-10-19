@@ -37,7 +37,7 @@ namespace DGL
 		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float strokeWeight);
 
 		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c);
-		void Line(const Math::Float2& start, const Math::Float2& end, float strokeWeight);
+		void Line(const Math::Float2& start, const Math::Float2& end, float strokeWeight, ShapeRenderer::LineCapStyle startCap, ShapeRenderer::LineCapStyle endCap);
 		void Image(const Math::FloatBoundary& boundary);
 
 	private:

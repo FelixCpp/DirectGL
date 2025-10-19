@@ -7,8 +7,25 @@ module;
 
 module DirectGL.ShapeRenderer;
 
+import Preconditions;
+
 namespace DGL::ShapeRenderer
 {
+	[[nodiscard]] constexpr GLenum PrimitiveTypeToGlId(const PrimitiveType type)
+	{
+		switch (type)
+		{
+			case PrimitiveType::Points: return GL_POINTS;
+			case PrimitiveType::Triangles: return GL_TRIANGLES;
+			case PrimitiveType::TriangleStrip: return GL_TRIANGLE_STRIP;
+			case PrimitiveType::TriangleFan: return GL_TRIANGLE_FAN;
+			case PrimitiveType::Lines: return GL_LINES;
+			case PrimitiveType::LineStrip: return GL_LINE_STRIP;
+			case PrimitiveType::LineLoop: return GL_LINE_LOOP;
+			default: System::Error("Unknown PrimitiveType");
+		}
+	}
+
 	std::unique_ptr<ShapeRenderer> ShapeRenderer::Create(const size_t maxVertices, const size_t maxIndices)
 	{
 		GLuint buffers[2];
@@ -38,12 +55,28 @@ namespace DGL::ShapeRenderer
 		if (m_IndexBufferId != 0) glDeleteBuffers(1, &m_IndexBufferId);
 	}
 
-	void ShapeRenderer::Render(const std::span<const float>& positions, const std::span<const uint32_t>& indices)
+	void ShapeRenderer::Render(const std::span<const float>& positions, const std::span<const uint32_t>& indices, const PrimitiveType type)
 	{
+		// Convert the primitive type to the corresponding OpenGL draw mode id
+		const GLenum drawMode = PrimitiveTypeToGlId(type);
+
+		// Upload the vertex positions to the GPU
 		glNamedBufferSubData(m_PositionBufferId, 0, positions.size_bytes(), positions.data());
-		glNamedBufferSubData(m_IndexBufferId, 0, indices.size_bytes(), indices.data());
+
+		// Bind the VAO to prepare for drawing
 		glBindVertexArray(m_VertexArrayId);
-		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+
+		if (not indices.empty())
+		{
+			// Submit the index data to the GPU
+			glNamedBufferSubData(m_IndexBufferId, 0, indices.size_bytes(), indices.data());
+
+			// Render the shape using indexed drawing
+			glDrawElements(drawMode, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
+		} else
+		{
+			glDrawArrays(drawMode, 0, static_cast<GLsizei>(positions.size()));
+		}
 	}
 
 	void ShapeRenderer::Render(const Vertices& vertices)
@@ -56,7 +89,8 @@ namespace DGL::ShapeRenderer
 
 		Render(
 			std::span{ rawPositions, positionCount },
-			std::span{ rawIndices, indicesCount }
+			std::span{ rawIndices, indicesCount },
+			vertices.Type
 		);
 	}
 

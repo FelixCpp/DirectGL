@@ -5,6 +5,7 @@
 
 export module DirectGL.ShapeRenderer;
 
+export import :PrimitiveType;
 export import :ShapeFactory;
 export import :ShapeRenderer;
 export import :Vertices;

@@ -9,6 +9,7 @@ export module DirectGL:RenderState;
 
 import DirectGL.Renderer;
 import DirectGL.Blending;
+import DirectGL.ShapeRenderer;
 
 import :TransformationStack;
 import :DrawMode;
@@ -30,6 +31,9 @@ export namespace DGL
 		EllipseMode EllipseMode;
 		SegmentCountMode SegmentCountMode;
 
+		ShapeRenderer::LineCapStyle StartCap;
+		ShapeRenderer::LineCapStyle EndCap;
+
 		TransformationStack TransformationStack;
 
 		RenderState();
@@ -48,7 +52,9 @@ namespace DGL
 		ImageMode(RectModeLTWH()),
 		RectMode(RectModeLTWH()),
 		EllipseMode(EllipseModeCenterDiameter()),
-		SegmentCountMode(SegmentCountModeSmooth())
+		SegmentCountMode(SegmentCountModeSmooth()),
+		StartCap(ShapeRenderer::LineCapStyle::Butt),
+		EndCap(ShapeRenderer::LineCapStyle::Butt)
 	{
 	}
 }

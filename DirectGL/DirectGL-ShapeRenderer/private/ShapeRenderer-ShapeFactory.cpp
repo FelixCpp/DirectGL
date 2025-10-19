@@ -1,6 +1,7 @@
 ﻿module;
 
 #include <cmath>
+#include <algorithm>
 
 module DirectGL.ShapeRenderer;
 
@@ -9,6 +10,7 @@ namespace DGL::ShapeRenderer
 	Vertices ShapeFactory::GetFilledRectangle(const Math::FloatBoundary& boundary, const float depth)
 	{
 		Vertices vertices;
+		vertices.Type = PrimitiveType::TriangleFan;
 
 		vertices.Positions.reserve(4);
 		vertices.Positions.emplace_back(boundary.Left, boundary.Top, depth);
@@ -16,20 +18,13 @@ namespace DGL::ShapeRenderer
 		vertices.Positions.emplace_back(boundary.Right(), boundary.Bottom(), depth);
 		vertices.Positions.emplace_back(boundary.Left, boundary.Bottom(), depth);
 
-		vertices.Indices.reserve(6);
-		vertices.Indices.emplace_back(0);
-		vertices.Indices.emplace_back(1);
-		vertices.Indices.emplace_back(2);
-		vertices.Indices.emplace_back(2);
-		vertices.Indices.emplace_back(3);
-		vertices.Indices.emplace_back(0);
-
 		return vertices;
 	}
 
 	Vertices ShapeFactory::GetOutlinedRectangle(const Math::FloatBoundary& boundary, const float strokeWeight, const float depth)
 	{
 		Vertices vertices;
+		vertices.Type = PrimitiveType::Triangles;
 
 		const float halfStroke = strokeWeight * 0.5f;
 		const auto innerBoundary = Math::FloatBoundary::FromLTWH(boundary.Left + halfStroke, boundary.Top + halfStroke, boundary.Width - strokeWeight, boundary.Height - strokeWeight);
@@ -73,6 +68,7 @@ namespace DGL::ShapeRenderer
 	Vertices ShapeFactory::GetFilledEllipse(const Math::Float2 center, const Math::Radius radius, const size_t segments, const float depth)
 	{
 		Vertices vertices;
+		vertices.Type = PrimitiveType::Triangles;
 		vertices.Positions.reserve(segments + 1); // + 1 for the center point
 
 		// Insert the center point in order to form a triangle fan
@@ -101,6 +97,7 @@ namespace DGL::ShapeRenderer
 	Vertices ShapeFactory::GetOutlinedEllipse(const Math::Float2 center, const Math::Radius radius, const size_t segments, const float strokeWeight, const float depth)
 	{
 		Vertices vertices;
+		vertices.Type = PrimitiveType::Triangles;
 		vertices.Positions.reserve(segments * 2); // Each segment has an inner and outer vertex
 		const float halfStroke = strokeWeight * 0.5f;
 		const auto innerRadius = Math::Radius::Elliptical(radius.X - halfStroke, radius.Y - halfStroke);
@@ -150,6 +147,7 @@ namespace DGL::ShapeRenderer
 	Vertices ShapeFactory::GetFilledTriangle(const Math::Float2 a, const Math::Float2 b, const Math::Float2 c, const float depth)
 	{
 		Vertices vertices;
+		vertices.Type = PrimitiveType::Triangles;
 
 		vertices.Positions.reserve(3);
 		vertices.Positions.emplace_back(a.X, a.Y, depth);
@@ -163,33 +161,133 @@ namespace DGL::ShapeRenderer
 
 		return vertices;
 	}
-	Vertices ShapeFactory::GetLine(const Math::Float2 start, const Math::Float2 end, const float strokeWeight, const float depth)
-	{
-		const Math::Float2 direction = (end - start).Normalized();
-		const Math::Float2 perpendicular = direction.Perpendicular() * (strokeWeight * 0.5f);
 
-		// Define the four corners of the rectangle
-		const Math::Float2 v0 = start + perpendicular; // Top-left
-		const Math::Float2 v1 = end + perpendicular;   // Top-right
-		const Math::Float2 v2 = end - perpendicular;   // Bottom-right
-		const Math::Float2 v3 = start - perpendicular; // Bottom-left
+	inline void InsertCorner(std::vector<Math::Float3>& points, const Math::Float2 center, const float radius, const Math::Angle start, const Math::Angle end, const uint32_t segments, const float depth)
+	{
+		float angle = start.AsRadians();
+		const float sweepAngle = (end - start).AsRadians();
+		const float angleIncrement = sweepAngle / static_cast<float>(segments);
+
+		for (uint32_t i = 0; i < segments; ++i)
+		{
+			const float x = center.X + std::cos(angle) * radius;
+			const float y = center.Y + std::sin(angle) * radius;
+			points.emplace_back(x, y, depth);
+
+			angle += angleIncrement;
+		}
+	}
+
+	Vertices ShapeFactory::GetLine(const Math::Float2 start, const Math::Float2 end, const float strokeWeight, LineCapStyle startCap, LineCapStyle endCap, const float depth)
+	{
+		//const Math::Float2 direction = (end - start).Normalized();
+		//const Math::Float2 perpendicular = direction.Perpendicular() * (strokeWeight * 0.5f);
+
+		//// Define the four corners of the rectangle
+		//const Math::Float2 v0 = start + perpendicular; // Top-left
+		//const Math::Float2 v1 = end + perpendicular;   // Top-right
+		//const Math::Float2 v2 = end - perpendicular;   // Bottom-right
+		//const Math::Float2 v3 = start - perpendicular; // Bottom-left
+
+		//Vertices vertices;
+		//vertices.Type = PrimitiveType::Triangles;
+
+		//vertices.Positions.reserve(4); // A line is represented as a rectangle (two triangles)
+		//vertices.Positions.emplace_back(v0.X, v0.Y, depth);
+		//vertices.Positions.emplace_back(v1.X, v1.Y, depth);
+		//vertices.Positions.emplace_back(v2.X, v2.Y, depth);
+		//vertices.Positions.emplace_back(v3.X, v3.Y, depth);
+
+		//// Define the two triangles that make up the rectangle
+		//vertices.Indices.reserve(6);
+		//vertices.Indices.emplace_back(0);
+		//vertices.Indices.emplace_back(1);
+		//vertices.Indices.emplace_back(2);
+		//vertices.Indices.emplace_back(2);
+		//vertices.Indices.emplace_back(3);
+		//vertices.Indices.emplace_back(0);
+
+		//return vertices;
+
+		startCap = LineCapStyle::Round;
+		endCap = LineCapStyle::Round;
+
+		const Math::Float2 direction = (end - start).Normalized();
+		const Math::Float2 offset = direction.Perpendicular() * (strokeWeight * 0.5f);
+		const Math::Angle angle = direction.Heading();
 
 		Vertices vertices;
+		vertices.Type = PrimitiveType::Points;
 
-		vertices.Positions.reserve(4); // A line is represented as a rectangle (two triangles)
-		vertices.Positions.emplace_back(v0.X, v0.Y, depth);
-		vertices.Positions.emplace_back(v1.X, v1.Y, depth);
-		vertices.Positions.emplace_back(v2.X, v2.Y, depth);
-		vertices.Positions.emplace_back(v3.X, v3.Y, depth);
+		std::vector<Math::Float3> startPoints;
+		switch (startCap)
+		{
+			case LineCapStyle::Butt:
+			{
+				startPoints.emplace_back(start.X + offset.X, start.Y + offset.Y, depth);
+				startPoints.emplace_back(start.X - offset.X, start.Y - offset.Y, depth);
+			} break;
 
-		// Define the two triangles that make up the rectangle
-		vertices.Indices.reserve(6);
-		vertices.Indices.emplace_back(0);
-		vertices.Indices.emplace_back(1);
-		vertices.Indices.emplace_back(2);
-		vertices.Indices.emplace_back(2);
-		vertices.Indices.emplace_back(3);
-		vertices.Indices.emplace_back(0);
+			case LineCapStyle::Square:
+			{
+				const Math::Float2 capOffset = direction * (strokeWeight * 0.5f);
+				startPoints.emplace_back(start.X + offset.X - capOffset.X, start.Y + offset.Y - capOffset.Y, depth);
+				startPoints.emplace_back(start.X - offset.X - capOffset.X, start.Y - offset.Y - capOffset.Y, depth);
+			} break;
+
+			case LineCapStyle::Round:
+			{
+				constexpr uint32_t segments = 5;
+				float startAngle = (angle + Math::Degrees(90.0f)).AsRadians();
+				constexpr float angleIncrement = Math::PI / static_cast<float>(segments);
+
+				for (uint32_t i = 0; i < segments; ++i)
+				{
+					const float x = start.X + std::cos(startAngle) * strokeWeight * 0.5f;
+					const float y = start.Y + std::sin(startAngle) * strokeWeight * 0.5f;
+					startPoints.emplace_back(x, y, depth);
+
+					startAngle += angleIncrement;
+				}
+			} break;
+		}
+
+		std::vector<Math::Float3> endPoints;
+		switch (endCap)
+		{
+			case LineCapStyle::Butt:
+			{
+				endPoints.emplace_back(end.X + offset.X, end.Y + offset.Y, depth);
+				endPoints.emplace_back(end.X - offset.X, end.Y - offset.Y, depth);
+			} break;
+
+			case LineCapStyle::Square:
+			{
+				const Math::Float2 capOffset = direction * (strokeWeight * 0.5f);
+				endPoints.emplace_back(end.X + offset.X + capOffset.X, end.Y + offset.Y + capOffset.Y, depth);
+				endPoints.emplace_back(end.X - offset.X + capOffset.X, end.Y - offset.Y + capOffset.Y, depth);
+			} break;
+
+			case LineCapStyle::Round:
+			{
+				const uint32_t segments = 5;
+				float startAngle = (angle + Math::Degrees(270.0f)).AsRadians();
+				constexpr float angleIncrement = Math::PI / static_cast<float>(segments);
+
+				for (uint32_t i = 0; i < segments; ++i)
+				{
+					const float x = end.X + std::cos(startAngle) * strokeWeight * 0.5f;
+					const float y = end.Y + std::sin(startAngle) * strokeWeight * 0.5f;
+					endPoints.emplace_back(x, y, depth);
+
+					startAngle += angleIncrement;
+				}
+			} break;
+		}
+
+		// Insert the positions into the vertices
+		vertices.Positions.insert(vertices.Positions.end(), startPoints.begin(), startPoints.end());
+		vertices.Positions.insert(vertices.Positions.end(), endPoints.begin(), endPoints.end());
 
 		return vertices;
 	}

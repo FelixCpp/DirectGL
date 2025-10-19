@@ -45,9 +45,9 @@ namespace DGL
 		m_ShapeRenderer.Render(vertices);
 	}
 
-	void RendererFacade::Line(const Math::Float2& start, const Math::Float2& end, const float strokeWeight)
+	void RendererFacade::Line(const Math::Float2& start, const Math::Float2& end, const float strokeWeight, const ShapeRenderer::LineCapStyle startCap, const ShapeRenderer::LineCapStyle endCap)
 	{
-		const auto vertices = m_ShapeFactory.GetLine(start, end, strokeWeight, IncrementAndGetDepth());
+		const auto vertices = m_ShapeFactory.GetLine(start, end, strokeWeight, startCap, endCap, IncrementAndGetDepth());
 		m_ShapeRenderer.Render(vertices);
 	}
 

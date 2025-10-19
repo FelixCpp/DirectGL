@@ -242,7 +242,7 @@ namespace DGL
 			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight);
+			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight, state.StartCap, state.EndCap);
 		}
 	}
 
