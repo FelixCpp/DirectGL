@@ -33,15 +33,13 @@ namespace DGL
 		}
 	}
 
-	GraphicsLayer& GraphicsLayerStack::GetCurrentLayer()
+	GraphicsLayer& GraphicsLayerStack::PeekLayer()
 	{
-		if (m_OffscreenLayers.empty())
-		{
-			return *m_MainLayer;
-		}
-		else
+		if (not m_OffscreenLayers.empty())
 		{
 			return *(m_OffscreenLayers.top());
 		}
+
+		return *m_MainLayer;
 	}
 }

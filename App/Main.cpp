@@ -5,10 +5,12 @@ import DirectGL.Math;
 
 struct DirectGLGame : DGL::Sketch
 {
+	std::unique_ptr<DGL::OffscreenGraphicsLayer> layer = DGL::CreateGraphics(500, 500);
+
 	bool Setup() override
 	{
 		DGL::SetWindowSize(640, 360);
-		
+
 		return true;
 	}
 

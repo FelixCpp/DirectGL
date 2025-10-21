@@ -24,12 +24,12 @@ namespace DGL
 		void PushLayer(OffscreenGraphicsLayer* layer);
 		void PopLayer();
 
-		GraphicsLayer& GetCurrentLayer();
+		GraphicsLayer& PeekLayer();
 
 	private:
 
 		MainGraphicsLayer* m_MainLayer;
-		std::stack<Offsc*> m_OffscreenLayers;
+		std::stack<OffscreenGraphicsLayer*> m_OffscreenLayers;
 
 	};
 }

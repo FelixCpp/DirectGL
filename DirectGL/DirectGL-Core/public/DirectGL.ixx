@@ -132,6 +132,12 @@ export namespace DGL
 	void PopState();
 	RenderState& PeekState();
 
+	void PushLayer(OffscreenGraphicsLayer* layer);
+	void PopLayer();
+	GraphicsLayer& PeekLayer();
+
+	std::unique_ptr<OffscreenGraphicsLayer> CreateGraphics(uint32_t width, uint32_t height);
+
 	void PushTransform();
 	void PopTransform();
 	Math::Matrix4x4& PeekTransform();
@@ -180,6 +186,7 @@ import :ConfigureDPIStartupTask;
 import :ConfigureGladStartupTask;
 import :ContextWrapper;
 import :RenderStateStack;
+import :GraphicsLayerStack;
 
 import :WindowStartupTask;
 import :InputListener;
@@ -213,7 +220,7 @@ struct DirectGLLibrary
 	std::unique_ptr<DGL::RendererFacade> 					RendererFacade;			//!< The renderer facade to use for rendering
 	std::unique_ptr<DGL::DepthProvider>						DepthProvider;			//!< The depth provider to use for managing depth values
 	std::unique_ptr<DGL::MainGraphicsLayer>					MainGraphicsLayer;		//!< The main graphics layer to use for rendering
-	DGL::GraphicsLayer*										ActiveGraphicsLayer;	//!< The currently active graphics layer
+	std::unique_ptr<DGL::GraphicsLayerStack>				GraphicsLayerStack;		//!< The graphics layer stack to use for managing graphics layers
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
 	int				ExitCode = 0;					//!< The return code to return on application shutdown

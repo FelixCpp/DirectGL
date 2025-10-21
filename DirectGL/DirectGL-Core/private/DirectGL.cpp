@@ -66,6 +66,8 @@ namespace DGL
 				*Library.BlendModeActivator
 			);
 
+			Library.GraphicsLayerStack = std::make_unique<GraphicsLayerStack>(Library.MainGraphicsLayer.get());
+
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
 			{
@@ -241,40 +243,54 @@ namespace DGL
 	bool IsLooping() { return not Library.IsPaused; }
 	void Redraw() { Library.UserRequestedRedraw = true; }
 
-	void PushState() { Library.MainGraphicsLayer->PushState(); }
-	void PopState() { Library.MainGraphicsLayer->PopState(); }
-	RenderState& PeekState() { return Library.MainGraphicsLayer->PeekState(); }
+	void PushLayer(OffscreenGraphicsLayer* layer) { Library.GraphicsLayerStack->PushLayer(layer); }
+	void PopLayer() { Library.GraphicsLayerStack->PopLayer(); }
+	GraphicsLayer& PeekLayer() { return Library.GraphicsLayerStack->PeekLayer(); }
 
-	void PushTransform() { Library.MainGraphicsLayer->PushTransform(); }
-	void PopTransform() { Library.MainGraphicsLayer->PopTransform(); }
-	Math::Matrix4x4& PeekTransform() { return Library.MainGraphicsLayer->PeekTransform(); }
-	void ResetTransform() { Library.MainGraphicsLayer->ResetTransform(); }
+	std::unique_ptr<OffscreenGraphicsLayer> CreateGraphics(const uint32_t width, const uint32_t height)
+	{
+		return OffscreenGraphicsLayer::Create(
+			{ width, height },
+			*Library.RendererFacade,
+			*Library.ShapeFactory,
+			*Library.BlendModeActivator
+		);
+	}
 
-	void Translate(const float x, const float y) { Library.MainGraphicsLayer->Translate(x, y); }
-	void Scale(const float x, const float y) { Library.MainGraphicsLayer->Scale(x, y); }
-	void Rotate(const Math::Angle angle) { Library.MainGraphicsLayer->Rotate(angle); }
-	void Skew(const Math::Angle angleX, const Math::Angle angleY) { Library.MainGraphicsLayer->Skew(angleX, angleY); }
+	void PushState() { PeekLayer().PushState(); }
+	void PopState() { PeekLayer().PopState(); }
+	RenderState& PeekState() { return PeekLayer().PeekState(); }
 
-	void Fill(const Renderer::Color color) { Library.MainGraphicsLayer->Fill(color); }
-	void Stroke(const Renderer::Color color) { Library.MainGraphicsLayer->Stroke(color); }
-	void StrokeWeight(const float strokeWeight) { Library.MainGraphicsLayer->StrokeWeight(strokeWeight); }
+	void PushTransform() { PeekLayer().PushTransform(); }
+	void PopTransform() { PeekLayer().PopTransform(); }
+	Math::Matrix4x4& PeekTransform() { return PeekLayer().PeekTransform(); }
+	void ResetTransform() { PeekLayer().ResetTransform(); }
 
-	void NoFill() { Library.MainGraphicsLayer->NoFill(); }
-	void NoStroke() { Library.MainGraphicsLayer->NoStroke(); }
+	void Translate(const float x, const float y) { PeekLayer().Translate(x, y); }
+	void Scale(const float x, const float y) { PeekLayer().Scale(x, y); }
+	void Rotate(const Math::Angle angle) { PeekLayer().Rotate(angle); }
+	void Skew(const Math::Angle angleX, const Math::Angle angleY) { PeekLayer().Skew(angleX, angleY); }
 
-	void SetBlend(const Blending::BlendMode& blendMode) { Library.MainGraphicsLayer->SetBlendMode(blendMode); }
-	void SetRectMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetRectMode(rectMode); }
-	void SetImageMode(const RectMode& rectMode) { Library.MainGraphicsLayer->SetImageMode(rectMode); }
-	void SetEllipseMode(const EllipseMode& ellipseMode) { Library.MainGraphicsLayer->SetEllipseMode(ellipseMode); }
-	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { Library.MainGraphicsLayer->SetSegmentCountMode(segmentCountMode); }
+	void Fill(const Renderer::Color color) { PeekLayer().Fill(color); }
+	void Stroke(const Renderer::Color color) { PeekLayer().Stroke(color); }
+	void StrokeWeight(const float strokeWeight) { PeekLayer().StrokeWeight(strokeWeight); }
 
-	void Background(const Renderer::Color color) { Library.MainGraphicsLayer->Background(color); }
-	void Rect(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Rect(x1, y1, x2, y2); }
+	void NoFill() { PeekLayer().NoFill(); }
+	void NoStroke() { PeekLayer().NoStroke(); }
+
+	void SetBlend(const Blending::BlendMode& blendMode) { PeekLayer().SetBlendMode(blendMode); }
+	void SetRectMode(const RectMode& rectMode) { PeekLayer().SetRectMode(rectMode); }
+	void SetImageMode(const RectMode& rectMode) { PeekLayer().SetImageMode(rectMode); }
+	void SetEllipseMode(const EllipseMode& ellipseMode) { PeekLayer().SetEllipseMode(ellipseMode); }
+	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetSegmentCountMode(segmentCountMode); }
+
+	void Background(const Renderer::Color color) { PeekLayer().Background(color); }
+	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Rect(x1, y1, x2, y2); }
 	void Quad(const float x1, const float y1, const float xy2) { Rect(x1, y1, xy2, xy2); }
-	void Ellipse(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Ellipse(x1, y1, x2, y2); }
+	void Ellipse(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Ellipse(x1, y1, x2, y2); }
 	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
-	void Point(const float x, const float y) { Library.MainGraphicsLayer->Point(x, y); }
-	void Line(const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Line(x1, y1, x2, y2); }
-	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { Library.MainGraphicsLayer->Triangle(x1, y1, x2, y2, x3, y3); }
-	void Image(const Texture::Texture& texture, const float x1, const float y1, const float x2, const float y2) { Library.MainGraphicsLayer->Image(texture, x1, y1, x2, y2); }
+	void Point(const float x, const float y) { PeekLayer().Point(x, y); }
+	void Line(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Line(x1, y1, x2, y2); }
+	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { PeekLayer().Triangle(x1, y1, x2, y2, x3, y3); }
+	void Image(const Texture::Texture& texture, const float x1, const float y1, const float x2, const float y2) { PeekLayer().Image(texture, x1, y1, x2, y2); }
 }
