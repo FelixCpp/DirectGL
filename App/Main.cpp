@@ -8,7 +8,7 @@ struct DirectGLGame : DGL::Sketch
 	bool Setup() override
 	{
 		DGL::SetWindowSize(640, 360);
-
+		
 		return true;
 	}
 

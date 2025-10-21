@@ -207,13 +207,13 @@ struct DirectGLLibrary
 
 	std::unique_ptr<DGL::Blending::BlendModeActivator> BlendModeActivator;
 
-	std::unique_ptr<DGL::ShapeRenderer::ShapeFactory>		ShapeFactory;		//!< The shape factory to use
-	std::unique_ptr<DGL::ShapeRenderer::ShapeRenderer>		ShapeRenderer;		//!< The shape renderer to use for primitive drawing
-	std::unique_ptr<DGL::TextureRenderer::TextureRenderer>	TextureRenderer;	//!< The texture renderer to use for textured drawing
-	std::unique_ptr<DGL::RendererFacade> 					RendererFacade;		//!< The renderer facade to use for rendering
-	std::unique_ptr<DGL::DepthProvider>						DepthProvider;		//!< The depth provider to use for managing depth values
-	std::unique_ptr<DGL::MainGraphicsLayer>					MainGraphicsLayer;	//!< The main graphics layer to use for rendering
-
+	std::unique_ptr<DGL::ShapeRenderer::ShapeFactory>		ShapeFactory;			//!< The shape factory to use
+	std::unique_ptr<DGL::ShapeRenderer::ShapeRenderer>		ShapeRenderer;			//!< The shape renderer to use for primitive drawing
+	std::unique_ptr<DGL::TextureRenderer::TextureRenderer>	TextureRenderer;		//!< The texture renderer to use for textured drawing
+	std::unique_ptr<DGL::RendererFacade> 					RendererFacade;			//!< The renderer facade to use for rendering
+	std::unique_ptr<DGL::DepthProvider>						DepthProvider;			//!< The depth provider to use for managing depth values
+	std::unique_ptr<DGL::MainGraphicsLayer>					MainGraphicsLayer;		//!< The main graphics layer to use for rendering
+	DGL::GraphicsLayer*										ActiveGraphicsLayer;	//!< The currently active graphics layer
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
 	int				ExitCode = 0;					//!< The return code to return on application shutdown

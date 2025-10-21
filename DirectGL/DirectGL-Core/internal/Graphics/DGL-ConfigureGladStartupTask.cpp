@@ -13,7 +13,7 @@ namespace DGL
 {
 	Startup::StartupTask::Continuation ConfigureGladStartupTask::Setup()
 	{
-		if (not gladLoadGL(std::bit_cast<GLADloadfunc>(&wglGetProcAddress)))
+		if (not gladLoaderLoadGL())
 		{
 			Error("Failed to initialize GLAD");
 			return Abort;
