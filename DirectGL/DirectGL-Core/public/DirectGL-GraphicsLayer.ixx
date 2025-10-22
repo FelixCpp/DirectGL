@@ -20,6 +20,8 @@ export namespace DGL
 	{
 		virtual ~GraphicsLayer() = default;
 
+		virtual const Math::FloatBoundary& GetViewport() const = 0;
+
 		virtual void PushState() = 0;
 		virtual void PopState() = 0;
 		virtual RenderState& PeekState() = 0;
@@ -46,6 +48,10 @@ export namespace DGL
 		virtual void SetImageMode(const RectMode& imageMode) = 0;
 		virtual void SetEllipseMode(const EllipseMode& ellipseMode) = 0;
 		virtual void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) = 0;
+
+		virtual void SetImageTint(Renderer::Color tint) = 0;
+		virtual void SetImageAlpha(uint8_t alpha) = 0;
+		virtual void SetImageOpacity(float opacity) = 0;
 
 		virtual void Background(Renderer::Color color) = 0;
 		virtual void Rect(float x1, float y1, float x2, float y2) = 0;

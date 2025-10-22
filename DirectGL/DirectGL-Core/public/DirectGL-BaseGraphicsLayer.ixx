@@ -33,7 +33,7 @@ export namespace DGL
 		);
 
 		void SetViewport(Math::FloatBoundary viewport);
-		const Math::FloatBoundary& GetViewport() const;
+		const Math::FloatBoundary& GetViewport() const override;
 
 		void BeginDraw();
 		void EndDraw();
@@ -64,6 +64,10 @@ export namespace DGL
 		void SetImageMode(const RectMode& imageMode) override;
 		void SetEllipseMode(const EllipseMode& ellipseMode) override;
 		void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) override;
+
+		void SetImageTint(Renderer::Color tint) override;
+		void SetImageAlpha(uint8_t alpha) override;
+		void SetImageOpacity(float opacity) override;
 
 		void Background(Renderer::Color color) override;
 		void Rect(float x1, float y1, float x2, float y2) override;

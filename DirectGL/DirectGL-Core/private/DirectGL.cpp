@@ -262,6 +262,8 @@ namespace DGL
 		);
 	}
 
+	const Math::FloatBoundary& GetViewport() { return PeekLayer().GetViewport(); }
+
 	void PushState() { PeekLayer().PushState(); }
 	void PopState() { PeekLayer().PopState(); }
 	RenderState& PeekState() { return PeekLayer().PeekState(); }
@@ -288,6 +290,10 @@ namespace DGL
 	void SetImageMode(const RectMode& rectMode) { PeekLayer().SetImageMode(rectMode); }
 	void SetEllipseMode(const EllipseMode& ellipseMode) { PeekLayer().SetEllipseMode(ellipseMode); }
 	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetSegmentCountMode(segmentCountMode); }
+
+	void SetImageTint(const Renderer::Color tint) { PeekLayer().SetImageTint(tint); }
+	void SetImageAlpha(const uint8_t alpha) { PeekLayer().SetImageAlpha(alpha); }
+	void SetImageOpacity(const float opacity) { PeekLayer().SetImageOpacity(opacity); }
 
 	void Background(const Renderer::Color color) { PeekLayer().Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Rect(x1, y1, x2, y2); }

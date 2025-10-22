@@ -1,6 +1,7 @@
 ﻿module;
 
 #include <memory>
+#include <algorithm>
 
 module DirectGL;
 
@@ -151,6 +152,21 @@ namespace DGL
 		PeekState().SegmentCountMode = segmentCountMode;
 	}
 
+	void BaseGraphicsLayer::SetImageTint(const Renderer::Color tint)
+	{
+		PeekState().ImageTint = tint;
+	}
+
+	void BaseGraphicsLayer::SetImageAlpha(const uint8_t alpha)
+	{
+		PeekState().ImageAlpha = alpha;
+	}
+
+	void BaseGraphicsLayer::SetImageOpacity(const float opacity)
+	{
+		PeekState().ImageAlpha = static_cast<uint8_t>(std::clamp(opacity * 255.0f, 0.0f, 255.0f));
+	}
+
 	void BaseGraphicsLayer::Background(const Renderer::Color color)
 	{
 		// Render the rectangle with the specified background color
@@ -286,7 +302,7 @@ namespace DGL
 
 		m_BlendModeActivator->Activate(state.BlendMode);
 		m_TextureFillBrush->SetTexture(&texture);
-		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
+		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform(), state.ImageTint, state.ImageAlpha);
 		m_Renderer->Image(boundary, IncrementAndGetDepth());
 	}
 

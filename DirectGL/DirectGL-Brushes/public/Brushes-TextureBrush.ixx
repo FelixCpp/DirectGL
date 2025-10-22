@@ -13,6 +13,7 @@ import :ShaderProgram;
 
 import DirectGL.Math;
 import DirectGL.Texture;
+import DirectGL.Renderer;
 
 export namespace DGL::Brushes
 {
@@ -31,7 +32,7 @@ export namespace DGL::Brushes
 		void SetWrapMode(Texture::TextureWrapMode wrapMode);
 		Texture::TextureWrapMode GetWrapMode() const;
 
-		void UploadUniforms(const Math::Matrix4x4& projectionViewMatrix, const Math::Matrix4x4& modelMatrix);
+		void UploadUniforms(const Math::Matrix4x4& projectionViewMatrix, const Math::Matrix4x4& modelMatrix, Renderer::Color imageTint, uint8_t imageAlpha);
 
 	private:
 

@@ -25,6 +25,9 @@ export namespace DGL
 		bool IsFillEnabled;
 		bool IsStrokeEnabled;
 
+		Renderer::Color ImageTint;
+		uint8_t ImageAlpha;
+
 		Blending::BlendMode BlendMode;
 		RectMode ImageMode;
 		RectMode RectMode;
@@ -46,6 +49,7 @@ namespace DGL
 		FillColor(255, 255, 255),
 		StrokeColor(255, 255, 255),
 		StrokeWeight(1.0f),
+		ImageAlpha(255),
 		IsFillEnabled(true),
 		IsStrokeEnabled(true),
 		BlendMode(Blending::BlendModes::Alpha),

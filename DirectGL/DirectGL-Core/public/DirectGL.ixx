@@ -130,6 +130,7 @@ export namespace DGL
 	GraphicsLayer& PeekLayer();
 
 	std::unique_ptr<GraphicsLayer> CreateGraphics(uint32_t width, uint32_t height);
+	const Math::FloatBoundary& GetViewport();
 
 	void PushTransform();
 	void PopTransform();
@@ -153,6 +154,10 @@ export namespace DGL
 	void SetImageMode(const RectMode& rectMode);
 	void SetEllipseMode(const EllipseMode& ellipseMode);
 	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode);
+
+	void SetImageTint(Renderer::Color tint);
+	void SetImageAlpha(uint8_t alpha);
+	void SetImageOpacity(float opacity);
 
 	void Background(Renderer::Color color);
 	void Rect(float x1, float y1, float x2, float y2);

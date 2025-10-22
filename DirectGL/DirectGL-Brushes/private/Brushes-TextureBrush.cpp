@@ -31,9 +31,12 @@ layout (location = 0) out vec4 o_FragColor;
 layout (location = 0) in vec2 v_TexCoord;
 
 layout (binding = 0) uniform sampler2D u_Texture;
+uniform vec4 u_ImageTint;
+uniform float u_ImageAlpha;
 
 void main() {
-	o_FragColor = texture(u_Texture, v_TexCoord);
+	o_FragColor = texture(u_Texture, v_TexCoord) * u_ImageTint;
+	o_FragColor.a *= u_ImageAlpha;
 }
 )";
 
@@ -95,7 +98,12 @@ namespace DGL::Brushes
 		return m_TextureSampler->GetWrapMode();
 	}
 
-	void TextureBrush::UploadUniforms(const Math::Matrix4x4& projectionViewMatrix, const Math::Matrix4x4& modelMatrix)
+	void TextureBrush::UploadUniforms(
+		const Math::Matrix4x4& projectionViewMatrix,
+		const Math::Matrix4x4& modelMatrix,
+		const Renderer::Color imageTint,
+		const uint8_t imageAlpha
+	)
 	{
 		if (m_Texture == nullptr)
 		{
@@ -106,6 +114,14 @@ namespace DGL::Brushes
 		m_ShaderProgram->UploadTexture("u_Texture", 0);
 		m_ShaderProgram->UploadMatrix4x4("u_ProjectionViewMatrix", std::span<const float, 16>(projectionViewMatrix.GetData(), 16));
 		m_ShaderProgram->UploadMatrix4x4("u_ModelMatrix", std::span<const float, 16>(modelMatrix.GetData(), 16));
+		m_ShaderProgram->UploadFloat1("u_ImageAlpha", static_cast<float>(imageAlpha) / 255.0f);
+		m_ShaderProgram->UploadFloat4(
+			"u_ImageTint",
+			static_cast<float>(imageTint.R) / 255.0f,
+			static_cast<float>(imageTint.G) / 255.0f,
+			static_cast<float>(imageTint.B) / 255.0f,
+			static_cast<float>(imageTint.A) / 255.0f
+		);
 
 		glBindSampler(0, m_TextureSampler->GetRendererId());
 		glBindTextureUnit(0, m_Texture->GetRendererId());

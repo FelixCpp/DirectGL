@@ -43,6 +43,8 @@ namespace DGL
 		// Nothing to do for now
 	}
 
+	const Math::FloatBoundary& MainGraphicsLayer::GetViewport() const { return m_GraphicsLayer.GetViewport(); }
+
 	void MainGraphicsLayer::PushState() { m_GraphicsLayer.PushState(); }
 	void MainGraphicsLayer::PopState() { m_GraphicsLayer.PopState(); }
 	RenderState& MainGraphicsLayer::PeekState() { return m_GraphicsLayer.PeekState(); }
@@ -69,6 +71,10 @@ namespace DGL
 	void MainGraphicsLayer::SetImageMode(const RectMode& imageMode) { m_GraphicsLayer.SetImageMode(imageMode); }
 	void MainGraphicsLayer::SetEllipseMode(const EllipseMode& ellipseMode) { m_GraphicsLayer.SetEllipseMode(ellipseMode); }
 	void MainGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayer.SetSegmentCountMode(segmentCountMode); }
+
+	void MainGraphicsLayer::SetImageTint(const Renderer::Color tint) { m_GraphicsLayer.SetImageTint(tint); }
+	void MainGraphicsLayer::SetImageAlpha(const uint8_t alpha) { m_GraphicsLayer.SetImageAlpha(alpha); }
+	void MainGraphicsLayer::SetImageOpacity(const float opacity) { m_GraphicsLayer.SetImageOpacity(opacity); }
 
 	void MainGraphicsLayer::Background(const Renderer::Color color) { m_GraphicsLayer.Background(color); }
 	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Rect(x1, y1, x2, y2); }

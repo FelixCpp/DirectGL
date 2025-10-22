@@ -45,6 +45,11 @@ namespace DGL
 		return m_RenderTarget->GetRenderTexture();
 	}
 
+	const Math::FloatBoundary& OffscreenGraphicsLayer::GetViewport() const
+	{
+		return m_GraphicsLayerImpl.GetViewport();
+	}
+
 	void OffscreenGraphicsLayer::PushState() { m_GraphicsLayerImpl.PushState(); }
 	void OffscreenGraphicsLayer::PopState() { m_GraphicsLayerImpl.PopState(); }
 	RenderState& OffscreenGraphicsLayer::PeekState() { return m_GraphicsLayerImpl.PeekState(); }
@@ -71,6 +76,10 @@ namespace DGL
 	void OffscreenGraphicsLayer::SetImageMode(const RectMode& imageMode) { m_GraphicsLayerImpl.SetImageMode(imageMode); }
 	void OffscreenGraphicsLayer::SetEllipseMode(const EllipseMode& ellipseMode) { m_GraphicsLayerImpl.SetEllipseMode(ellipseMode); }
 	void OffscreenGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayerImpl.SetSegmentCountMode(segmentCountMode); }
+
+	void OffscreenGraphicsLayer::SetImageTint(const Renderer::Color tint) { m_GraphicsLayerImpl.SetImageTint(tint); }
+	void OffscreenGraphicsLayer::SetImageAlpha(const uint8_t alpha) { m_GraphicsLayerImpl.SetImageAlpha(alpha); }
+	void OffscreenGraphicsLayer::SetImageOpacity(const float opacity) { m_GraphicsLayerImpl.SetImageOpacity(opacity); }
 
 	void OffscreenGraphicsLayer::Background(const Renderer::Color color) { m_GraphicsLayerImpl.Background(color); }
 	void OffscreenGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Rect(x1, y1, x2, y2); }

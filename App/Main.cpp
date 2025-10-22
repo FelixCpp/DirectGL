@@ -11,6 +11,7 @@ struct DirectGLGame : DGL::Sketch
 	{
 		DGL::SetWindowSize(1280, 720);
 
+
 		DGL::PushLayer(layer.get());
 		// Render 10 bars of different colors
 		DGL::Fill({ 255, 0, 0 });
@@ -31,20 +32,23 @@ struct DirectGLGame : DGL::Sketch
 	{
 		DGL::Background(DGL::Renderer::Color(100, 100, 100));
 
-		if (DGL::IsMouseButtonDown(DGL::MouseButton::Left))
-		{
-			const auto [mx, my] = DGL::GetMousePosition();
+		opacity += deltaTime * 0.5f;
+		DGL::SetImageOpacity(opacity);
 
-			if (const auto* offscreenLayer = dynamic_cast<DGL::OffscreenGraphicsLayer*>(layer.get()))
-			{
-				DGL::Image(offscreenLayer->GetRenderTexture(), mx, my, 50.0f, 50.0f);
-			}
+		const auto [mx, my] = DGL::GetMousePosition();
+		DGL::SetImageTint({ 100, 30, 255 });
+
+		if (const auto* offscreenLayer = dynamic_cast<DGL::OffscreenGraphicsLayer*>(layer.get()))
+		{
+			DGL::Image(offscreenLayer->GetRenderTexture(), mx, my, 500.0f, 500.0f);
 		}
 	}
 
 	void Destroy() override
 	{
 	}
+
+	float opacity = 0.0f;
 };
 
 int main()
