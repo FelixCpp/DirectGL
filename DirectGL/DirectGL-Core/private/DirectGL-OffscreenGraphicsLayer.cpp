@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 
+#include <memory>
 #include <type_traits>
 
 module DirectGL;
@@ -13,22 +14,35 @@ namespace DGL
 	std::unique_ptr<OffscreenGraphicsLayer> OffscreenGraphicsLayer::Create(
 		const Math::Uint2 viewportSize,
 		RendererFacade& renderer,
-		ShapeRenderer::ShapeFactory& shapeFactory,
 		Blending::BlendModeActivator& blendModeActivator
 	) {
-		return std::unique_ptr<OffscreenGraphicsLayer>(new OffscreenGraphicsLayer(viewportSize, renderer, shapeFactory, blendModeActivator));
+		return std::unique_ptr<OffscreenGraphicsLayer>(new OffscreenGraphicsLayer(viewportSize, renderer, blendModeActivator));
 	}
 
 	void OffscreenGraphicsLayer::BeginDraw()
 	{
-		m_RenderTarget->BeginDraw();
 		m_GraphicsLayerImpl.BeginDraw();
+		m_RenderTarget->Activate();
 	}
 
 	void OffscreenGraphicsLayer::EndDraw()
 	{
 		m_GraphicsLayerImpl.EndDraw();
-		m_RenderTarget->EndDraw();
+	}
+
+	void OffscreenGraphicsLayer::Resume()
+	{
+		m_RenderTarget->Activate();
+	}
+
+	void OffscreenGraphicsLayer::Suspend()
+	{
+		// Nothing to do for now
+	}
+
+	const Texture::Texture& OffscreenGraphicsLayer::GetRenderTexture() const
+	{
+		return m_RenderTarget->GetRenderTexture();
 	}
 
 	void OffscreenGraphicsLayer::PushState() { m_GraphicsLayerImpl.PushState(); }
@@ -69,10 +83,9 @@ namespace DGL
 	OffscreenGraphicsLayer::OffscreenGraphicsLayer(
 		const Math::Uint2 viewportSize,
 		RendererFacade& renderer,
-		ShapeRenderer::ShapeFactory& shapeFactory,
 		Blending::BlendModeActivator& blendModeActivator
 	) :	m_RenderTarget(Renderer::OffscreenRenderTarget::Create(viewportSize)),
-		m_GraphicsLayerImpl(renderer, shapeFactory, blendModeActivator)
+		m_GraphicsLayerImpl(renderer, viewportSize, blendModeActivator, std::make_unique<IncrementalDepthProvider>(0.0f, 1.0f / 20'000.0f))
 	{
 	}
 }

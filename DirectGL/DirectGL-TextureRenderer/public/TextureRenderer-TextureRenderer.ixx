@@ -17,7 +17,7 @@ export namespace DGL::TextureRenderer
 	{
 	public:
 
-		static std::unique_ptr<TextureRenderer> Create(size_t maxVertices);
+		static std::unique_ptr<TextureRenderer> Create();
 
 		~TextureRenderer();
 

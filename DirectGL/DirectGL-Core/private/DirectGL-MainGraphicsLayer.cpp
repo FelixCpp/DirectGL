@@ -1,4 +1,8 @@
-﻿module DirectGL;
+﻿module;
+
+#include <memory>
+
+module DirectGL;
 
 import :MainGraphicsLayer;
 
@@ -7,10 +11,9 @@ namespace DGL
 	std::unique_ptr<MainGraphicsLayer> MainGraphicsLayer::Create(
 		const Math::Uint2 viewportSize,
 		RendererFacade& renderer,
-		ShapeRenderer::ShapeFactory& shapeFactory,
 		Blending::BlendModeActivator& blendModeActivator
 	) {
-		return std::unique_ptr<MainGraphicsLayer>(new MainGraphicsLayer(viewportSize, renderer, shapeFactory, blendModeActivator));
+		return std::unique_ptr<MainGraphicsLayer>(new MainGraphicsLayer(viewportSize, renderer, blendModeActivator));
 	}
 
 	void MainGraphicsLayer::Resize(const Math::Uint2 viewportSize)
@@ -21,14 +24,23 @@ namespace DGL
 
 	void MainGraphicsLayer::BeginDraw()
 	{
-		m_MainRenderTarget->BeginDraw();
 		m_GraphicsLayer.BeginDraw();
+		m_MainRenderTarget->Activate();
 	}
 
 	void MainGraphicsLayer::EndDraw()
 	{
 		m_GraphicsLayer.EndDraw();
-		m_MainRenderTarget->EndDraw();
+	}
+
+	void MainGraphicsLayer::Resume()
+	{
+		m_MainRenderTarget->Activate();
+	}
+
+	void MainGraphicsLayer::Suspend()
+	{
+		// Nothing to do for now
 	}
 
 	void MainGraphicsLayer::PushState() { m_GraphicsLayer.PushState(); }
@@ -69,10 +81,21 @@ namespace DGL
 	MainGraphicsLayer::MainGraphicsLayer(
 		const Math::Uint2 viewportSize,
 		RendererFacade& renderer,
-		ShapeRenderer::ShapeFactory& shapeFactory,
 		Blending::BlendModeActivator& blendModeActivator
-	):	m_MainRenderTarget(Renderer::MainRenderTarget::Create(Math::UintBoundary::FromLTWH(0, 0, viewportSize.X, viewportSize.Y))),
-		m_GraphicsLayer(renderer, shapeFactory, blendModeActivator)
+	):	m_MainRenderTarget(
+			Renderer::MainRenderTarget::Create(
+				Math::UintBoundary::FromLTWH(
+					0, 0,
+					viewportSize.X, viewportSize.Y
+				)
+			)
+		),
+		m_GraphicsLayer(
+			renderer,
+			viewportSize,
+			blendModeActivator,
+			std::make_unique<IncrementalDepthProvider>(0.0f, 1.0f / 20'000.0f)
+		)
 	{
 	}
 }

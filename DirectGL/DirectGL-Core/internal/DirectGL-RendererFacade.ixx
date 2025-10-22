@@ -3,6 +3,10 @@
 // Author       : Felix Busch
 // Created Date : 2025/10/15
 
+module;
+
+#include <memory>
+
 export module DirectGL:RendererFacade;
 
 import DirectGL.Math;
@@ -26,29 +30,24 @@ namespace DGL
 		explicit RendererFacade(
 			TextureRenderer::TextureRenderer& textureRenderer,
 			ShapeRenderer::ShapeRenderer& shapeRenderer,
-			ShapeRenderer::ShapeFactory& shapeFactory,
-			DepthProvider& depthProvider
+			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
-		void FillRectangle(const Math::FloatBoundary& boundary);
-		void DrawRectangle(const Math::FloatBoundary& boundary, float strokeWeight);
+		void FillRectangle(const Math::FloatBoundary& boundary, float depth);
+		void DrawRectangle(const Math::FloatBoundary& boundary, float strokeWeight, float depth);
 
-		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments);
-		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float strokeWeight);
+		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float depth);
+		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, size_t segments, float strokeWeight, float depth);
 
-		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c);
-		void Line(const Math::Float2& start, const Math::Float2& end, float strokeWeight, ShapeRenderer::LineCapStyle startCap, ShapeRenderer::LineCapStyle endCap);
-		void Image(const Math::FloatBoundary& boundary);
+		void FillTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c, float depth);
+		void Line(const Math::Float2& start, const Math::Float2& end, float strokeWeight, ShapeRenderer::LineCapStyle startCap, ShapeRenderer::LineCapStyle endCap, float depth);
+		void Image(const Math::FloatBoundary& boundary, float depth);
 
 	private:
-
-		float IncrementAndGetDepth() const;
 
 		TextureRenderer::TextureRenderer& m_TextureRenderer;
 		ShapeRenderer::ShapeRenderer& m_ShapeRenderer;
 		ShapeRenderer::ShapeFactory& m_ShapeFactory;
-
-		DepthProvider* m_DepthProvider;
 
 	};
 }

@@ -19,19 +19,23 @@ import :RenderStateStack;
 
 export namespace DGL
 {
-	class OffscreenGraphicsLayer : public Renderer::RenderTarget, public GraphicsLayer
+	class OffscreenGraphicsLayer : public GraphicsLayer
 	{
 	public:
 
 		static std::unique_ptr<OffscreenGraphicsLayer> Create(
 			Math::Uint2 viewportSize,
 			RendererFacade& renderer,
-			ShapeRenderer::ShapeFactory& shapeFactory,
 			Blending::BlendModeActivator& blendModeActivator
 		);
 
-		void BeginDraw() override;
-		void EndDraw() override;
+		void BeginDraw();
+		void EndDraw();
+
+		void Resume();
+		void Suspend();
+
+		const Texture::Texture& GetRenderTexture() const;
 
 		void PushState() override;
 		void PopState() override;
@@ -73,7 +77,6 @@ export namespace DGL
 		explicit OffscreenGraphicsLayer(
 			Math::Uint2 viewportSize,
 			RendererFacade& renderer,
-			ShapeRenderer::ShapeFactory& shapeFactory,
 			Blending::BlendModeActivator& blendModeActivator
 		);
 

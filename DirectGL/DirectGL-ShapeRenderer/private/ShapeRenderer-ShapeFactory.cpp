@@ -68,27 +68,15 @@ namespace DGL::ShapeRenderer
 	Vertices ShapeFactory::GetFilledEllipse(const Math::Float2 center, const Math::Radius radius, const size_t segments, const float depth)
 	{
 		Vertices vertices;
-		vertices.Type = PrimitiveType::Triangles;
-		vertices.Positions.reserve(segments + 1); // + 1 for the center point
+		vertices.Type = PrimitiveType::TriangleFan;
+		vertices.Positions.reserve(segments);
 
-		// Insert the center point in order to form a triangle fan
-		vertices.Positions.emplace_back(center.X, center.Y, depth);
-
-		for (size_t i = 0; i < segments; i++)
+		for (size_t i = 0; i <= segments; i++)
 		{
 			const float angle = (static_cast<float>(i) / static_cast<float>(segments)) * Math::TAU;
 			const float x = center.X + radius.X * std::cos(angle);
 			const float y = center.Y + radius.Y * std::sin(angle);
 			vertices.Positions.emplace_back(x, y, depth);
-		}
-
-		// Generate the indices
-		vertices.Indices.reserve(segments * 3); // Each segment forms a triangle with the center
-		for (size_t i = 1; i <= segments; i++)
-		{
-			vertices.Indices.emplace_back(0); // Center point
-			vertices.Indices.emplace_back(i); // Current point on the ellipse
-			vertices.Indices.emplace_back(i % segments + 1); // Next point on the ellipse (wrap around)
 		}
 
 		return vertices;
@@ -154,140 +142,12 @@ namespace DGL::ShapeRenderer
 		vertices.Positions.emplace_back(b.X, b.Y, depth);
 		vertices.Positions.emplace_back(c.X, c.Y, depth);
 
-		vertices.Indices.reserve(3);
-		vertices.Indices.emplace_back(0);
-		vertices.Indices.emplace_back(1);
-		vertices.Indices.emplace_back(2);
-
 		return vertices;
-	}
-
-	inline void InsertCorner(std::vector<Math::Float3>& points, const Math::Float2 center, const float radius, const Math::Angle start, const Math::Angle end, const uint32_t segments, const float depth)
-	{
-		float angle = start.AsRadians();
-		const float sweepAngle = (end - start).AsRadians();
-		const float angleIncrement = sweepAngle / static_cast<float>(segments);
-
-		for (uint32_t i = 0; i < segments; ++i)
-		{
-			const float x = center.X + std::cos(angle) * radius;
-			const float y = center.Y + std::sin(angle) * radius;
-			points.emplace_back(x, y, depth);
-
-			angle += angleIncrement;
-		}
 	}
 
 	Vertices ShapeFactory::GetLine(const Math::Float2 start, const Math::Float2 end, const float strokeWeight, LineCapStyle startCap, LineCapStyle endCap, const float depth)
 	{
-		//const Math::Float2 direction = (end - start).Normalized();
-		//const Math::Float2 perpendicular = direction.Perpendicular() * (strokeWeight * 0.5f);
-
-		//// Define the four corners of the rectangle
-		//const Math::Float2 v0 = start + perpendicular; // Top-left
-		//const Math::Float2 v1 = end + perpendicular;   // Top-right
-		//const Math::Float2 v2 = end - perpendicular;   // Bottom-right
-		//const Math::Float2 v3 = start - perpendicular; // Bottom-left
-
-		//Vertices vertices;
-		//vertices.Type = PrimitiveType::Triangles;
-
-		//vertices.Positions.reserve(4); // A line is represented as a rectangle (two triangles)
-		//vertices.Positions.emplace_back(v0.X, v0.Y, depth);
-		//vertices.Positions.emplace_back(v1.X, v1.Y, depth);
-		//vertices.Positions.emplace_back(v2.X, v2.Y, depth);
-		//vertices.Positions.emplace_back(v3.X, v3.Y, depth);
-
-		//// Define the two triangles that make up the rectangle
-		//vertices.Indices.reserve(6);
-		//vertices.Indices.emplace_back(0);
-		//vertices.Indices.emplace_back(1);
-		//vertices.Indices.emplace_back(2);
-		//vertices.Indices.emplace_back(2);
-		//vertices.Indices.emplace_back(3);
-		//vertices.Indices.emplace_back(0);
-
-		//return vertices;
-
-		startCap = LineCapStyle::Round;
-		endCap = LineCapStyle::Round;
-
-		const Math::Float2 direction = (end - start).Normalized();
-		const Math::Float2 offset = direction.Perpendicular() * (strokeWeight * 0.5f);
-		const Math::Angle angle = direction.Heading();
-
 		Vertices vertices;
-		vertices.Type = PrimitiveType::Points;
-
-		std::vector<Math::Float3> startPoints;
-		switch (startCap)
-		{
-			case LineCapStyle::Butt:
-			{
-				startPoints.emplace_back(start.X + offset.X, start.Y + offset.Y, depth);
-				startPoints.emplace_back(start.X - offset.X, start.Y - offset.Y, depth);
-			} break;
-
-			case LineCapStyle::Square:
-			{
-				const Math::Float2 capOffset = direction * (strokeWeight * 0.5f);
-				startPoints.emplace_back(start.X + offset.X - capOffset.X, start.Y + offset.Y - capOffset.Y, depth);
-				startPoints.emplace_back(start.X - offset.X - capOffset.X, start.Y - offset.Y - capOffset.Y, depth);
-			} break;
-
-			case LineCapStyle::Round:
-			{
-				constexpr uint32_t segments = 5;
-				float startAngle = (angle + Math::Degrees(90.0f)).AsRadians();
-				constexpr float angleIncrement = Math::PI / static_cast<float>(segments);
-
-				for (uint32_t i = 0; i < segments; ++i)
-				{
-					const float x = start.X + std::cos(startAngle) * strokeWeight * 0.5f;
-					const float y = start.Y + std::sin(startAngle) * strokeWeight * 0.5f;
-					startPoints.emplace_back(x, y, depth);
-
-					startAngle += angleIncrement;
-				}
-			} break;
-		}
-
-		std::vector<Math::Float3> endPoints;
-		switch (endCap)
-		{
-			case LineCapStyle::Butt:
-			{
-				endPoints.emplace_back(end.X + offset.X, end.Y + offset.Y, depth);
-				endPoints.emplace_back(end.X - offset.X, end.Y - offset.Y, depth);
-			} break;
-
-			case LineCapStyle::Square:
-			{
-				const Math::Float2 capOffset = direction * (strokeWeight * 0.5f);
-				endPoints.emplace_back(end.X + offset.X + capOffset.X, end.Y + offset.Y + capOffset.Y, depth);
-				endPoints.emplace_back(end.X - offset.X + capOffset.X, end.Y - offset.Y + capOffset.Y, depth);
-			} break;
-
-			case LineCapStyle::Round:
-			{
-				const uint32_t segments = 5;
-				float startAngle = (angle + Math::Degrees(270.0f)).AsRadians();
-				constexpr float angleIncrement = Math::PI / static_cast<float>(segments);
-
-				for (uint32_t i = 0; i < segments; ++i)
-				{
-					const float x = end.X + std::cos(startAngle) * strokeWeight * 0.5f;
-					const float y = end.Y + std::sin(startAngle) * strokeWeight * 0.5f;
-					endPoints.emplace_back(x, y, depth);
-
-					startAngle += angleIncrement;
-				}
-			} break;
-		}
-
-		// Insert the positions into the vertices
-		vertices.Positions.insert(vertices.Positions.end(), startPoints.begin(), startPoints.end());
-		vertices.Positions.insert(vertices.Positions.end(), endPoints.begin(), endPoints.end());
 
 		return vertices;
 	}

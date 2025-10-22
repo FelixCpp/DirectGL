@@ -11,35 +11,48 @@ namespace DGL
 
 	void GraphicsLayerStack::PushLayer(OffscreenGraphicsLayer* layer)
 	{
+		// Suspend the current layer
+		if (not m_OffscreenLayers.empty())
+		{
+			m_OffscreenLayers.top()->Suspend();
+		}
+		else
+		{
+			m_MainLayer->Suspend();
+		}
+
+		// Push & Activate
 		m_OffscreenLayers.push(layer);
-		layer->BeginDraw();
+		m_OffscreenLayers.top()->BeginDraw();
 	}
 
 	void GraphicsLayerStack::PopLayer()
 	{
 		if (not m_OffscreenLayers.empty())
 		{
+			// Deactivate & Pop
 			m_OffscreenLayers.top()->EndDraw();
 			m_OffscreenLayers.pop();
+		}
 
-			if (m_OffscreenLayers.empty())
-			{
-				m_MainLayer->BeginDraw();
-			}
-			else
-			{
-				m_OffscreenLayers.top()->BeginDraw();
-			}
+		// Resume the previous layer
+		if (not m_OffscreenLayers.empty())
+		{
+			m_OffscreenLayers.top()->Resume();
+		}
+		else
+		{
+			m_MainLayer->Resume();
 		}
 	}
 
 	GraphicsLayer& GraphicsLayerStack::PeekLayer()
 	{
-		if (not m_OffscreenLayers.empty())
+		if (m_OffscreenLayers.empty())
 		{
-			return *(m_OffscreenLayers.top());
+			return *m_MainLayer;
 		}
 
-		return *m_MainLayer;
+		return *m_OffscreenLayers.top();
 	}
 }

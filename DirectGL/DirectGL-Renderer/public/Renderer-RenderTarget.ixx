@@ -25,23 +25,7 @@ export namespace DGL::Renderer
 		virtual ~RenderTarget() = default;
 
 		/// Activates this render target for drawing.
-		/// Must be paired with a subsequent call to EndDraw().
-		virtual void BeginDraw() = 0;
-
-		/// Deactivates this render target and restores the
-		/// previous render target.
-		virtual void EndDraw() = 0;
-	};
-}
-
-namespace DGL::Renderer
-{
-	/// This data class contains information needed to restore a previously
-	/// active render target.
-	struct RenderTargetRestoreInformation
-	{
-		GLint CachedFramebufferId;
-		Math::UintBoundary CachedViewport;
+		virtual void Activate() = 0;
 	};
 }
 
@@ -57,15 +41,13 @@ export namespace DGL::Renderer
 		void SetViewport(Math::UintBoundary viewport);
 		const Math::UintBoundary& GetViewport() const;
 
-		void BeginDraw() override;
-		void EndDraw() override;
+		void Activate() override;
 
 	private:
 
 		explicit MainRenderTarget(Math::UintBoundary viewport);
 
 		Math::UintBoundary m_Viewport;
-		std::optional<RenderTargetRestoreInformation> m_RestoreInfo;
 
 	};
 }
@@ -81,8 +63,7 @@ export namespace DGL::Renderer
 
 		~OffscreenRenderTarget() override;
 
-		void BeginDraw() override;
-		void EndDraw() override;
+		void Activate() override;
 		const Texture::Texture& GetRenderTexture() const;
 
 	private:
@@ -99,8 +80,6 @@ export namespace DGL::Renderer
 		std::unique_ptr<Texture::Texture> m_RenderTexture;
 
 		Math::Uint2 m_ViewportSize;
-
-		std::optional<RenderTargetRestoreInformation> m_RestoreInfo;
 
 	};
 }

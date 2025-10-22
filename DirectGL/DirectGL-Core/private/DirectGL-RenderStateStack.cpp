@@ -19,8 +19,12 @@ namespace DGL
 
 	void RenderStateStack::Clear()
 	{
+		// Clear out all render states from the stack
 		while (not m_RenderStates.empty())
 			m_RenderStates.pop();
+
+		// Reset the default state to its initial values.
+		m_DefaultState = {};
 	}
 
 	RenderState& RenderStateStack::PeekState()

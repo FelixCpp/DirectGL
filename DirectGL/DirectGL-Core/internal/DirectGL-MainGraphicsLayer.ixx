@@ -20,21 +20,23 @@ import :RendererFacade;
 
 export namespace DGL
 {
-	class MainGraphicsLayer : public Renderer::RenderTarget, public GraphicsLayer
+	class MainGraphicsLayer : public GraphicsLayer
 	{
 	public:
 
 		static std::unique_ptr<MainGraphicsLayer> Create(
 			Math::Uint2 viewportSize,
 			RendererFacade& renderer,
-			ShapeRenderer::ShapeFactory& shapeFactory,
 			Blending::BlendModeActivator& blendModeActivator
 		);
 
 		void Resize(Math::Uint2 viewportSize);
 
-		void BeginDraw() override;
-		void EndDraw() override;
+		void BeginDraw();
+		void EndDraw();
+
+		void Resume();
+		void Suspend();
 
 		void PushState() override;
 		void PopState() override;
@@ -76,7 +78,6 @@ export namespace DGL
 		explicit MainGraphicsLayer(
 			Math::Uint2 viewportSize,
 			RendererFacade& renderer,
-			ShapeRenderer::ShapeFactory& shapeFactory,
 			Blending::BlendModeActivator& blendModeActivator
 		);
 

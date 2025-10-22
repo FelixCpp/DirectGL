@@ -49,20 +49,17 @@ namespace DGL
 			Library.BlendModeActivator = std::make_unique<Blending::CachingBlendModeActivator>(*defaultActivator);
 			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
 			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
-			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create(500);
-			Library.DepthProvider = std::make_unique<IncrementalDepthProvider>(0.0f, 1.0f / 20'000.f);
+			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create();
 
 			Library.RendererFacade = std::make_unique<RendererFacade>(
 				*Library.TextureRenderer,
 				*Library.ShapeRenderer,
-				*Library.ShapeFactory,
-				*Library.DepthProvider
+				*Library.ShapeFactory
 			);
 
 			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
 				Library.Window->GetSize(),
 				*Library.RendererFacade,
-				*Library.ShapeFactory,
 				*Library.BlendModeActivator
 			);
 
@@ -126,7 +123,6 @@ namespace DGL
 					// Note that this needs to happen before we call the Draw function
 					Library.UserRequestedRedraw = false;
 
-					Library.DepthProvider->ResetDepth();
 					Library.MainGraphicsLayer->BeginDraw();
 					Library.Sketch->Draw(deltaTime.count());
 					Library.MainGraphicsLayer->EndDraw();
@@ -243,16 +239,25 @@ namespace DGL
 	bool IsLooping() { return not Library.IsPaused; }
 	void Redraw() { Library.UserRequestedRedraw = true; }
 
-	void PushLayer(OffscreenGraphicsLayer* layer) { Library.GraphicsLayerStack->PushLayer(layer); }
+	void PushLayer(GraphicsLayer* layer)
+	{
+		if (const auto offscreenLayer = dynamic_cast<OffscreenGraphicsLayer*>(layer))
+		{
+			Library.GraphicsLayerStack->PushLayer(offscreenLayer);
+		} else
+		{
+			Logging::Error("Only offscreen graphics layers can be pushed onto the graphics layer stack");
+		}
+	}
+
 	void PopLayer() { Library.GraphicsLayerStack->PopLayer(); }
 	GraphicsLayer& PeekLayer() { return Library.GraphicsLayerStack->PeekLayer(); }
 
-	std::unique_ptr<OffscreenGraphicsLayer> CreateGraphics(const uint32_t width, const uint32_t height)
+	std::unique_ptr<GraphicsLayer> CreateGraphics(const uint32_t width, const uint32_t height)
 	{
 		return OffscreenGraphicsLayer::Create(
 			{ width, height },
 			*Library.RendererFacade,
-			*Library.ShapeFactory,
 			*Library.BlendModeActivator
 		);
 	}

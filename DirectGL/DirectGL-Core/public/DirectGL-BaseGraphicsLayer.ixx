@@ -17,6 +17,7 @@ import DirectGL.Blending;
 import :RendererFacade;
 import :RenderStateStack;
 import :GraphicsLayer;
+import :DepthProvider;
 
 export namespace DGL
 {
@@ -26,8 +27,9 @@ export namespace DGL
 
 		explicit BaseGraphicsLayer(
 			RendererFacade& renderer,
-			ShapeRenderer::ShapeFactory& shapeFactory,
-			Blending::BlendModeActivator& blendModeActivator
+			Math::Uint2 viewportSize,
+			Blending::BlendModeActivator& blendModeActivator,
+			std::unique_ptr<DepthProvider> depthProvider
 		);
 
 		void SetViewport(Math::FloatBoundary viewport);
@@ -73,14 +75,16 @@ export namespace DGL
 
 	private:
 
+		float IncrementAndGetDepth() const;
+
 		RendererFacade* m_Renderer;
-		ShapeRenderer::ShapeFactory* m_ShapeFactory;
 		Blending::BlendModeActivator* m_BlendModeActivator;
 
 		std::unique_ptr<Brushes::SolidColorBrush> m_SolidFillBrush;
 		std::unique_ptr<Brushes::SolidColorBrush> m_SolidStrokeBrush;
 
 		std::unique_ptr<Brushes::TextureBrush> m_TextureFillBrush;
+		std::unique_ptr<DepthProvider> m_DepthProvider;
 
 		RenderStateStack m_RenderStates;
 

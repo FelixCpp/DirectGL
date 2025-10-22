@@ -6,19 +6,27 @@ module DirectGL.TextureRenderer;
 
 namespace DGL::TextureRenderer
 {
-	std::unique_ptr<TextureRenderer> TextureRenderer::Create(const size_t maxVertices)
+	std::unique_ptr<TextureRenderer> TextureRenderer::Create()
 	{
+		constexpr GLuint indices[] = { 0, 1, 2, 2, 3, 0 };
+		constexpr GLfloat texCoords[] = {
+			0.0f, 1.0f,
+			1.0f, 1.0f,
+			1.0f, 0.0f,
+			0.0f, 0.0f
+		};
+
 		GLuint positionBufferId = 0;
 		glCreateBuffers(1, &positionBufferId);
-		glNamedBufferStorage(positionBufferId, maxVertices * 3 * sizeof(GLfloat), nullptr, GL_DYNAMIC_STORAGE_BIT);
+		glNamedBufferStorage(positionBufferId, 4 * 3 * sizeof(GLfloat), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 		GLuint texCoordBufferId = 0;
 		glCreateBuffers(1, &texCoordBufferId);
-		glNamedBufferStorage(texCoordBufferId, maxVertices * 2 * sizeof(GLfloat), nullptr, GL_DYNAMIC_STORAGE_BIT);
+		glNamedBufferStorage(texCoordBufferId, 4 * 2 * sizeof(GLfloat), texCoords, GL_DYNAMIC_STORAGE_BIT);
 
 		GLuint indexBufferId = 0;
 		glCreateBuffers(1, &indexBufferId);
-		glNamedBufferStorage(indexBufferId, maxVertices * sizeof(GLuint), nullptr, GL_DYNAMIC_STORAGE_BIT);
+		glNamedBufferStorage(indexBufferId, 6 * sizeof(GLuint), indices, GL_DYNAMIC_STORAGE_BIT);
 
 		GLuint vertexArrayId = 0;
 		glCreateVertexArrays(1, &vertexArrayId);
@@ -54,21 +62,7 @@ namespace DGL::TextureRenderer
 			left, top + height, depth,
 		};
 
-		constexpr GLfloat texCoords[] = {
-			0.0f, 0.0f,
-			1.0f, 0.0f,
-			1.0f, 1.0f,
-			0.0f, 1.0f
-		};
-
-		constexpr GLuint indices[] = {
-			0, 1, 2,
-			2, 3, 0
-		};
-
 		glNamedBufferSubData(m_PositionBufferId, 0, sizeof(positions), positions);
-		glNamedBufferSubData(m_TexCoordBufferId, 0, sizeof(texCoords), texCoords);
-		glNamedBufferSubData(m_IndexBufferId, 0, sizeof(indices), indices);
 		glBindVertexArray(m_VertexArrayId);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 	}

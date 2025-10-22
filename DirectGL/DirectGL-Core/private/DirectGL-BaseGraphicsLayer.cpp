@@ -1,6 +1,6 @@
 ﻿module;
 
-#include <cstdio>
+#include <memory>
 
 module DirectGL;
 
@@ -8,10 +8,22 @@ import :BaseGraphicsLayer;
 
 namespace DGL
 {
+	BaseGraphicsLayer::BaseGraphicsLayer(RendererFacade& renderer, const Math::Uint2 viewportSize, Blending::BlendModeActivator& blendModeActivator, std::unique_ptr<DepthProvider> depthProvider) :
+		m_Renderer(&renderer),
+		m_BlendModeActivator(&blendModeActivator),
+		m_SolidFillBrush(Brushes::SolidColorBrush::Create(Colors::White)),
+		m_SolidStrokeBrush(Brushes::SolidColorBrush::Create(Colors::White)),
+		m_TextureFillBrush(Brushes::TextureBrush::Create()),
+		m_DepthProvider(std::move(depthProvider)),
+		m_Viewport(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(viewportSize.X), static_cast<float>(viewportSize.Y))),
+		m_ProjectionMatrix(Math::Matrix4x4::Orthographic(m_Viewport, -1.0f, 1.0f))
+	{
+	}
+
 	void BaseGraphicsLayer::SetViewport(const Math::FloatBoundary viewport)
 	{
 		m_Viewport = viewport;
-		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(m_Viewport, 1.0f, -1.0f);
+		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(m_Viewport, -1.0f, 1.0f);
 	}
 
 	const Math::FloatBoundary& BaseGraphicsLayer::GetViewport() const
@@ -21,13 +33,13 @@ namespace DGL
 
 	void BaseGraphicsLayer::BeginDraw()
 	{
+		m_DepthProvider->ResetDepth();
 		m_RenderStates.Clear();
-		ResetTransform();
 	}
 
 	void BaseGraphicsLayer::EndDraw()
 	{
-		// Nothing to do for now.
+		// Nothing to do for now
 	}
 
 	void BaseGraphicsLayer::PushState()
@@ -145,7 +157,7 @@ namespace DGL
 		m_BlendModeActivator->Activate(Blending::BlendModes::Opaque);
 		m_SolidFillBrush->SetColor(color);
 		m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, Math::Matrix4x4::Identity);
-		m_Renderer->FillRectangle(m_Viewport);
+		m_Renderer->FillRectangle(m_Viewport, IncrementAndGetDepth());
 	}
 
 	void BaseGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2)
@@ -163,7 +175,7 @@ namespace DGL
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillRectangle(boundary);
+			m_Renderer->FillRectangle(boundary, IncrementAndGetDepth());
 		}
 
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
@@ -171,7 +183,7 @@ namespace DGL
 		{
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->DrawRectangle(boundary, state.StrokeWeight);
+			m_Renderer->DrawRectangle(boundary, state.StrokeWeight, IncrementAndGetDepth());
 		}
 	}
 
@@ -196,7 +208,7 @@ namespace DGL
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillEllipse(center, radius, segments);
+			m_Renderer->FillEllipse(center, radius, segments, IncrementAndGetDepth());
 		}
 
 		// Only render if the stroke is enabled and the stroke weight is greater than zero
@@ -204,7 +216,7 @@ namespace DGL
 		{
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->DrawEllipse(center, radius, segments, state.StrokeWeight);
+			m_Renderer->DrawEllipse(center, radius, segments, state.StrokeWeight, IncrementAndGetDepth());
 		}
 	}
 
@@ -227,7 +239,7 @@ namespace DGL
 			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillEllipse(center, radius, segments);
+			m_Renderer->FillEllipse(center, radius, segments, IncrementAndGetDepth());
 		}
 	}
 
@@ -242,7 +254,7 @@ namespace DGL
 			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight, state.StartCap, state.EndCap);
+			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight, state.StartCap, state.EndCap, IncrementAndGetDepth());
 		}
 	}
 
@@ -258,7 +270,7 @@ namespace DGL
 		{
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->FillTriangle(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, Math::Float2{ x3, y3 });
+			m_Renderer->FillTriangle(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, Math::Float2{ x3, y3 }, IncrementAndGetDepth());
 		}
 
 		// TODO(Felix): Implement outlined triangle rendering.
@@ -275,16 +287,19 @@ namespace DGL
 		m_BlendModeActivator->Activate(state.BlendMode);
 		m_TextureFillBrush->SetTexture(&texture);
 		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-		m_Renderer->Image(boundary);
+		m_Renderer->Image(boundary, IncrementAndGetDepth());
 	}
 
-	BaseGraphicsLayer::BaseGraphicsLayer(RendererFacade& renderer, ShapeRenderer::ShapeFactory& shapeFactory, Blending::BlendModeActivator& blendModeActivator) :
-		m_Renderer(&renderer),
-		m_ShapeFactory(&shapeFactory),
-		m_BlendModeActivator(&blendModeActivator),
-		m_SolidFillBrush(Brushes::SolidColorBrush::Create(Colors::White)),
-		m_SolidStrokeBrush(Brushes::SolidColorBrush::Create(Colors::White)),
-		m_TextureFillBrush(Brushes::TextureBrush::Create())
+	float BaseGraphicsLayer::IncrementAndGetDepth() const
 	{
+		// Get the current depth
+		const float depth = m_DepthProvider->GetDepth();
+
+		// Increment the depth for the next draw call
+		m_DepthProvider->IncrementDepth();
+
+		// Return the previous depth
+		return depth;
 	}
+
 }

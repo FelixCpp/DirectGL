@@ -3,36 +3,13 @@
 #include <glad/gl.h>
 
 #include <optional>
+#include <memory>
 #include <type_traits>
+#include <format>
 
 module DirectGL.Renderer;
 
 import DirectGL.Logging;
-
-namespace DGL::Renderer
-{
-	[[nodiscard]] RenderTargetRestoreInformation QueryCurrentRestoreInfo()
-	{
-		GLint currentFramebufferId = 0;
-		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFramebufferId);
-
-		GLint viewport[4];
-		glGetIntegerv(GL_VIEWPORT, viewport);
-
-		return RenderTargetRestoreInformation{
-			.CachedFramebufferId = currentFramebufferId,
-			.CachedViewport = Math::UintBoundary::FromLTWH(viewport[0], viewport[1], viewport[2], viewport[3])
-		};
-	}
-
-	void RestoreRenderTarget(const RenderTargetRestoreInformation& info)
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(info.CachedFramebufferId));
-		const auto [x, y, width, height] = info.CachedViewport;
-
-		glViewport(static_cast<GLint>(x), static_cast<GLint>(y), static_cast<GLsizei>(width), static_cast<GLsizei>(height));
-	}
-}
 
 namespace DGL::Renderer
 {
@@ -43,11 +20,6 @@ namespace DGL::Renderer
 
 	void MainRenderTarget::SetViewport(const Math::UintBoundary viewport)
 	{
-		if (m_RestoreInfo != std::nullopt)
-		{
-			Logging::Debug("MainRenderTarget::SetViewport() called while drawing. The new viewport will take effect after EndDraw().");
-		}
-
 		m_Viewport = viewport;
 	}
 
@@ -56,30 +28,11 @@ namespace DGL::Renderer
 		return m_Viewport;
 	}
 
-	void MainRenderTarget::BeginDraw()
+	void MainRenderTarget::Activate()
 	{
-		if (m_RestoreInfo != std::nullopt)
-		{
-			Logging::Warning("MainRenderTarget::BeginDraw() called while already drawing. Nested BeginDraw calls are not allowed.");
-			return;
-		}
-
-		m_RestoreInfo = QueryCurrentRestoreInfo();
-
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(m_Viewport.Left, m_Viewport.Top, m_Viewport.Width, m_Viewport.Height);
-	}
-
-	void MainRenderTarget::EndDraw()
-	{
-		if (const auto restoreInfo = m_RestoreInfo)
-		{
-			RestoreRenderTarget(*restoreInfo);
-			m_RestoreInfo.reset();
-		} else
-		{
-			Logging::Warning("MainRenderTarget::EndDraw() called, but no restore information is available. This indicates a logic error.");
-		}
+	//	Logging::Info(std::format("Activated MainRenderTarget with viewport size {}x{}", m_Viewport.Width, m_Viewport.Height));
 	}
 
 	MainRenderTarget::MainRenderTarget(const Math::UintBoundary viewport):
@@ -127,34 +80,15 @@ namespace DGL::Renderer
 
 	OffscreenRenderTarget::~OffscreenRenderTarget()
 	{
-		if (m_RestoreInfo != std::nullopt) RestoreRenderTarget(*m_RestoreInfo);
 		if (m_FramebufferId != 0) glDeleteFramebuffers(1, &m_FramebufferId);
 		if (m_RenderbufferId != 0) glDeleteRenderbuffers(1, &m_RenderbufferId);
 	}
 
-	void OffscreenRenderTarget::BeginDraw()
+	void OffscreenRenderTarget::Activate()
 	{
-		if (m_RestoreInfo != std::nullopt)
-		{
-			Logging::Warning("OffscreenRenderTarget::BeginDraw() called while already drawing. Nested BeginDraw calls are not allowed.");
-			return;
-		}
-
-		m_RestoreInfo = QueryCurrentRestoreInfo();
-
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
 		glViewport(0, 0, m_ViewportSize.X, m_ViewportSize.Y);
-	}
-
-	void OffscreenRenderTarget::EndDraw()
-	{
-		if (const auto restoreInfo = m_RestoreInfo)
-		{
-			RestoreRenderTarget(*restoreInfo);
-		} else
-		{
-			Logging::Warning("OffscreenRenderTarget::EndDraw() called, but no restore information is available. This indicates a logic error.");
-		}
+	//	Logging::Info(std::format("Activated OffscreenRenderTarget with viewport size {}x{}", m_ViewportSize.X, m_ViewportSize.Y));
 	}
 
 	const Texture::Texture& OffscreenRenderTarget::GetRenderTexture() const
@@ -169,5 +103,4 @@ namespace DGL::Renderer
 		m_ViewportSize(viewportSize)
 	{
 	}
-
 }

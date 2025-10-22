@@ -115,13 +115,6 @@ export import :Texture;
 
 export namespace DGL
 {
-	/*Renderer::ShapeFactory& GetDefaultShapeFactory();
-	Renderer::Renderer& GetDefaultRenderer();
-	GraphicsLayer& GetMainGraphicsLayer();*/
-}
-
-export namespace DGL
-{
 	void Loop();
 	void NoLoop();
 	void ToggleLoop();
@@ -132,11 +125,11 @@ export namespace DGL
 	void PopState();
 	RenderState& PeekState();
 
-	void PushLayer(OffscreenGraphicsLayer* layer);
+	void PushLayer(GraphicsLayer* layer);
 	void PopLayer();
 	GraphicsLayer& PeekLayer();
 
-	std::unique_ptr<OffscreenGraphicsLayer> CreateGraphics(uint32_t width, uint32_t height);
+	std::unique_ptr<GraphicsLayer> CreateGraphics(uint32_t width, uint32_t height);
 
 	void PushTransform();
 	void PopTransform();
@@ -218,7 +211,6 @@ struct DirectGLLibrary
 	std::unique_ptr<DGL::ShapeRenderer::ShapeRenderer>		ShapeRenderer;			//!< The shape renderer to use for primitive drawing
 	std::unique_ptr<DGL::TextureRenderer::TextureRenderer>	TextureRenderer;		//!< The texture renderer to use for textured drawing
 	std::unique_ptr<DGL::RendererFacade> 					RendererFacade;			//!< The renderer facade to use for rendering
-	std::unique_ptr<DGL::DepthProvider>						DepthProvider;			//!< The depth provider to use for managing depth values
 	std::unique_ptr<DGL::MainGraphicsLayer>					MainGraphicsLayer;		//!< The main graphics layer to use for rendering
 	std::unique_ptr<DGL::GraphicsLayerStack>				GraphicsLayerStack;		//!< The graphics layer stack to use for managing graphics layers
 

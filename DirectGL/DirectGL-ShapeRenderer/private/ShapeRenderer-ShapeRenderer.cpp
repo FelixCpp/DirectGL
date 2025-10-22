@@ -75,7 +75,7 @@ namespace DGL::ShapeRenderer
 			glDrawElements(drawMode, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
 		} else
 		{
-			glDrawArrays(drawMode, 0, static_cast<GLsizei>(positions.size()));
+			glDrawArrays(drawMode, 0, static_cast<GLsizei>(positions.size()) / 3);
 		}
 	}
 
