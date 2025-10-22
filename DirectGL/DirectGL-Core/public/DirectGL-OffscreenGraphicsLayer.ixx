@@ -69,6 +69,8 @@ export namespace DGL
 		void SetImageTint(Renderer::Color tint) override;
 		void SetImageAlpha(uint8_t alpha) override;
 		void SetImageOpacity(float opacity) override;
+		void SetImageFilterMode(Texture::TextureFilterMode filterMode) override;
+		void SetImageWrapMode(Texture::TextureWrapMode wrapMode) override;
 
 		void Background(Renderer::Color color) override;
 		void Rect(float x1, float y1, float x2, float y2) override;

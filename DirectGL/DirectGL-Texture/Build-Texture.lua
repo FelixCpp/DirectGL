@@ -12,13 +12,16 @@ project("DirectGL-Texture")
 
 	links({
 		"DirectGL-Math",
+		"DirectGL-Logging",
 
 		"Glad",
+		"Stb",
 		"Preconditions",
 	})
 
 	includedirs({
-		"%{wks.location}/Libraries/Glad/include"
+		"%{wks.location}/Libraries/Glad/include",
+		"%{wks.location}/Libraries/Stb/include",
 	})
 
 	filter("system:windows")

@@ -10,6 +10,7 @@ export module DirectGL:RenderState;
 import DirectGL.Renderer;
 import DirectGL.Blending;
 import DirectGL.ShapeRenderer;
+import DirectGL.Texture;
 
 import :TransformationStack;
 import :DrawMode;
@@ -26,6 +27,8 @@ export namespace DGL
 		bool IsStrokeEnabled;
 
 		Renderer::Color ImageTint;
+		Texture::TextureFilterMode ImageFilterMode;
+		Texture::TextureWrapMode ImageWrapMode;
 		uint8_t ImageAlpha;
 
 		Blending::BlendMode BlendMode;
@@ -33,6 +36,7 @@ export namespace DGL
 		RectMode RectMode;
 		EllipseMode EllipseMode;
 		SegmentCountMode SegmentCountMode;
+
 
 		ShapeRenderer::LineCapStyle StartCap;
 		ShapeRenderer::LineCapStyle EndCap;
@@ -49,9 +53,12 @@ namespace DGL
 		FillColor(255, 255, 255),
 		StrokeColor(255, 255, 255),
 		StrokeWeight(1.0f),
-		ImageAlpha(255),
 		IsFillEnabled(true),
 		IsStrokeEnabled(true),
+		ImageTint(Renderer::Colors::White),
+		ImageFilterMode(Texture::TextureFilterMode::Linear),
+		ImageWrapMode(Texture::TextureWrapMode::ClampToEdge),
+		ImageAlpha(255),
 		BlendMode(Blending::BlendModes::Alpha),
 		ImageMode(RectModeLTWH()),
 		RectMode(RectModeLTWH()),

@@ -8,6 +8,7 @@ module;
 #include <glad/gl.h>
 
 #include <memory>
+#include <filesystem>
 
 export module DirectGL.Texture:Texture;
 
@@ -20,6 +21,7 @@ export namespace DGL::Texture
 	public:
 
 		static std::unique_ptr<Texture> Create(Math::Uint2 size, const uint8_t* data);
+		static std::unique_ptr<Texture> Create(const std::filesystem::path& filepath);
 
 		~Texture();
 

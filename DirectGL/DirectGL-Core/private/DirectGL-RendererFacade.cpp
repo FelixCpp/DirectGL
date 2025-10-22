@@ -17,6 +17,16 @@ namespace DGL
 	{
 	}
 
+	void RendererFacade::BeginDraw()
+	{
+		m_TextureRenderer.BeginDraw();
+	}
+
+	void RendererFacade::EndDraw()
+	{
+		m_TextureRenderer.EndDraw();
+	}
+
 	void RendererFacade::FillRectangle(const Math::FloatBoundary& boundary, const float depth)
 	{
 		const auto vertices = m_ShapeFactory.GetFilledRectangle(boundary, depth);

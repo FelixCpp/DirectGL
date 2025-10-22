@@ -75,6 +75,8 @@ namespace DGL
 	void MainGraphicsLayer::SetImageTint(const Renderer::Color tint) { m_GraphicsLayer.SetImageTint(tint); }
 	void MainGraphicsLayer::SetImageAlpha(const uint8_t alpha) { m_GraphicsLayer.SetImageAlpha(alpha); }
 	void MainGraphicsLayer::SetImageOpacity(const float opacity) { m_GraphicsLayer.SetImageOpacity(opacity); }
+	void MainGraphicsLayer::SetImageFilterMode(const Texture::TextureFilterMode filterMode) { m_GraphicsLayer.SetImageFilterMode(filterMode); }
+	void MainGraphicsLayer::SetImageWrapMode(const Texture::TextureWrapMode wrapMode) { m_GraphicsLayer.SetImageWrapMode(wrapMode); }
 
 	void MainGraphicsLayer::Background(const Renderer::Color color) { m_GraphicsLayer.Background(color); }
 	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayer.Rect(x1, y1, x2, y2); }

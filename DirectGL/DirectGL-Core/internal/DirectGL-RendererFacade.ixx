@@ -33,6 +33,9 @@ namespace DGL
 			ShapeRenderer::ShapeFactory& shapeFactory
 		);
 
+		void BeginDraw();
+		void EndDraw();
+
 		void FillRectangle(const Math::FloatBoundary& boundary, float depth);
 		void DrawRectangle(const Math::FloatBoundary& boundary, float strokeWeight, float depth);
 

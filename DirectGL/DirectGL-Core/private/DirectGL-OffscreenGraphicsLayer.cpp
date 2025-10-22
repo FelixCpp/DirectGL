@@ -80,6 +80,8 @@ namespace DGL
 	void OffscreenGraphicsLayer::SetImageTint(const Renderer::Color tint) { m_GraphicsLayerImpl.SetImageTint(tint); }
 	void OffscreenGraphicsLayer::SetImageAlpha(const uint8_t alpha) { m_GraphicsLayerImpl.SetImageAlpha(alpha); }
 	void OffscreenGraphicsLayer::SetImageOpacity(const float opacity) { m_GraphicsLayerImpl.SetImageOpacity(opacity); }
+	void OffscreenGraphicsLayer::SetImageFilterMode(const Texture::TextureFilterMode filterMode) { m_GraphicsLayerImpl.SetImageFilterMode(filterMode); }
+	void OffscreenGraphicsLayer::SetImageWrapMode(const Texture::TextureWrapMode wrapMode) { m_GraphicsLayerImpl.SetImageWrapMode(wrapMode); }
 
 	void OffscreenGraphicsLayer::Background(const Renderer::Color color) { m_GraphicsLayerImpl.Background(color); }
 	void OffscreenGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2) { m_GraphicsLayerImpl.Rect(x1, y1, x2, y2); }

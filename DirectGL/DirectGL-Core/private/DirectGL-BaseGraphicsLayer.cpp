@@ -36,11 +36,12 @@ namespace DGL
 	{
 		m_DepthProvider->ResetDepth();
 		m_RenderStates.Clear();
+		m_Renderer->BeginDraw();
 	}
 
 	void BaseGraphicsLayer::EndDraw()
 	{
-		// Nothing to do for now
+		m_Renderer->EndDraw();
 	}
 
 	void BaseGraphicsLayer::PushState()
@@ -165,6 +166,16 @@ namespace DGL
 	void BaseGraphicsLayer::SetImageOpacity(const float opacity)
 	{
 		PeekState().ImageAlpha = static_cast<uint8_t>(std::clamp(opacity * 255.0f, 0.0f, 255.0f));
+	}
+
+	void BaseGraphicsLayer::SetImageFilterMode(const Texture::TextureFilterMode filterMode)
+	{
+		PeekState().ImageFilterMode = filterMode;
+	}
+
+	void BaseGraphicsLayer::SetImageWrapMode(const Texture::TextureWrapMode wrapMode)
+	{
+		PeekState().ImageWrapMode = wrapMode;
 	}
 
 	void BaseGraphicsLayer::Background(const Renderer::Color color)
@@ -302,6 +313,8 @@ namespace DGL
 
 		m_BlendModeActivator->Activate(state.BlendMode);
 		m_TextureFillBrush->SetTexture(&texture);
+		m_TextureFillBrush->SetFilterMode(state.ImageFilterMode);
+		m_TextureFillBrush->SetWrapMode(state.ImageWrapMode);
 		m_TextureFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform(), state.ImageTint, state.ImageAlpha);
 		m_Renderer->Image(boundary, IncrementAndGetDepth());
 	}

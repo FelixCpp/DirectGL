@@ -52,6 +52,8 @@ export namespace DGL
 		virtual void SetImageTint(Renderer::Color tint) = 0;
 		virtual void SetImageAlpha(uint8_t alpha) = 0;
 		virtual void SetImageOpacity(float opacity) = 0;
+		virtual void SetImageFilterMode(Texture::TextureFilterMode filterMode) = 0;
+		virtual void SetImageWrapMode(Texture::TextureWrapMode wrapMode) = 0;
 
 		virtual void Background(Renderer::Color color) = 0;
 		virtual void Rect(float x1, float y1, float x2, float y2) = 0;

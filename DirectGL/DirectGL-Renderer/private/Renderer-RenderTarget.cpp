@@ -32,7 +32,6 @@ namespace DGL::Renderer
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(m_Viewport.Left, m_Viewport.Top, m_Viewport.Width, m_Viewport.Height);
-	//	Logging::Info(std::format("Activated MainRenderTarget with viewport size {}x{}", m_Viewport.Width, m_Viewport.Height));
 	}
 
 	MainRenderTarget::MainRenderTarget(const Math::UintBoundary viewport):
@@ -88,7 +87,6 @@ namespace DGL::Renderer
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, m_FramebufferId);
 		glViewport(0, 0, m_ViewportSize.X, m_ViewportSize.Y);
-	//	Logging::Info(std::format("Activated OffscreenRenderTarget with viewport size {}x{}", m_ViewportSize.X, m_ViewportSize.Y));
 	}
 
 	const Texture::Texture& OffscreenRenderTarget::GetRenderTexture() const

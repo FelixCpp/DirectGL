@@ -158,6 +158,8 @@ export namespace DGL
 	void SetImageTint(Renderer::Color tint);
 	void SetImageAlpha(uint8_t alpha);
 	void SetImageOpacity(float opacity);
+	void SetImageFilterMode(Texture::TextureFilterMode filterMode);
+	void SetImageWrapMode(Texture::TextureWrapMode wrapMode);
 
 	void Background(Renderer::Color color);
 	void Rect(float x1, float y1, float x2, float y2);

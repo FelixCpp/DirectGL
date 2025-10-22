@@ -49,7 +49,7 @@ namespace DGL
 			Library.BlendModeActivator = std::make_unique<Blending::CachingBlendModeActivator>(*defaultActivator);
 			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
 			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
-			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create();
+			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create(500);
 
 			Library.RendererFacade = std::make_unique<RendererFacade>(
 				*Library.TextureRenderer,
@@ -294,6 +294,8 @@ namespace DGL
 	void SetImageTint(const Renderer::Color tint) { PeekLayer().SetImageTint(tint); }
 	void SetImageAlpha(const uint8_t alpha) { PeekLayer().SetImageAlpha(alpha); }
 	void SetImageOpacity(const float opacity) { PeekLayer().SetImageOpacity(opacity); }
+	void SetImageFilterMode(const Texture::TextureFilterMode filterMode) { PeekLayer().SetImageFilterMode(filterMode); }
+	void SetImageWrapMode(const Texture::TextureWrapMode wrapMode) { PeekLayer().SetImageWrapMode(wrapMode); }
 
 	void Background(const Renderer::Color color) { PeekLayer().Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Rect(x1, y1, x2, y2); }

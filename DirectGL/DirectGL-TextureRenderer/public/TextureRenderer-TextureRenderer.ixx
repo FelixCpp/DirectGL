@@ -17,19 +17,25 @@ export namespace DGL::TextureRenderer
 	{
 	public:
 
-		static std::unique_ptr<TextureRenderer> Create();
+		static std::unique_ptr<TextureRenderer> Create(size_t maxTexturesPerBatch);
 
 		~TextureRenderer();
 
 		void Render(float left, float top, float width, float height, float depth);
 
+		void BeginDraw();
+		void EndDraw();
+
 	private:
+
+		void Flush();
 
 		explicit TextureRenderer(
 			GLuint vertexArrayId,
 			GLuint positionBufferId,
 			GLuint texCoordBufferId,
-			GLuint indexBufferId
+			GLuint indexBufferId,
+			size_t maxTexturesPerBatch
 		);
 
 
@@ -37,6 +43,10 @@ export namespace DGL::TextureRenderer
 		GLuint m_PositionBufferId;
 		GLuint m_TexCoordBufferId;
 		GLuint m_IndexBufferId;
+
+		std::unique_ptr<float[]> m_BatchedPositions;
+		size_t m_BatchedTextureCount;
+		size_t m_MaxTexturesPerBatch;
 
 	};
 }
