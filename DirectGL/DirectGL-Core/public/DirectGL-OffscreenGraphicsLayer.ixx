@@ -64,7 +64,12 @@ export namespace DGL
 		void SetRectMode(const RectMode& rectMode) override;
 		void SetImageMode(const RectMode& imageMode) override;
 		void SetEllipseMode(const EllipseMode& ellipseMode) override;
-		void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) override;
+		void SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode) override;
+
+		void SetLineStartCap(ShapeRenderer::LineCapStyle startCap) override;
+		void SetLineEndCap(ShapeRenderer::LineCapStyle endCap) override;
+		void SetLineJoinStyle(ShapeRenderer::LineJoinStyle joinStyle) override;
+		void SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode) override;
 
 		void SetImageTint(Renderer::Color tint) override;
 		void SetImageAlpha(uint8_t alpha) override;

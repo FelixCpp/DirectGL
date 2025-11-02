@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <algorithm>
+#include <vector>
 
 module DirectGL.ShapeRenderer;
 
@@ -145,10 +146,135 @@ namespace DGL::ShapeRenderer
 		return vertices;
 	}
 
-	Vertices ShapeFactory::GetLine(const Math::Float2 start, const Math::Float2 end, const float strokeWeight, LineCapStyle startCap, LineCapStyle endCap, const float depth)
+	Vertices ShapeFactory::GetOutlinedTriangle(const Math::Float2 a, const Math::Float2 b, const Math::Float2 c, const float strokeWeight, const LineJoinStyle joinStyle, const float depth)
 	{
-		Vertices vertices;
+		return Vertices {
+			.Type = PrimitiveType::Triangles,
+			.Positions = {},
+			.Indices = {},
+		};
+	}
 
-		return vertices;
+	void AddButtLineCap(std::vector<Math::Float3>& positions, const Math::Float2 root, const Math::Float2 offset, const float depth)
+	{
+		// A butt cap does nothing more than the line itself.
+
+		// Add the two positions for the butt cap.
+		positions.reserve(positions.size() + 2);
+
+		positions.emplace_back(root - offset, depth);
+		positions.emplace_back(root + offset, depth);
+	}
+
+	void AddSquareLineCap(std::vector<Math::Float3>& positions, const Math::Float2 root, const Math::Float2 direction, const Math::Float2 offset, const float strokeWeight, const float depth)
+	{
+		// A square cap extends the line by half the stroke weight in the direction of the line.
+		const Math::Float2 extension = direction * strokeWeight;
+
+		// Add the two positions for the square cap.
+		positions.reserve(positions.size() + 2);
+
+		positions.emplace_back(root - offset + extension, depth);
+		positions.emplace_back(root + offset + extension, depth);
+	}
+
+	void AddRoundLineCap(std::vector<Math::Float3>& positions, const Math::Float2 root, const Math::Angle startAngle, const Math::Angle sweepAngle, const float strokeWeight, const size_t segments, const float depth)
+	{
+		const size_t steps = std::max(2uz, segments);
+
+		const float halfStrokeWeight = strokeWeight * 0.5f;
+		const float startRadians = startAngle.AsRadians();
+		const float sweepRadians = sweepAngle.AsRadians();
+
+		const float step = sweepRadians / static_cast<float>(steps - 1);
+
+		positions.reserve(positions.size() + steps);
+
+		for (size_t i = 0; i < steps; ++i)
+		{
+			const float angle = startRadians + static_cast<float>(i) * step;
+			const float x = root.X + std::cos(angle) * halfStrokeWeight;
+			const float y = root.Y + std::sin(angle) * halfStrokeWeight;
+			positions.emplace_back(x, y, depth);
+		}
+	}
+
+	Vertices ShapeFactory::GetLine(const Math::Float2 start, const Math::Float2 end, const float strokeWeight, const LineCapStyle startCap, const LineCapStyle endCap, const std::function<size_t(Math::Radius)>& getSegmentCountForRoundCap, const float depth)
+	{
+		// Regardless of the line cap style, we need to compute the direction and perpendicular vectors.
+		const Math::Float2 direction = (end - start).Normalized();
+		const Math::Float2 perpendicular = direction.Perpendicular();
+		const Math::Float2 offset = perpendicular * strokeWeight * 0.5f;
+		const Math::Angle lineAngle = direction.Heading();
+
+		const size_t segmentCountForRoundCap = (startCap == LineCapStyle::Round) or (endCap == LineCapStyle::Round)
+			? getSegmentCountForRoundCap(Math::Radius::Circular(strokeWeight * 0.5f))
+			: 0;
+
+		// First step is to compute the positions for the start of the line.
+		// These positions depend on the line start cap style.
+		std::vector<Math::Float3> positions;
+
+		switch (startCap)
+		{
+			case LineCapStyle::Butt: AddButtLineCap(positions, start, offset, depth); break;
+			case LineCapStyle::Square: AddSquareLineCap(positions, start, -direction, offset, strokeWeight, depth); break;
+			case LineCapStyle::Round: AddRoundLineCap(positions, start, lineAngle + Math::Degrees(270.0f), Math::Degrees(-180.0f), strokeWeight, segmentCountForRoundCap, depth); break;
+		}
+
+		const size_t startPositionCount = positions.size(); //< Remember how many positions we have after the start cap.
+
+		// Now add the positions for the end of the line.
+		switch (endCap)
+		{
+			case LineCapStyle::Butt: AddButtLineCap(positions, end, offset, depth); break;
+			case LineCapStyle::Square: AddSquareLineCap(positions, end, direction, offset, strokeWeight, depth); break;
+			case LineCapStyle::Round: AddRoundLineCap(positions, end, lineAngle - Math::Degrees(90.0f), Math::Degrees(180.0f), strokeWeight, segmentCountForRoundCap, depth); break;
+		}
+
+		const size_t endPositionCount = positions.size() - startPositionCount; //< Remember how many positions we have after the end cap.
+
+		// At this point, we have gathered all positions for the line.
+		//
+		// The following graphic illustrates how the positions are organized:
+		//
+		// In case of a line with butt or square caps:
+		// 0 ------------------ 2
+		// |                    |
+		// |                    |
+		// |                    |
+		// 1 ------------------ 3
+		//
+		// In case of round caps, there will be more positions at the start and/or end of the line:
+		//     0 ------------------ 7
+		//    1						|
+		//   2						|
+		//  3						|
+		//   4						|
+		//    5						|
+		//     6 ------------------ 8
+		//
+		// In this case we iterate over all positions and get always a pair of positions:
+		// For the start cap, we get the first N positions (0 to startPositionCount - 1)
+		// For the end cap, we get the last N positions (startPositionCount to total count - 1)
+		// We then create a triangle strip by connecting these pairs.
+
+		std::vector<uint32_t> indices;
+
+		const size_t maximumIterations = std::max(startPositionCount, endPositionCount);
+		for (size_t i = 0; i < maximumIterations; ++i)
+		{
+			const size_t startPositionIndex = std::min(i, startPositionCount - 1); // Get the index for the start cap positions
+			const size_t endPositionIndex = startPositionCount + std::min(i, endPositionCount - 1); // Get the index for the end cap positions
+
+			indices.emplace_back(startPositionIndex);
+			indices.emplace_back(endPositionIndex);
+		}
+
+		return Vertices {
+			.Type = PrimitiveType::TriangleStrip,
+			.Positions = std::move(positions),
+			.Indices = std::move(indices),
+		};
 	}
 }

@@ -15,7 +15,7 @@ namespace System
 		virtual ~Context() = default;
 
 		virtual void SetVerticalSyncEnabled(bool enabled) = 0;
-		virtual void Flush() = 0;
+		virtual void SwapBuffers() = 0;
 	};
 
 	export struct ContextSettings

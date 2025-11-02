@@ -112,8 +112,6 @@ namespace DGL::TextureRenderer
 			return;
 		}
 
-		printf("Flushing %zu batched textures\n", m_BatchedTextureCount);
-
 		// Copy the data into the corresponding position buffer
 		const size_t batchedPositionCount = m_BatchedTextureCount * 4 * 3;
 		const size_t batchedPositionCountInBytes = batchedPositionCount * sizeof(GLfloat);

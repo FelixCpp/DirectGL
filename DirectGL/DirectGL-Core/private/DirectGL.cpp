@@ -128,7 +128,7 @@ namespace DGL
 					Library.MainGraphicsLayer->EndDraw();
 
 					// Present the rendered frame on screen
-					Library.Context->Flush();
+					Library.Context->SwapBuffers();
 
 					const auto now = std::chrono::high_resolution_clock::now();
 					deltaTime = now - lastFrameTime;
@@ -289,7 +289,12 @@ namespace DGL
 	void SetRectMode(const RectMode& rectMode) { PeekLayer().SetRectMode(rectMode); }
 	void SetImageMode(const RectMode& rectMode) { PeekLayer().SetImageMode(rectMode); }
 	void SetEllipseMode(const EllipseMode& ellipseMode) { PeekLayer().SetEllipseMode(ellipseMode); }
-	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetSegmentCountMode(segmentCountMode); }
+	void SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetEllipseSegmentCountMode(segmentCountMode); }
+
+	void SetLineStartCap(const ShapeRenderer::LineCapStyle startCap) { PeekLayer().SetLineStartCap(startCap); }
+	void SetLineEndCap(const ShapeRenderer::LineCapStyle endCap) { PeekLayer().SetLineEndCap(endCap); }
+	void SetLineJoinStyle(const ShapeRenderer::LineJoinStyle joinStyle) { PeekLayer().SetLineJoinStyle(joinStyle); }
+	void SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetLineSegmentCountMode(segmentCountMode); }
 
 	void SetImageTint(const Renderer::Color tint) { PeekLayer().SetImageTint(tint); }
 	void SetImageAlpha(const uint8_t alpha) { PeekLayer().SetImageAlpha(alpha); }

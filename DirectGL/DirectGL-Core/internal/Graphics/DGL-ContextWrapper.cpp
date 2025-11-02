@@ -49,8 +49,8 @@ namespace DGL
 		m_Context->SetVerticalSyncEnabled(enabled);
 	}
 
-	void ContextWrapper::Flush()
+	void ContextWrapper::SwapBuffers()
 	{
-		m_Context->Flush();
+		m_Context->SwapBuffers();
 	}
 }

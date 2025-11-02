@@ -246,9 +246,9 @@ namespace System
 		}
 	}
 
-	void WGLContext::Flush()
+	void WGLContext::SwapBuffers()
 	{
-		SwapBuffers(m_DeviceContext);
+		::SwapBuffers(m_DeviceContext);
 	}
 
 	WGLContext::WGLContext(const HDC deviceContext, const HGLRC renderingContext, const NativeWindowHandle parentHandle, const std::function<void(std::string_view)>& onError):

@@ -57,9 +57,15 @@ namespace DGL
 		m_ShapeRenderer.Render(vertices);
 	}
 
-	void RendererFacade::Line(const Math::Float2& start, const Math::Float2& end, const float strokeWeight, const ShapeRenderer::LineCapStyle startCap, const ShapeRenderer::LineCapStyle endCap, const float depth)
+	void RendererFacade::DrawTriangle(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c, const float strokeWeight, const ShapeRenderer::LineJoinStyle joinStyle, const float depth)
 	{
-		const auto vertices = m_ShapeFactory.GetLine(start, end, strokeWeight, startCap, endCap, depth);
+		const auto vertices = m_ShapeFactory.GetOutlinedTriangle(a, b, c, strokeWeight, joinStyle, depth);
+		m_ShapeRenderer.Render(vertices);
+	}
+
+	void RendererFacade::Line(const Math::Float2& start, const Math::Float2& end, const float strokeWeight, const ShapeRenderer::LineCapStyle startCap, const ShapeRenderer::LineCapStyle endCap, const SegmentCountMode& segmentCountMode, const float depth)
+	{
+		const auto vertices = m_ShapeFactory.GetLine(start, end, strokeWeight, startCap, endCap, segmentCountMode, depth);
 		m_ShapeRenderer.Render(vertices);
 	}
 

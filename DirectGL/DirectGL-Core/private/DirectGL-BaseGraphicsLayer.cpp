@@ -148,9 +148,29 @@ namespace DGL
 		PeekState().EllipseMode = ellipseMode;
 	}
 
-	void BaseGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode)
+	void BaseGraphicsLayer::SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode)
 	{
-		PeekState().SegmentCountMode = segmentCountMode;
+		PeekState().EllipseSegmentCountMode = segmentCountMode;
+	}
+
+	void BaseGraphicsLayer::SetLineStartCap(const ShapeRenderer::LineCapStyle startCap)
+	{
+		PeekState().LineStartCap = startCap;
+	}
+
+	void BaseGraphicsLayer::SetLineEndCap(const ShapeRenderer::LineCapStyle endCap)
+	{
+		PeekState().LineEndCap = endCap;
+	}
+
+	void BaseGraphicsLayer::SetLineJoinStyle(const ShapeRenderer::LineJoinStyle joinStyle)
+	{
+		PeekState().LineJoinStyle = joinStyle;
+	}
+
+	void BaseGraphicsLayer::SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode)
+	{
+		PeekState().LineSegmentCountMode = segmentCountMode;
 	}
 
 	void BaseGraphicsLayer::SetImageTint(const Renderer::Color tint)
@@ -225,7 +245,7 @@ namespace DGL
 		// Compute the center and radius of the ellipse
 		const auto center = boundary.Center();
 		const auto radius = Math::Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
-		const auto segments = state.SegmentCountMode(radius);
+		const auto segments = state.EllipseSegmentCountMode(radius);
 		if (segments <= 0) return;
 
 		m_BlendModeActivator->Activate(state.BlendMode);
@@ -261,7 +281,7 @@ namespace DGL
 			// Compute the vertices for a point rendered as a small filled circle.
 			const auto radius = Math::Radius::Elliptical(boundary.Width * 0.5f, boundary.Height * 0.5f);
 			const auto center = boundary.Center();
-			const auto segments = state.SegmentCountMode(radius);
+			const auto segments = state.EllipseSegmentCountMode(radius);
 
 			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
@@ -281,7 +301,7 @@ namespace DGL
 			m_BlendModeActivator->Activate(state.BlendMode);
 			m_SolidStrokeBrush->SetColor(state.StrokeColor);
 			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
-			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight, state.StartCap, state.EndCap, IncrementAndGetDepth());
+			m_Renderer->Line({ x1, y1 }, { x2, y2 }, state.StrokeWeight, state.LineStartCap, state.LineEndCap, state.LineSegmentCountMode, IncrementAndGetDepth());
 		}
 	}
 
@@ -298,6 +318,13 @@ namespace DGL
 			m_SolidFillBrush->SetColor(state.FillColor);
 			m_SolidFillBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
 			m_Renderer->FillTriangle(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, Math::Float2{ x3, y3 }, IncrementAndGetDepth());
+		}
+
+		if (state.IsStrokeEnabled and state.StrokeWeight > 0.0f)
+		{
+			m_SolidStrokeBrush->SetColor(state.StrokeColor);
+			m_SolidStrokeBrush->UploadUniforms(m_ProjectionMatrix, state.TransformationStack.PeekTransform());
+			m_Renderer->DrawTriangle(Math::Float2{ x1, y1 }, Math::Float2{ x2, y2 }, Math::Float2{ x3, y3 }, state.StrokeWeight, state.LineJoinStyle, IncrementAndGetDepth());
 		}
 
 		// TODO(Felix): Implement outlined triangle rendering.

@@ -29,7 +29,7 @@ namespace DGL
 		void Teardown() override;
 
 		void SetVerticalSyncEnabled(bool enabled) override;
-		void Flush() override;
+		void SwapBuffers() override;
 
 	private:
 

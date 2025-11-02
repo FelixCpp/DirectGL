@@ -70,7 +70,12 @@ namespace DGL
 	void MainGraphicsLayer::SetRectMode(const RectMode& rectMode) { m_GraphicsLayer.SetRectMode(rectMode); }
 	void MainGraphicsLayer::SetImageMode(const RectMode& imageMode) { m_GraphicsLayer.SetImageMode(imageMode); }
 	void MainGraphicsLayer::SetEllipseMode(const EllipseMode& ellipseMode) { m_GraphicsLayer.SetEllipseMode(ellipseMode); }
-	void MainGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayer.SetSegmentCountMode(segmentCountMode); }
+	void MainGraphicsLayer::SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayer.SetEllipseSegmentCountMode(segmentCountMode); }
+
+	void MainGraphicsLayer::SetLineStartCap(const ShapeRenderer::LineCapStyle startCap) { m_GraphicsLayer.SetLineStartCap(startCap); }
+	void MainGraphicsLayer::SetLineEndCap(const ShapeRenderer::LineCapStyle endCap) { m_GraphicsLayer.SetLineEndCap(endCap); }
+	void MainGraphicsLayer::SetLineJoinStyle(const ShapeRenderer::LineJoinStyle joinStyle) { m_GraphicsLayer.SetLineJoinStyle(joinStyle); }
+	void MainGraphicsLayer::SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayer.SetLineSegmentCountMode(segmentCountMode); }
 
 	void MainGraphicsLayer::SetImageTint(const Renderer::Color tint) { m_GraphicsLayer.SetImageTint(tint); }
 	void MainGraphicsLayer::SetImageAlpha(const uint8_t alpha) { m_GraphicsLayer.SetImageAlpha(alpha); }

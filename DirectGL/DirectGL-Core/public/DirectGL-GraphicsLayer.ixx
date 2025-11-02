@@ -47,7 +47,12 @@ export namespace DGL
 		virtual void SetRectMode(const RectMode& rectMode) = 0;
 		virtual void SetImageMode(const RectMode& imageMode) = 0;
 		virtual void SetEllipseMode(const EllipseMode& ellipseMode) = 0;
-		virtual void SetSegmentCountMode(const SegmentCountMode& segmentCountMode) = 0;
+		virtual void SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode) = 0;
+
+		virtual void SetLineStartCap(ShapeRenderer::LineCapStyle startCap) = 0;
+		virtual void SetLineEndCap(ShapeRenderer::LineCapStyle endCap) = 0;
+		virtual void SetLineJoinStyle(ShapeRenderer::LineJoinStyle joinStyle) = 0;
+		virtual void SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode) = 0;
 
 		virtual void SetImageTint(Renderer::Color tint) = 0;
 		virtual void SetImageAlpha(uint8_t alpha) = 0;

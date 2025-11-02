@@ -35,11 +35,12 @@ export namespace DGL
 		RectMode ImageMode;
 		RectMode RectMode;
 		EllipseMode EllipseMode;
-		SegmentCountMode SegmentCountMode;
+		SegmentCountMode EllipseSegmentCountMode;
 
-
-		ShapeRenderer::LineCapStyle StartCap;
-		ShapeRenderer::LineCapStyle EndCap;
+		ShapeRenderer::LineCapStyle LineStartCap;
+		ShapeRenderer::LineCapStyle LineEndCap;
+		ShapeRenderer::LineJoinStyle LineJoinStyle;
+		SegmentCountMode LineSegmentCountMode;
 
 		TransformationStack TransformationStack;
 
@@ -63,9 +64,11 @@ namespace DGL
 		ImageMode(RectModeLTWH()),
 		RectMode(RectModeLTWH()),
 		EllipseMode(EllipseModeCenterDiameter()),
-		SegmentCountMode(SegmentCountModeSmooth()),
-		StartCap(ShapeRenderer::LineCapStyle::Butt),
-		EndCap(ShapeRenderer::LineCapStyle::Butt)
+		EllipseSegmentCountMode(SegmentCountModeSmooth()),
+		LineStartCap(ShapeRenderer::LineCapStyle::Butt),
+		LineEndCap(ShapeRenderer::LineCapStyle::Butt),
+		LineJoinStyle(ShapeRenderer::LineJoinStyle::Miter),
+		LineSegmentCountMode(SegmentCountModeSmooth())
 	{
 	}
 }

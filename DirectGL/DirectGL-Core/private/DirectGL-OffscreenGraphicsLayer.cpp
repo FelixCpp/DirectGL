@@ -75,7 +75,12 @@ namespace DGL
 	void OffscreenGraphicsLayer::SetRectMode(const RectMode& rectMode) { m_GraphicsLayerImpl.SetRectMode(rectMode); }
 	void OffscreenGraphicsLayer::SetImageMode(const RectMode& imageMode) { m_GraphicsLayerImpl.SetImageMode(imageMode); }
 	void OffscreenGraphicsLayer::SetEllipseMode(const EllipseMode& ellipseMode) { m_GraphicsLayerImpl.SetEllipseMode(ellipseMode); }
-	void OffscreenGraphicsLayer::SetSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayerImpl.SetSegmentCountMode(segmentCountMode); }
+	void OffscreenGraphicsLayer::SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayerImpl.SetEllipseSegmentCountMode(segmentCountMode); }
+
+	void OffscreenGraphicsLayer::SetLineStartCap(const ShapeRenderer::LineCapStyle startCap) { m_GraphicsLayerImpl.SetLineStartCap(startCap); }
+	void OffscreenGraphicsLayer::SetLineEndCap(const ShapeRenderer::LineCapStyle endCap) { m_GraphicsLayerImpl.SetLineEndCap(endCap); }
+	void OffscreenGraphicsLayer::SetLineJoinStyle(const ShapeRenderer::LineJoinStyle joinStyle) { m_GraphicsLayerImpl.SetLineJoinStyle(joinStyle); }
+	void OffscreenGraphicsLayer::SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode) { m_GraphicsLayerImpl.SetLineSegmentCountMode(segmentCountMode); }
 
 	void OffscreenGraphicsLayer::SetImageTint(const Renderer::Color tint) { m_GraphicsLayerImpl.SetImageTint(tint); }
 	void OffscreenGraphicsLayer::SetImageAlpha(const uint8_t alpha) { m_GraphicsLayerImpl.SetImageAlpha(alpha); }

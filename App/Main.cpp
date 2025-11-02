@@ -1,12 +1,10 @@
 #include <memory>
 
 import DirectGL;
-import DirectGL.Math;
-import DirectGL.Texture;
 
-struct DirectGLGame : DGL::Sketch
+class DirectGLGame : public DGL::Sketch
 {
-	std::unique_ptr<DGL::Texture::Texture> texture = DGL::Texture::Texture::Create("wallpaper.jpg");
+public:
 
 	bool Setup() override
 	{
@@ -21,13 +19,13 @@ struct DirectGLGame : DGL::Sketch
 
 	void Draw(const float deltaTime) override
 	{
-		DGL::Background(DGL::Renderer::Color(0, 0, 0));
 		
 	}
 
 	void Destroy() override
 	{
 	}
+
 };
 
 int main()

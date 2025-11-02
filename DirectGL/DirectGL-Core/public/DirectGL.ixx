@@ -153,7 +153,12 @@ export namespace DGL
 	void SetRectMode(const RectMode& rectMode);
 	void SetImageMode(const RectMode& rectMode);
 	void SetEllipseMode(const EllipseMode& ellipseMode);
-	void SetSegmentCountMode(const SegmentCountMode& segmentCountMode);
+	void SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode);
+
+	void SetLineStartCap(ShapeRenderer::LineCapStyle startCap);
+	void SetLineEndCap(ShapeRenderer::LineCapStyle endCap);
+	void SetLineJoinStyle(ShapeRenderer::LineJoinStyle joinStyle);
+	void SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode);
 
 	void SetImageTint(Renderer::Color tint);
 	void SetImageAlpha(uint8_t alpha);

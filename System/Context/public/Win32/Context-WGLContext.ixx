@@ -26,7 +26,7 @@ namespace System
 		~WGLContext() override;
 
 		void SetVerticalSyncEnabled(bool enabled) override;
-		void Flush() override;
+		void SwapBuffers() override;
 
 	private:
 

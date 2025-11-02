@@ -3,7 +3,13 @@
 // Author       : Felix Busch
 // Created Date : 2025/10/15
 
+module;
+
+#include <functional>
+
 export module DirectGL.ShapeRenderer:ShapeFactory;
+
+import DirectGL.Math;
 
 import :Vertices;
 
@@ -16,6 +22,7 @@ export namespace DGL::ShapeRenderer
 		Vertices GetFilledEllipse(Math::Float2 center, Math::Radius radius, size_t segments, float depth);
 		Vertices GetOutlinedEllipse(Math::Float2 center, Math::Radius radius, size_t segments, float strokeWeight, float depth);
 		Vertices GetFilledTriangle(Math::Float2 a, Math::Float2 b, Math::Float2 c, float depth);
-		Vertices GetLine(Math::Float2 start, Math::Float2 end, float strokeWeight, LineCapStyle startCap, LineCapStyle endCap, float depth);
+		Vertices GetOutlinedTriangle(Math::Float2 a, Math::Float2 b, Math::Float2 c, float strokeWeight, LineJoinStyle joinStyle, float depth);
+		Vertices GetLine(Math::Float2 start, Math::Float2 end, float strokeWeight, LineCapStyle startCap, LineCapStyle endCap, const std::function<size_t(Math::Radius)>& getSegmentCountForRoundCap, float depth);
 	};
 }

@@ -17,8 +17,8 @@ export namespace DGL::ShapeRenderer
 {
 	struct Vertices
 	{
+		PrimitiveType				Type;		//!< Primitive type
 		std::vector<Math::Float3>	Positions;	//!< List of vertex positions
 		std::vector<uint32_t>		Indices;	//!< Indices into positions
-		PrimitiveType				Type;		//!< Primitive type
 	};
 }

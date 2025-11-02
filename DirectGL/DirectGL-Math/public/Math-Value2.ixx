@@ -3,6 +3,7 @@ module;
 #include <cstdint>
 #include <concepts>
 #include <cmath>
+#include <algorithm>
 
 export module DirectGL.Math:Value2;
 
@@ -37,11 +38,15 @@ export namespace DGL::Math
 		constexpr T Dot(const Value2& other) const;
 
 		Angle Heading() const;
+		Angle AngleBetween(const Value2& other) const;
 
 		Value2 Limited(T maxLength) const;
 		Value2 Normalized() const;
 		Value2 Perpendicular() const;
 
+		Value2 Rotated(Angle angle) const;
+
+		constexpr Value2 operator - () const;
 		constexpr Value2 operator + (const Value2& other) const;
 		constexpr Value2 operator - (const Value2& other) const;
 		constexpr Value2 operator / (const Value2& other) const;
@@ -117,6 +122,19 @@ namespace DGL::Math
 	template <typename T> constexpr T Value2<T>::Dot(const Value2& other) const { return X * other.X + Y * other.Y; }
 
 	template <typename T> Angle Value2<T>::Heading() const { return Radians(std::atan2(Y, X)); }
+	template <typename T> Angle Value2<T>::AngleBetween(const Value2& other) const
+	{
+		const T dotProduct = Dot(other);
+		const T lengthsProduct = Length() * other.Length();
+		if (lengthsProduct == T{})
+		{
+			return Angle::Zero;
+		}
+
+		const T cosineOfAngle = dotProduct / lengthsProduct;
+		const T clampedCosine = std::clamp(cosineOfAngle, static_cast<T>(-1), static_cast<T>(1));
+		return Radians(static_cast<float>(std::acos(clampedCosine)));
+	}
 
 	template <typename T> Value2<T> Value2<T>::Limited(const T maxLength) const
 	{
@@ -141,7 +159,19 @@ namespace DGL::Math
 	}
 
 	template <typename T> Value2<T> Value2<T>::Perpendicular() const { return Value2{ -Y, X }; }
+	template <typename T> Value2<T> Value2<T>::Rotated(const Angle angle) const
+	{
+		const T radians = static_cast<T>(angle.AsRadians());
+		const T cosAngle = std::cos(radians);
+		const T sinAngle = std::sin(radians);
 
+		return Value2 {
+			X * cosAngle - Y * sinAngle,
+			X * sinAngle + Y * cosAngle
+		};
+	}
+
+	template <typename T> constexpr Value2<T> Value2<T>::operator-() const { return { -X, -Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator+(const Value2& other) const { return { X + other.X, Y + other.Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator-(const Value2& other) const { return { X - other.X, Y - other.Y }; }
 	template <typename T> constexpr Value2<T> Value2<T>::operator/(const Value2& other) const { return { X / other.X, Y / other.Y }; }
