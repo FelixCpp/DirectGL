@@ -16,8 +16,6 @@ export namespace DGL::Math
 		float X;
 		float Y;
 
-		static const Radius Zero;
-
 		[[nodiscard]] static constexpr Radius Circular(float radius);
 		[[nodiscard]] static constexpr Radius Elliptical(float radiusX, float radiusY);
 
@@ -26,6 +24,8 @@ export namespace DGL::Math
 
 		constexpr bool operator == (Radius other) const;
 		constexpr bool operator != (Radius other) const;
+
+		static const Radius Zero;
 
 	private:
 

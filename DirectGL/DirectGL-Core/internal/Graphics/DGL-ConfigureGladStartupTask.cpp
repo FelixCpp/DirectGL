@@ -31,6 +31,9 @@ namespace DGL
 		const GLubyte* glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
 		Debug(std::format("OpenGL GLSL version: {}", glslVersion ? reinterpret_cast<const char*>(glslVersion) : "Unknown"));
 
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glEnable(GL_DEBUG_OUTPUT);
 		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);

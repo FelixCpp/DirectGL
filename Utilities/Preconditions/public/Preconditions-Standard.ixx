@@ -21,12 +21,4 @@ export namespace System
 	{
 		throw std::domain_error(std::format("An operation is not yet implemented: {}", reason));
 	}
-
-	constexpr void repeat(const size_t count, auto&& action) requires std::invocable<decltype(action), size_t>
-	{
-		for (size_t i = 0; i < count; ++i)
-		{
-			action(i);
-		}
-	}
 }

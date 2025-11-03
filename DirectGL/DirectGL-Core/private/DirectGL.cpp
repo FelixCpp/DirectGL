@@ -6,11 +6,13 @@
 #include <string_view>
 #include <filesystem>
 
-#include <Glad/gl.h>
+#include <glad/gl.h>
 
 module DirectGL;
 
 import LogForge;
+
+import :BatchedQuadRenderer;
 
 /// <summary>
 /// Sketch interface to be implemented by the user
@@ -30,6 +32,7 @@ namespace DGL
 		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
 		Library.Window = std::make_unique<WindowWrapper>(std::make_shared<MonitorProviderCache>(CreateDefaultMonitorProvider()));
 
+
 		AppStartup startup;
 		startup.AddStartupTask(Library.Logger);
 		startup.AddStartupTask(std::make_shared<ConfigureDPIStartupTask>());
@@ -39,6 +42,9 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
+			Library.QuadRenderer = std::make_unique<BatchedQuadRenderer>(1000);
+			Library.ShapeBuilder = std::make_unique<ShapeBuilder>(*Library.QuadRenderer);
+
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
 			{
@@ -66,6 +72,8 @@ namespace DGL
 						},
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
+							glViewport(0, 0, resizeEvent.Width, resizeEvent.Height);
+
 							Redraw(); //!< Request a redraw after the window has been resized.
 							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
 						},
@@ -96,7 +104,10 @@ namespace DGL
 					// Note that this needs to happen before we call the Draw function
 					Library.UserRequestedRedraw = false;
 
+					const auto [width, height] = GetWindowSize();
+					Library.QuadRenderer->BeginDraw(Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, width, height), -1.0f, 1.0f));
 					Library.Sketch->Draw(deltaTime.count());
+					Library.QuadRenderer->EndDraw();
 
 					// Present the rendered frame on screen
 					Library.Context->SwapBuffers();
@@ -200,4 +211,76 @@ namespace DGL
 	void ToggleLoop() { Library.IsPaused = not Library.IsPaused; }
 	bool IsLooping() { return not Library.IsPaused; }
 	void Redraw() { Library.UserRequestedRedraw = true; }
+}
+
+namespace DGL
+{
+	RenderStyle& GetCurrentRenderStyle()
+	{
+		return Library.RenderStyle;
+	}
+
+	void SetFillColor(const color_t color)
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.FillColor = color;
+		style.IsFillEnabled = true;
+	}
+
+	void SetStrokeColor(const color_t color)
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.StrokeColor = color;
+		style.IsStrokeEnabled = true;
+	}
+
+	void SetStrokeWeight(const float weight)
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.StrokeWeight = weight;
+	}
+
+	void SetFillDisabled()
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.IsFillEnabled = false;
+	}
+
+	void SetStrokeDisabled()
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.IsStrokeEnabled = false;
+	}
+
+	void BeginShape(const ShapeMode mode)
+	{
+		Library.ShapeBuilder->Begin(mode);
+	}
+
+	void EndShape()
+	{
+		Library.ShapeBuilder->End();
+	}
+
+	void Vertex(const float x, const float y)
+	{
+		const RenderStyle& style = GetCurrentRenderStyle();
+
+		Library.ShapeBuilder->AddVertex({
+			.Position = { x, y, 0.0f },
+			.FillColor = style.FillColor,
+			.StrokeColor = style.StrokeColor,
+			.StrokeWeight = style.StrokeWeight,
+		});
+	}
+
+	void Rect(const float x1, const float y1, const float x2, const float y2)
+	{
+		BeginShape(ShapeMode::Quads);
+		Vertex(x1, y1);
+		Vertex(x2, y1);
+		Vertex(x2, y2);
+		Vertex(x1, y2);
+		EndShape();
+	}
 }

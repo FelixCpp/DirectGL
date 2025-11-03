@@ -110,6 +110,28 @@ export namespace DGL
 	void Redraw();
 }
 
+import :RenderStyle;
+import :ShapeMode;
+
+export namespace DGL
+{
+	RenderStyle& GetRenderStyle();
+
+	void SetFillColor(color_t color);
+
+	void SetStrokeColor(color_t color);
+	void SetStrokeWeight(float weight);
+
+	void SetFillDisabled();
+	void SetStrokeDisabled();
+
+	void BeginShape(ShapeMode mode);
+	void EndShape();
+	void Vertex(float x, float y);
+
+	void Rect(float x1, float y1, float x2, float y2);
+}
+
 //////////////////////////////// - Non-API - //////////////////////////////
 ///																		///
 ///	This Section contains type definitions and implementations that are	///
@@ -128,6 +150,7 @@ import :WindowStartupTask;
 import :InputListener;
 
 import :AsyncLogger;
+import :ShapeBuilder;
 
 enum struct ExitType
 {
@@ -144,6 +167,9 @@ struct DirectGLLibrary
 	std::shared_ptr<DGL::AsyncLogger>				Logger;				//!< The logging channel to use
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
+	DGL::RenderStyle								RenderStyle;
+	std::unique_ptr<DGL::QuadRenderer>				QuadRenderer;
+	std::unique_ptr<DGL::ShapeBuilder>				ShapeBuilder;
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
 	int				ExitCode = 0;					//!< The return code to return on application shutdown

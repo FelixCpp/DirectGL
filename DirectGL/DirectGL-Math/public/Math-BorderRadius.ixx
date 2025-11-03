@@ -29,6 +29,8 @@ export namespace DGL::Math
 		Radius BottomRight;
 		Radius BottomLeft;
 
+		constexpr BorderRadius();
+
 		[[nodiscard]] static constexpr BorderRadius All(Radius radius);
 		[[nodiscard]] static constexpr BorderRadius Symmetric(float horizontal, float vertical);
 		[[nodiscard]] static constexpr BorderRadius Only(const BorderRadiusOnly& only);
@@ -47,6 +49,14 @@ export namespace DGL::Math
 
 namespace DGL::Math
 {
+	constexpr BorderRadius::BorderRadius() :
+		TopLeft(Radius::Zero),
+		TopRight(Radius::Zero),
+		BottomRight(Radius::Zero),
+		BottomLeft(Radius::Zero)
+	{
+	}
+
 	constexpr BorderRadius BorderRadius::All(const Radius radius)
 	{
 		return Only({
