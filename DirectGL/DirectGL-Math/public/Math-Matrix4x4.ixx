@@ -12,6 +12,8 @@ export module DirectGL.Math:Matrix4x4;
 
 import :Boundary;
 import :Constants;
+import :Value2;
+import :Value3;
 
 export namespace DGL::Math
 {
@@ -32,6 +34,9 @@ export namespace DGL::Math
 
 		Matrix4x4 operator * (const Matrix4x4& other) const;
 		Matrix4x4& operator *=(const Matrix4x4& other);
+
+		constexpr Float2 TransformPoint(const Float2& point) const;
+		constexpr Float3 TransformPoint(const Float3& point) const;
 
 		static constexpr Matrix4x4 Translation(float x, float y, float z);
 		static constexpr Matrix4x4 Scaling(float x, float y, float z);
@@ -107,6 +112,21 @@ namespace DGL::Math
 	Matrix4x4& Matrix4x4::operator*=(const Matrix4x4& other)
 	{
 		return *this = *this * other;
+	}
+
+	constexpr Float2 Matrix4x4::TransformPoint(const Float2& point) const
+	{
+		const float x = m_Data[0] * point.X + m_Data[4] * point.Y + m_Data[12];
+		const float y = m_Data[1] * point.X + m_Data[5] * point.Y + m_Data[13];
+		return Float2(x, y);
+	}
+
+	constexpr Float3 Matrix4x4::TransformPoint(const Float3& point) const
+	{
+		const float x = m_Data[0] * point.X + m_Data[4] * point.Y + m_Data[8] * point.Z + m_Data[12];
+		const float y = m_Data[1] * point.X + m_Data[5] * point.Y + m_Data[9] * point.Z + m_Data[13];
+		const float z = m_Data[2] * point.X + m_Data[6] * point.Y + m_Data[10] * point.Z + m_Data[14];
+		return Float3(x, y, z);
 	}
 
 	constexpr Matrix4x4 Matrix4x4::Translation(const float x, const float y, const float z)

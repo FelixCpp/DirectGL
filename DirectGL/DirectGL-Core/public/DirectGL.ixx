@@ -197,6 +197,7 @@ import :WindowStartupTask;
 import :InputListener;
 
 import :MainGraphicsLayer;
+import :AdvancedGraphicsLayer;
 import :RendererFacade;
 import :DepthProvider;
 
@@ -223,7 +224,7 @@ struct DirectGLLibrary
 	std::unique_ptr<DGL::ShapeRenderer::ShapeRenderer>		ShapeRenderer;			//!< The shape renderer to use for primitive drawing
 	std::unique_ptr<DGL::TextureRenderer::TextureRenderer>	TextureRenderer;		//!< The texture renderer to use for textured drawing
 	std::unique_ptr<DGL::RendererFacade> 					RendererFacade;			//!< The renderer facade to use for rendering
-	std::unique_ptr<DGL::MainGraphicsLayer>					MainGraphicsLayer;		//!< The main graphics layer to use for rendering
+	std::unique_ptr<DGL::AdvancedGraphicsLayer>				MainGraphicsLayer;		//!< The main graphics layer to use for rendering
 	std::unique_ptr<DGL::GraphicsLayerStack>				GraphicsLayerStack;		//!< The graphics layer stack to use for managing graphics layers
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown

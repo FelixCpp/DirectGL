@@ -57,12 +57,7 @@ namespace DGL
 				*Library.ShapeFactory
 			);
 
-			Library.MainGraphicsLayer = MainGraphicsLayer::Create(
-				Library.Window->GetSize(),
-				*Library.RendererFacade,
-				*Library.BlendModeActivator
-			);
-
+			Library.MainGraphicsLayer = std::make_unique<AdvancedGraphicsLayer>(Library.Window->GetSize());
 			Library.GraphicsLayerStack = std::make_unique<GraphicsLayerStack>(Library.MainGraphicsLayer.get());
 
 			Library.Sketch = factory();
@@ -222,13 +217,6 @@ namespace DGL
 	Math::Int2 GetWindowPosition() { return Library.Window->GetPosition(); }
 	void SetWindowTitle(const std::string_view title) { Library.Window->SetTitle(title); }
 	std::string GetWindowTitle() { return Library.Window->GetTitle(); }
-}
-
-namespace DGL
-{
-	/*Renderer::Renderer& GetDefaultRenderer() { return *Library.VertexRenderer; }
-	Renderer::ShapeFactory& GetDefaultShapeFactory() { return *Library.ShapeFactory; }
-	GraphicsLayer& GetMainGraphicsLayer() { return *Library.MainGraphicsLayer; }*/
 }
 
 namespace DGL

@@ -11,6 +11,7 @@ module;
 export module DirectGL:GraphicsLayerStack;
 
 import :MainGraphicsLayer;
+import :AdvancedGraphicsLayer;
 import :OffscreenGraphicsLayer;
 
 namespace DGL
@@ -19,7 +20,7 @@ namespace DGL
 	{
 	public:
 
-		explicit GraphicsLayerStack(MainGraphicsLayer* baseLayer);
+		explicit GraphicsLayerStack(AdvancedGraphicsLayer* baseLayer);
 
 		void PushLayer(OffscreenGraphicsLayer* layer);
 		void PopLayer();
@@ -28,7 +29,9 @@ namespace DGL
 
 	private:
 
-		MainGraphicsLayer* m_MainLayer;
+		//MainGraphicsLayer* m_MainLayer;
+		AdvancedGraphicsLayer* m_MainLayer;
+
 		std::stack<OffscreenGraphicsLayer*> m_OffscreenLayers;
 
 	};

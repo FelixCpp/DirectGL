@@ -4,7 +4,7 @@ import :GraphicsLayerStack;
 
 namespace DGL
 {
-	GraphicsLayerStack::GraphicsLayerStack(MainGraphicsLayer* baseLayer) :
+	GraphicsLayerStack::GraphicsLayerStack(AdvancedGraphicsLayer* baseLayer) :
 		m_MainLayer(baseLayer)
 	{
 	}
