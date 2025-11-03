@@ -16,7 +16,7 @@ inline LibraryPtr Load(const std::string_view libraryName)
 
 namespace DGL
 {
-	inline bool EnableShCore()
+	bool EnableShCore()
 	{
 		const LibraryPtr shCore = Load("shcore.dll");
 		if (shCore == nullptr)
@@ -44,7 +44,7 @@ namespace DGL
 		return hr != E_INVALIDARG;
 	}
 
-	inline bool EnableUser32()
+	bool EnableUser32()
 	{
 		const LibraryPtr user32 = Load("user32.dll");
 		if (user32 == nullptr)
@@ -64,7 +64,7 @@ namespace DGL
 		return functionPtr() == TRUE;
 	}
 
-	Startup::StartupTask::Continuation ConfigureDPIStartupTask::Setup()
+	StartupTask::Continuation ConfigureDPIStartupTask::Setup()
 	{
 		if (EnableShCore())
 		{

@@ -13,16 +13,10 @@ workspace("DirectGL")
 
     OutputDir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
-    group("System")
-        include("System/Context/Build-Context.lua")
-        include("System/Monitor/Build-Monitor.lua")
-        include("System/Window/Build-Window.lua")
-
     group("Utilities")
         include("Utilities/Logging/Build-LogForge.lua")
         include("Utilities/Preconditions/Build-Preconditions.lua")
         include("Utilities/Premake/Build-Premake.lua")
-        include("Utilities/Startup/Build-Startup.lua")
 
     group("Libraries")
         include("Libraries/Glad/Build-Glad.lua")
@@ -33,12 +27,14 @@ workspace("DirectGL")
         include("DirectGL/DirectGL-Input/Build-Input.lua")
         include("DirectGL/DirectGL-Logging/Build-Logging.lua")
         include("DirectGL/DirectGL-Math/Build-Math.lua")
-        include("DirectGL/DirectGL-Renderer/Build-Renderer.lua")
-        include("DirectGL/DirectGL-ShapeRenderer/Build-ShapeRenderer.lua")
-        include("DirectGL/DirectGL-TextureRenderer/Build-TextureRenderer.lua")
-        include("DirectGL/DirectGL-Brushes/Build-Brushes.lua")
-        include("DirectGL/DirectGL-Texture/Build-Texture.lua")
-        include("DirectGL/DirectGL-Blending/Build-Blending.lua")
+
+        -- Operating System API's
+        include("DirectGL/DirectGL-Context/Build-Context.lua")
+        include("DirectGL/DirectGL-Monitor/Build-Monitor.lua")
+        include("DirectGL/DirectGL-Window/Build-Window.lua")
+
+        -- Utility Libraries
+        include("DirectGL/DirectGL-Startup/Build-Startup.lua")
 
     group("") -- Root group
         include("App/Build-App.lua")

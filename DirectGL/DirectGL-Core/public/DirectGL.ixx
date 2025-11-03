@@ -17,18 +17,14 @@ export module DirectGL;
 
 /// First we export external libraries that are required by the public API
 /// of the library.
-export import System.Window;
-
-export import :Math;
+export import DirectGL.Math;
 
 import LogForge;
 
 import DirectGL.Input;
 import DirectGL.Logging;
-import DirectGL.Renderer;
-import DirectGL.ShapeRenderer;
-import DirectGL.TextureRenderer;
-import DirectGL.Blending;
+import DirectGL.Window;
+import DirectGL.Monitor;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
 ///																		///
@@ -46,7 +42,7 @@ export namespace DGL
 	{
 		virtual ~Sketch() = default;
 		virtual bool Setup() = 0;
-		virtual void Event(const System::WindowEvent& event) = 0;
+		virtual void Event(const WindowEvent& event) = 0;
 		virtual void Draw(float deltaTime) = 0;
 		virtual void Destroy() = 0;
 	};
@@ -105,14 +101,6 @@ export namespace DGL
 	std::string GetWindowTitle();										//!< Get the window title
 }
 
-export import :BlendMode;
-export import :Color;
-export import :DrawMode;
-export import :GraphicsLayer;
-export import :OffscreenGraphicsLayer;
-export import :RenderState;
-export import :Texture;
-
 export namespace DGL
 {
 	void Loop();
@@ -120,61 +108,6 @@ export namespace DGL
 	void ToggleLoop();
 	bool IsLooping();
 	void Redraw();
-
-	void PushState();
-	void PopState();
-	RenderState& PeekState();
-
-	void PushLayer(GraphicsLayer* layer);
-	void PopLayer();
-	GraphicsLayer& PeekLayer();
-
-	std::unique_ptr<GraphicsLayer> CreateGraphics(uint32_t width, uint32_t height);
-	const Math::FloatBoundary& GetViewport();
-
-	void PushTransform();
-	void PopTransform();
-	Math::Matrix4x4& PeekTransform();
-	void ResetTransform();
-
-	void Translate(float x, float y);
-	void Scale(float x, float y);
-	void Rotate(Math::Angle angle);
-	void Skew(Math::Angle angleX, Math::Angle angleY);
-
-	void Fill(Renderer::Color color);
-	void Stroke(Renderer::Color color);
-	void StrokeWeight(float strokeWeight);
-
-	void NoFill();
-	void NoStroke();
-
-	void SetBlend(const Blending::BlendMode& blendMode);
-	void SetRectMode(const RectMode& rectMode);
-	void SetImageMode(const RectMode& rectMode);
-	void SetEllipseMode(const EllipseMode& ellipseMode);
-	void SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode);
-
-	void SetLineStartCap(ShapeRenderer::LineCapStyle startCap);
-	void SetLineEndCap(ShapeRenderer::LineCapStyle endCap);
-	void SetLineJoinStyle(ShapeRenderer::LineJoinStyle joinStyle);
-	void SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode);
-
-	void SetImageTint(Renderer::Color tint);
-	void SetImageAlpha(uint8_t alpha);
-	void SetImageOpacity(float opacity);
-	void SetImageFilterMode(Texture::TextureFilterMode filterMode);
-	void SetImageWrapMode(Texture::TextureWrapMode wrapMode);
-
-	void Background(Renderer::Color color);
-	void Rect(float x1, float y1, float x2, float y2);
-	void Quad(float x1, float y1, float xy2);
-	void Ellipse(float x1, float y1, float x2, float y2);
-	void Circle(float x1, float y1, float xy2);
-	void Point(float x, float y);
-	void Line(float x1, float y1, float x2, float y2);
-	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
-	void Image(const Texture::Texture& texture, float x1, float y1, float x2, float y2);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -190,16 +123,11 @@ import :ConfigureDPIStartupTask;
 // Graphics
 import :ConfigureGladStartupTask;
 import :ContextWrapper;
-import :RenderStateStack;
-import :GraphicsLayerStack;
 
 import :WindowStartupTask;
 import :InputListener;
 
-import :MainGraphicsLayer;
-import :AdvancedGraphicsLayer;
-import :RendererFacade;
-import :DepthProvider;
+import :AsyncLogger;
 
 enum struct ExitType
 {
@@ -209,23 +137,13 @@ enum struct ExitType
 
 struct DirectGLLibrary
 {
-	std::shared_ptr<System::MonitorProvider>		MonitorProvider;	//!< The monitor provider to use
 	std::shared_ptr<DGL::ContextWrapper>			Context;			//!< The WGL configuration task
 	std::shared_ptr<DGL::WindowWrapper>				Window;				//!< The Core window of the sketch
 
 	std::unique_ptr<DGL::Sketch>					Sketch;				//!< The sketch provided by the user
-	std::shared_ptr<DGL::Logging::AsyncLogger>		Logger;				//!< The logging channel to use
+	std::shared_ptr<DGL::AsyncLogger>				Logger;				//!< The logging channel to use
 
-	DGL::InputListener									InputListener;		//!< The input listener to use
-
-	std::unique_ptr<DGL::Blending::BlendModeActivator> BlendModeActivator;
-
-	std::unique_ptr<DGL::ShapeRenderer::ShapeFactory>		ShapeFactory;			//!< The shape factory to use
-	std::unique_ptr<DGL::ShapeRenderer::ShapeRenderer>		ShapeRenderer;			//!< The shape renderer to use for primitive drawing
-	std::unique_ptr<DGL::TextureRenderer::TextureRenderer>	TextureRenderer;		//!< The texture renderer to use for textured drawing
-	std::unique_ptr<DGL::RendererFacade> 					RendererFacade;			//!< The renderer facade to use for rendering
-	std::unique_ptr<DGL::AdvancedGraphicsLayer>				MainGraphicsLayer;		//!< The main graphics layer to use for rendering
-	std::unique_ptr<DGL::GraphicsLayerStack>				GraphicsLayerStack;		//!< The graphics layer stack to use for managing graphics layers
+	DGL::InputListener								InputListener;		//!< The input listener to use
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
 	int				ExitCode = 0;					//!< The return code to return on application shutdown

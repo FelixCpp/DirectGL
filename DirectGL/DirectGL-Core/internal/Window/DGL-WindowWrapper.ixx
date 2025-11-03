@@ -12,22 +12,24 @@ module;
 
 export module DirectGL:WindowStartupTask;
 
-import Startup;
-import System.Monitor;
-import System.Window;
+import DirectGL.Startup;
+import DirectGL.Window;
+import DirectGL.Monitor;
 
 namespace DGL
 {
-	class WindowWrapper : public System::Window, public Startup::StartupTask
+	class WindowWrapper : public Window, public StartupTask
 	{
 	public:
 
-		explicit WindowWrapper(std::shared_ptr<System::MonitorProvider> monitorProvider);
+		explicit WindowWrapper(std::shared_ptr<MonitorProvider> monitorProvider);
 
 		Continuation Setup() override;
 		void Teardown() override;
 
-		std::optional<System::WindowEvent> PollEvent() override;
+		void SetSizeAndRecenter(const Math::Uint2& size);
+
+		std::optional<WindowEvent> PollEvent() override;
 		void SetPosition(const Math::Int2& position) override;
 		Math::Int2 GetPosition() const override;
 		void SetSize(const Math::Uint2& size) override;
@@ -39,12 +41,12 @@ namespace DGL
 		void SetResizable(bool resizability) override;
 		bool IsResizable() const override;
 		bool RequestFocus() const override;
-		System::NativeWindowHandle GetNativeHandle() const override;
+		NativeWindowHandle GetNativeHandle() const override;
 
 	private:
 
 		std::unique_ptr<Window> m_Window;
-		std::shared_ptr<System::MonitorProvider> m_MonitorProvider;
+		std::shared_ptr<MonitorProvider> m_MonitorProvider;
 
 	};
 }

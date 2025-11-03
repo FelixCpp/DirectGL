@@ -6,16 +6,14 @@
 
 module DirectGL;
 
-import System.Monitor;
-
 namespace DGL
 {
-	WindowWrapper::WindowWrapper(std::shared_ptr<System::MonitorProvider> monitorProvider)
+	WindowWrapper::WindowWrapper(std::shared_ptr<MonitorProvider> monitorProvider)
 		: m_MonitorProvider(std::move(monitorProvider))
 	{
 	}
 
-	Startup::StartupTask::Continuation WindowWrapper::Setup()
+	StartupTask::Continuation WindowWrapper::Setup()
 	{
 		int windowLeft = 100, windowTop = 100;
 
@@ -31,7 +29,7 @@ namespace DGL
 		}
 
 		// Create the window
-		m_Window = System::CreateWindow({
+		m_Window = CreateWindow({
 			.Size = { static_cast<uint32_t>(windowWidth), static_cast<uint32_t>(windowHeight) },
 			.Position = { windowLeft, windowTop },
 			.Title = "DirectGL Application",
@@ -55,7 +53,20 @@ namespace DGL
 		m_Window.reset();
 	}
 
-	std::optional<System::WindowEvent> WindowWrapper::PollEvent() { return m_Window->PollEvent(); }
+	void WindowWrapper::SetSizeAndRecenter(const Math::Uint2& size)
+	{
+		m_Window->SetSize(size);
+
+		// Recenter the window on the primary monitor
+		if (const auto primaryMonitor = m_MonitorProvider->GetPrimaryMonitor())
+		{
+			const int windowLeft = primaryMonitor->WorkArea.Left + (primaryMonitor->WorkArea.Width - static_cast<int32_t>(size.X)) / 2;
+			const int windowTop = primaryMonitor->WorkArea.Top + (primaryMonitor->WorkArea.Height - static_cast<int32_t>(size.Y)) / 2;
+			m_Window->SetPosition({ windowLeft, windowTop });
+		}
+	}
+
+	std::optional<WindowEvent> WindowWrapper::PollEvent() { return m_Window->PollEvent(); }
 	void WindowWrapper::SetPosition(const Math::Int2& position) { m_Window->SetPosition(position); }
 	Math::Int2 WindowWrapper::GetPosition() const { return m_Window->GetPosition(); }
 	void WindowWrapper::SetSize(const Math::Uint2& size) { m_Window->SetSize(size); }
@@ -67,6 +78,6 @@ namespace DGL
 	void WindowWrapper::SetResizable(const bool resizability) { m_Window->SetResizable(resizability); }
 	bool WindowWrapper::IsResizable() const { return m_Window->IsResizable(); }
 	bool WindowWrapper::RequestFocus() const { return m_Window->RequestFocus(); }
-	System::NativeWindowHandle WindowWrapper::GetNativeHandle() const { return m_Window->GetNativeHandle(); }
+	NativeWindowHandle WindowWrapper::GetNativeHandle() const { return m_Window->GetNativeHandle(); }
 
 }

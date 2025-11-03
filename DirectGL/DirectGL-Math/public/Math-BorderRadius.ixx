@@ -36,6 +36,8 @@ export namespace DGL::Math
 		constexpr bool operator == (const BorderRadius& other) const = default;
 		constexpr bool operator != (const BorderRadius& other) const = default;
 
+		static const BorderRadius Zero;
+
 	private:
 
 		constexpr explicit BorderRadius(Radius topLeft, Radius topRight, Radius bottomRight, Radius bottomLeft);
@@ -76,4 +78,6 @@ namespace DGL::Math
 		TopLeft(topLeft), TopRight(topRight), BottomRight(bottomRight), BottomLeft(bottomLeft)
 	{
 	}
+
+	inline constexpr BorderRadius BorderRadius::Zero = All(Radius::Zero);
 }

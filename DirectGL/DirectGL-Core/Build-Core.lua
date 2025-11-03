@@ -15,26 +15,23 @@ project("DirectGL-Core")
 
     links({
         -- DirectGL
-        "DirectGL-Brushes",
-        "DirectGL-Blending",
-        "DirectGL-Texture",
-        "DirectGL-Renderer",
-        "DirectGL-ShapeRenderer",
-        "DirectGL-TextureRenderer",
 
         "DirectGL-Input",
         "DirectGL-Logging",
         "DirectGL-Math",
 
+        -- DirectGL-OS
+        "DirectGL-Context",
+        "DirectGL-Monitor",
+        "DirectGL-Window",
+
+        -- DirectGL-Utility
+        "DirectGL-Startup",
+        
+
         -- Utilities
         "LogForge",
-        "Startup",
         "Preconditions",
-
-        -- System
-        "Context",
-        "Monitor",
-        "Window",
 
         -- Third-Party
         "Glad",

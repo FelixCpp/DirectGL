@@ -37,6 +37,7 @@ export namespace DGL::Math
 
 		constexpr Float2 TransformPoint(const Float2& point) const;
 		constexpr Float3 TransformPoint(const Float3& point) const;
+		constexpr FloatBoundary TransformBoundary(const FloatBoundary& boundary) const;
 
 		static constexpr Matrix4x4 Translation(float x, float y, float z);
 		static constexpr Matrix4x4 Scaling(float x, float y, float z);
@@ -127,6 +128,21 @@ namespace DGL::Math
 		const float y = m_Data[1] * point.X + m_Data[5] * point.Y + m_Data[9] * point.Z + m_Data[13];
 		const float z = m_Data[2] * point.X + m_Data[6] * point.Y + m_Data[10] * point.Z + m_Data[14];
 		return Float3(x, y, z);
+	}
+
+	constexpr FloatBoundary Matrix4x4::TransformBoundary(const FloatBoundary& boundary) const
+	{
+		const Float2 topLeft = TransformPoint(boundary.TopLeft());
+		const Float2 topRight = TransformPoint(boundary.TopRight());
+		const Float2 bottomRight = TransformPoint(boundary.BottomRight());
+		const Float2 bottomLeft = TransformPoint(boundary.BottomLeft());
+
+		const float left = std::min({ topLeft.X, topRight.X, bottomRight.X, bottomLeft.X });
+		const float right = std::max({ topLeft.X, topRight.X, bottomRight.X, bottomLeft.X });
+		const float top = std::min({ topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y });
+		const float bottom = std::max({ topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y });
+
+		return FloatBoundary::FromLTRB(left, top, right, bottom);
 	}
 
 	constexpr Matrix4x4 Matrix4x4::Translation(const float x, const float y, const float z)

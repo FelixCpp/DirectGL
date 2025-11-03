@@ -5,11 +5,11 @@
 
 export module DirectGL:ConfigureGladStartupTask;
 
-import Startup;
+import DirectGL.Startup;
 
 namespace DGL
 {
-	struct ConfigureGladStartupTask : public Startup::StartupTask
+	struct ConfigureGladStartupTask : StartupTask
 	{
 		Continuation Setup() override;
 		void Teardown() override;

@@ -11,7 +11,6 @@ project("App")
 
 	links({
 		"DirectGL-Core",
-		"DirectGL-Texture",
 	})
 
 	filter("system:windows")

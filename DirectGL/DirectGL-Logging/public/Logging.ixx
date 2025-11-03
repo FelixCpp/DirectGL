@@ -9,7 +9,6 @@ module;
 
 export module DirectGL.Logging;
 
-export import :AsyncLogger;
 export import :GlobalLogger;
 
 module :private;

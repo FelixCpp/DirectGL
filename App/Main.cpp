@@ -13,13 +13,12 @@ public:
 		return true;
 	}
 
-	void Event(const System::WindowEvent& event) override
+	void Event(const DGL::WindowEvent& event) override
 	{
 	}
 
 	void Draw(const float deltaTime) override
 	{
-		
 	}
 
 	void Destroy() override

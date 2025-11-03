@@ -5,21 +5,20 @@
 
 module;
 
-#include <Windows.h>
 #include <functional>
 #include <memory>
 
 export module DirectGL:ContextWrapper;
 
-import Startup;
-import System.Window;
-import System.Context;
+import DirectGL.Startup;
+import DirectGL.Window;
+import DirectGL.Context;
 
 namespace DGL
 {
-	typedef std::function<System::Window* ()> WindowProvider;
+	typedef std::function<Window* ()> WindowProvider;
 
-	class ContextWrapper : public System::Context, public Startup::StartupTask
+	class ContextWrapper : public Context, public StartupTask
 	{
 	public:
 

@@ -11,8 +11,7 @@ export module DirectGL:InputListener;
 
 import DirectGL.Input;
 import DirectGL.Math;
-
-import System.Window;
+import DirectGL.Window;
 
 namespace DGL
 {
@@ -36,7 +35,7 @@ namespace DGL
 
 		InputListener();
 
-		void Process(const System::WindowEvent& event);
+		void Process(const WindowEvent& event);
 		void Update();
 
 		[[nodiscard]] bool IsKeyPressed(Input::KeyboardKey key) const;

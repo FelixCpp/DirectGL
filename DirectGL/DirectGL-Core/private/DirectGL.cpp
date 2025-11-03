@@ -10,14 +10,7 @@
 
 module DirectGL;
 
-import System.Monitor;
-
-import Startup;
 import LogForge;
-
-import DirectGL.Renderer;
-
-using namespace System;
 
 /// <summary>
 /// Sketch interface to be implemented by the user
@@ -26,17 +19,18 @@ namespace DGL
 {
 	void LaunchImpl(const std::function<std::unique_ptr<Sketch>()>& factory)
 	{
-		Library.Logger = std::make_unique<Logging::AsyncLogger>(std::make_unique<LogForge::DefaultLogger>(
+		Library.Logger = std::make_unique<AsyncLogger>(std::make_unique<LogForge::DefaultLogger>(
 			std::make_unique<LogForge::DevelopmentLogFilter>(),
 			std::make_unique<LogForge::FmtLogPrinter>(),
 			std::make_unique<LogForge::ConsoleLogOutput>()
 		));
 
-		Library.MonitorProvider = std::make_shared<MonitorProviderCache>(std::make_shared<Win32MonitorProvider>());
-		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
-		Library.Window = std::make_unique<WindowWrapper>(Library.MonitorProvider);
+		Logging::SetLogger(Library.Logger);
 
-		Startup::AppStartup startup;
+		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
+		Library.Window = std::make_unique<WindowWrapper>(std::make_shared<MonitorProviderCache>(CreateDefaultMonitorProvider()));
+
+		AppStartup startup;
 		startup.AddStartupTask(Library.Logger);
 		startup.AddStartupTask(std::make_shared<ConfigureDPIStartupTask>());
 		startup.AddStartupTask(Library.Window);
@@ -45,21 +39,6 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
-			const auto defaultActivator = std::make_unique<Blending::DefaultBlendModeActivator>();
-			Library.BlendModeActivator = std::make_unique<Blending::CachingBlendModeActivator>(*defaultActivator);
-			Library.ShapeFactory = std::make_unique<ShapeRenderer::ShapeFactory>();
-			Library.ShapeRenderer = ShapeRenderer::ShapeRenderer::Create(10'000, 10'000);
-			Library.TextureRenderer = TextureRenderer::TextureRenderer::Create(500);
-
-			Library.RendererFacade = std::make_unique<RendererFacade>(
-				*Library.TextureRenderer,
-				*Library.ShapeRenderer,
-				*Library.ShapeFactory
-			);
-
-			Library.MainGraphicsLayer = std::make_unique<AdvancedGraphicsLayer>(Library.Window->GetSize());
-			Library.GraphicsLayerStack = std::make_unique<GraphicsLayerStack>(Library.MainGraphicsLayer.get());
-
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
 			{
@@ -87,7 +66,6 @@ namespace DGL
 						},
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
-							Library.MainGraphicsLayer->Resize({ resizeEvent.Width, resizeEvent.Height });
 							Redraw(); //!< Request a redraw after the window has been resized.
 							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
 						},
@@ -118,9 +96,7 @@ namespace DGL
 					// Note that this needs to happen before we call the Draw function
 					Library.UserRequestedRedraw = false;
 
-					Library.MainGraphicsLayer->BeginDraw();
 					Library.Sketch->Draw(deltaTime.count());
-					Library.MainGraphicsLayer->EndDraw();
 
 					// Present the rendered frame on screen
 					Library.Context->SwapBuffers();
@@ -199,16 +175,14 @@ namespace DGL
 
 	void SetWindowSize(const int width, const int height, const bool recenter)
 	{
-		Library.Window->SetSize({ static_cast<uint32_t>(width), static_cast<uint32_t>(height) });
+		const Math::Uint2 newWindowSize = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 
 		if (recenter)
 		{
-			if (const auto monitor = Library.MonitorProvider->GetPrimaryMonitor())
-			{
-				const int windowLeft = monitor->WorkArea.Left + (monitor->WorkArea.Width - width) / 2;
-				const int windowTop = monitor->WorkArea.Top + (monitor->WorkArea.Height - height) / 2;
-				SetWindowPosition(windowLeft, windowTop);
-			}
+			Library.Window->SetSizeAndRecenter(newWindowSize);
+		} else
+		{
+			Library.Window->SetSize(newWindowSize);
 		}
 	}
 
@@ -226,77 +200,4 @@ namespace DGL
 	void ToggleLoop() { Library.IsPaused = not Library.IsPaused; }
 	bool IsLooping() { return not Library.IsPaused; }
 	void Redraw() { Library.UserRequestedRedraw = true; }
-
-	void PushLayer(GraphicsLayer* layer)
-	{
-		if (const auto offscreenLayer = dynamic_cast<OffscreenGraphicsLayer*>(layer))
-		{
-			Library.GraphicsLayerStack->PushLayer(offscreenLayer);
-		} else
-		{
-			Logging::Error("Only offscreen graphics layers can be pushed onto the graphics layer stack");
-		}
-	}
-
-	void PopLayer() { Library.GraphicsLayerStack->PopLayer(); }
-	GraphicsLayer& PeekLayer() { return Library.GraphicsLayerStack->PeekLayer(); }
-
-	std::unique_ptr<GraphicsLayer> CreateGraphics(const uint32_t width, const uint32_t height)
-	{
-		return OffscreenGraphicsLayer::Create(
-			{ width, height },
-			*Library.RendererFacade,
-			*Library.BlendModeActivator
-		);
-	}
-
-	const Math::FloatBoundary& GetViewport() { return PeekLayer().GetViewport(); }
-
-	void PushState() { PeekLayer().PushState(); }
-	void PopState() { PeekLayer().PopState(); }
-	RenderState& PeekState() { return PeekLayer().PeekState(); }
-
-	void PushTransform() { PeekLayer().PushTransform(); }
-	void PopTransform() { PeekLayer().PopTransform(); }
-	Math::Matrix4x4& PeekTransform() { return PeekLayer().PeekTransform(); }
-	void ResetTransform() { PeekLayer().ResetTransform(); }
-
-	void Translate(const float x, const float y) { PeekLayer().Translate(x, y); }
-	void Scale(const float x, const float y) { PeekLayer().Scale(x, y); }
-	void Rotate(const Math::Angle angle) { PeekLayer().Rotate(angle); }
-	void Skew(const Math::Angle angleX, const Math::Angle angleY) { PeekLayer().Skew(angleX, angleY); }
-
-	void Fill(const Renderer::Color color) { PeekLayer().Fill(color); }
-	void Stroke(const Renderer::Color color) { PeekLayer().Stroke(color); }
-	void StrokeWeight(const float strokeWeight) { PeekLayer().StrokeWeight(strokeWeight); }
-
-	void NoFill() { PeekLayer().NoFill(); }
-	void NoStroke() { PeekLayer().NoStroke(); }
-
-	void SetBlend(const Blending::BlendMode& blendMode) { PeekLayer().SetBlendMode(blendMode); }
-	void SetRectMode(const RectMode& rectMode) { PeekLayer().SetRectMode(rectMode); }
-	void SetImageMode(const RectMode& rectMode) { PeekLayer().SetImageMode(rectMode); }
-	void SetEllipseMode(const EllipseMode& ellipseMode) { PeekLayer().SetEllipseMode(ellipseMode); }
-	void SetEllipseSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetEllipseSegmentCountMode(segmentCountMode); }
-
-	void SetLineStartCap(const ShapeRenderer::LineCapStyle startCap) { PeekLayer().SetLineStartCap(startCap); }
-	void SetLineEndCap(const ShapeRenderer::LineCapStyle endCap) { PeekLayer().SetLineEndCap(endCap); }
-	void SetLineJoinStyle(const ShapeRenderer::LineJoinStyle joinStyle) { PeekLayer().SetLineJoinStyle(joinStyle); }
-	void SetLineSegmentCountMode(const SegmentCountMode& segmentCountMode) { PeekLayer().SetLineSegmentCountMode(segmentCountMode); }
-
-	void SetImageTint(const Renderer::Color tint) { PeekLayer().SetImageTint(tint); }
-	void SetImageAlpha(const uint8_t alpha) { PeekLayer().SetImageAlpha(alpha); }
-	void SetImageOpacity(const float opacity) { PeekLayer().SetImageOpacity(opacity); }
-	void SetImageFilterMode(const Texture::TextureFilterMode filterMode) { PeekLayer().SetImageFilterMode(filterMode); }
-	void SetImageWrapMode(const Texture::TextureWrapMode wrapMode) { PeekLayer().SetImageWrapMode(wrapMode); }
-
-	void Background(const Renderer::Color color) { PeekLayer().Background(color); }
-	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Rect(x1, y1, x2, y2); }
-	void Quad(const float x1, const float y1, const float xy2) { Rect(x1, y1, xy2, xy2); }
-	void Ellipse(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Ellipse(x1, y1, x2, y2); }
-	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
-	void Point(const float x, const float y) { PeekLayer().Point(x, y); }
-	void Line(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Line(x1, y1, x2, y2); }
-	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { PeekLayer().Triangle(x1, y1, x2, y2, x3, y3); }
-	void Image(const Texture::Texture& texture, const float x1, const float y1, const float x2, const float y2) { PeekLayer().Image(texture, x1, y1, x2, y2); }
 }

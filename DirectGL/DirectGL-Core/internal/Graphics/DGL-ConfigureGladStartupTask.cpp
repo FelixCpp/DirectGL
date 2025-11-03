@@ -11,7 +11,7 @@ module DirectGL;
 
 namespace DGL
 {
-	Startup::StartupTask::Continuation ConfigureGladStartupTask::Setup()
+	StartupTask::Continuation ConfigureGladStartupTask::Setup()
 	{
 		if (not gladLoaderLoadGL())
 		{

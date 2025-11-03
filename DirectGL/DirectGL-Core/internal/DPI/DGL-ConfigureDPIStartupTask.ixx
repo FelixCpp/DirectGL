@@ -5,11 +5,11 @@
 
 export module DirectGL:ConfigureDPIStartupTask;
 
-import Startup;
+import DirectGL.Startup;
 
 namespace DGL
 {
-	struct ConfigureDPIStartupTask : Startup::StartupTask
+	struct ConfigureDPIStartupTask : StartupTask
 	{
 		Continuation Setup() override;
 		void Teardown() override;

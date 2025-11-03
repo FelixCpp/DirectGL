@@ -11,10 +11,7 @@ project("DirectGL-Logging")
 		"private/**.cpp",
 	})
 
-	links({
-		"LogForge",
-		"Startup",
-	})
+	links({ "LogForge" })
 
 	filter("system:windows")
 		systemversion("latest")

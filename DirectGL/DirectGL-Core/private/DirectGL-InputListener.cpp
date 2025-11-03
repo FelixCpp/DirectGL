@@ -10,26 +10,26 @@ namespace DGL
 		m_MouseButtonState.fill(IdleState);
 	}
 
-	void InputListener::Process(const System::WindowEvent& event)
+	void InputListener::Process(const WindowEvent& event)
 	{
 		event.Visit(
-			[this](const System::WindowEvent::KeyPressed& data)
+			[this](const WindowEvent::KeyPressed& data)
 			{
 				m_KeyboardState[static_cast<size_t>(data.Key)] = data.IsRepeated ? DownState : PressedState;
 			},
-			[this](const System::WindowEvent::KeyReleased& data)
+			[this](const WindowEvent::KeyReleased& data)
 			{
 				m_KeyboardState[static_cast<size_t>(data.Key)] = ReleasedState;
 			},
-			[this](const System::WindowEvent::MouseButtonPressed& data)
+			[this](const WindowEvent::MouseButtonPressed& data)
 			{
 				m_MouseButtonState[static_cast<size_t>(data.Button)] = PressedState;
 			},
-			[this](const System::WindowEvent::MouseButtonReleased& data)
+			[this](const WindowEvent::MouseButtonReleased& data)
 			{
 				m_MouseButtonState[static_cast<size_t>(data.Button)] = ReleasedState;
 			},
-			[this](const System::WindowEvent::MouseMoved& data)
+			[this](const WindowEvent::MouseMoved& data)
 			{
 				m_MousePosition = { data.MouseX, data.MouseY };
 			},

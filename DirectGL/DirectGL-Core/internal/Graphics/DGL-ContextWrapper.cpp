@@ -11,9 +11,9 @@ namespace DGL
 	{
 	}
 
-	Startup::StartupTask::Continuation ContextWrapper::Setup()
+	StartupTask::Continuation ContextWrapper::Setup()
 	{
-		m_Context = System::CreateContext({
+		m_Context = CreateContext({
 			.MajorVersion = 4,
 			.MinorVersion = 6,
 			.IsDebuggingContext = true,
