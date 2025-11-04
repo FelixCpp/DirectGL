@@ -1,6 +1,7 @@
 ﻿module;
 
 #include <optional>
+#include <array>
 
 module DirectGL;
 
@@ -10,9 +11,25 @@ import :ShapeBuilder;
 
 namespace DGL
 {
-	ShapeBuilder::ShapeBuilder(QuadRenderer& quadRenderer):
+	MeshVertex ShapeVertex::ToFilledMeshVertex() const
+	{
+		return MeshVertex {
+			.Position = Position,
+			.Color = FillColor
+		};
+	}
+
+	MeshVertex ShapeVertex::ToStrokedMeshVertex() const
+	{
+		return MeshVertex {
+			.Position = Position,
+			.Color = StrokeColor
+		};
+	}
+
+	ShapeBuilder::ShapeBuilder(DepthProvider& depthProvider):
 		m_CurrentShapeMode(std::nullopt),
-		m_QuadRenderer(&quadRenderer)
+		m_DepthProvider(&depthProvider)
 	{
 	}
 
@@ -21,27 +38,32 @@ namespace DGL
 		m_CurrentShapeMode = mode;
 	}
 
-	void ShapeBuilder::End()
+	Shape ShapeBuilder::End(const ShapeBuildingProperties& properties)
 	{
 		// Check if there are vertices to process
 		if (m_Vertices.empty())
 		{
-			return;
+			return Shape{};
 		}
 
-		switch (m_CurrentShapeMode.value())
-		{
-			case ShapeMode::Points: UploadVerticesAsPoints(); break;
-			case ShapeMode::Lines: UploadVerticesAsLines(); break;
-			case ShapeMode::Triangles: UploadVerticesAsTriangles(); break;
-			case ShapeMode::TriangleStrip: UploadVerticesAsTriangleStrip(); break;
-			case ShapeMode::TriangleFan: UploadVerticesAsTriangleFan(); break;
-			case ShapeMode::Quads: UploadVerticesAsQuads(); break;
-			case ShapeMode::QuadStrip: UploadVerticesAsQuadStrip(); break;
-		}
+		Shape result = [this, &properties] {
+			switch (m_CurrentShapeMode.value())
+			{
+				case ShapeMode::Points: return UploadVerticesAsPoints(properties);
+				case ShapeMode::Lines: return UploadVerticesAsLines(properties);
+				case ShapeMode::Triangles: return UploadVerticesAsTriangles(properties);
+				case ShapeMode::TriangleStrip: return UploadVerticesAsTriangleStrip(properties);
+				case ShapeMode::TriangleFan: return UploadVerticesAsTriangleFan(properties);
+				case ShapeMode::Quads: return UploadVerticesAsQuads(properties);
+				case ShapeMode::QuadStrip: return UploadVerticesAsQuadStrip(properties);
+				default: System::Error("Unknown shape mode in ShapeBuilder::End()");
+			}
+		}();
 
 		m_CurrentShapeMode.reset();
 		m_Vertices.clear();
+
+		return result;
 	}
 
 	void ShapeBuilder::AddVertex(const ShapeVertex& vertex)
@@ -55,133 +77,239 @@ namespace DGL
 		m_Vertices.emplace_back(vertex);
 	}
 
-	void ShapeBuilder::UploadVerticesAsPoints()
+	Shape ShapeBuilder::UploadVerticesAsPoints(const ShapeBuildingProperties& properties)
 	{
+		Shape shape;
+
 		for (size_t i = 0; i < m_Vertices.size(); ++i)
 		{
-			const ShapeVertex& v = m_Vertices[i];
-			System::TODO("Points are not yet implemented");
+			Mesh pointMesh = m_MeshBuilder.GeneratePointMesh(
+				m_Vertices[i].ToFilledMeshVertex(),
+				PointMeshProperties {
+					.Radius = properties.StrokeWeight,
+					.Segments = 12, // TODO(Felix): Make configurable
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(pointMesh);
 		}
+
+		return shape;
 	}
 
-	void ShapeBuilder::UploadVerticesAsLines()
+	Shape ShapeBuilder::UploadVerticesAsLines(const ShapeBuildingProperties& properties)
 	{
+		Shape shape;
+
 		for (size_t i = 1; i < m_Vertices.size(); i += 2)
 		{
-			const ShapeVertex& v1 = m_Vertices[i - 1];
-			const ShapeVertex& v2 = m_Vertices[i - 0];
-			System::TODO("Lines are not yet implemented");
+			Mesh lineMesh = m_MeshBuilder.GenerateLineMesh(
+				std::array {
+					m_Vertices[i - 1].ToFilledMeshVertex(),
+					m_Vertices[i - 0].ToFilledMeshVertex()
+				},
+				LineMeshProperties {
+					.StartCap = properties.StartCap,
+					.EndCap = properties.EndCap,
+					.StrokeWeight = properties.StrokeWeight,
+					.RoundedCapSegments = 12, // TODO(Felix): Make configurable
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(lineMesh);
 		}
+
+		return shape;
 	}
 
-	void ShapeBuilder::UploadVerticesAsTriangles()
+	Shape ShapeBuilder::UploadVerticesAsTriangles(const ShapeBuildingProperties& properties)
 	{
+		Shape shape;
+
 		for (size_t i = 2; i < m_Vertices.size(); i += 3)
 		{
-			const ShapeVertex& v1 = m_Vertices[i - 3];
-			const ShapeVertex& v2 = m_Vertices[i - 2];
-			const ShapeVertex& v3 = m_Vertices[i - 1];
-			System::TODO("Triangles are not yet implemented");
+			Mesh triangleMesh = m_MeshBuilder.GenerateTriangleMesh(
+				std::array {
+					m_Vertices[i - 2].ToFilledMeshVertex(),
+					m_Vertices[i - 1].ToFilledMeshVertex(),
+					m_Vertices[i - 0].ToFilledMeshVertex(),
+				},
+				TriangleMeshProperties {
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
+				std::array{
+					m_Vertices[i - 2].ToStrokedMeshVertex(),
+					m_Vertices[i - 1].ToStrokedMeshVertex(),
+					m_Vertices[i - 0].ToStrokedMeshVertex(),
+				},
+				OutlinedMeshProperties {
+					.StrokeWeight = properties.StrokeWeight,
+					.JoinStyle = properties.JoinStyle,
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(triangleMesh);
+			shape.StrokeShapes.emplace_back(outlinedMesh);
 		}
+
+		return shape;
 	}
 
-	void ShapeBuilder::UploadVerticesAsTriangleStrip()
+	Shape ShapeBuilder::UploadVerticesAsTriangleStrip(const ShapeBuildingProperties& properties)
 	{
+		Shape shape;
+
 		for (size_t i = 2; i < m_Vertices.size(); ++i)
 		{
-			const ShapeVertex& v1 = m_Vertices[i - 2];
-			const ShapeVertex& v2 = m_Vertices[i - 1];
-			const ShapeVertex& v3 = m_Vertices[i - 0];
-			System::TODO("Triangle strips are not yet implemented");
+			Mesh triangleMesh = m_MeshBuilder.GenerateTriangleMesh(
+				std::array {
+					m_Vertices[i - 2].ToFilledMeshVertex(),
+					m_Vertices[i - 1].ToFilledMeshVertex(),
+					m_Vertices[i - 0].ToFilledMeshVertex()
+				},
+				TriangleMeshProperties {
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
+				std::array{
+					m_Vertices[i - 2].ToStrokedMeshVertex(),
+					m_Vertices[i - 1].ToStrokedMeshVertex(),
+					m_Vertices[i - 0].ToStrokedMeshVertex()
+				},
+				OutlinedMeshProperties {
+					.StrokeWeight = properties.StrokeWeight,
+					.JoinStyle = properties.JoinStyle,
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(triangleMesh);
+			shape.StrokeShapes.emplace_back(outlinedMesh);
 		}
+
+		return shape;
 	}
 
-	void ShapeBuilder::UploadVerticesAsTriangleFan()
+	Shape ShapeBuilder::UploadVerticesAsTriangleFan(const ShapeBuildingProperties& properties)
 	{
+		Shape shape;
+
 		for (size_t i = 2; i < m_Vertices.size(); ++i)
 		{
-			const ShapeVertex& v1 = m_Vertices[0];
-			const ShapeVertex& v2 = m_Vertices[i - 1];
-			const ShapeVertex& v3 = m_Vertices[i - 0];
-			System::TODO("Triangle fans are not yet implemented");
+			Mesh triangleMesh = m_MeshBuilder.GenerateTriangleMesh(
+				std::array {
+					m_Vertices[0].ToFilledMeshVertex(),
+					m_Vertices[i - 1].ToFilledMeshVertex(),
+					m_Vertices[i - 0].ToFilledMeshVertex()
+				},
+				TriangleMeshProperties {
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
+				std::array{
+					m_Vertices[0].ToStrokedMeshVertex(),
+					m_Vertices[i - 1].ToStrokedMeshVertex(),
+					m_Vertices[i - 0].ToStrokedMeshVertex()
+				},
+				OutlinedMeshProperties {
+					.StrokeWeight = properties.StrokeWeight,
+					.JoinStyle = properties.JoinStyle,
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(triangleMesh);
+			shape.StrokeShapes.emplace_back(outlinedMesh);
 		}
+
+		return shape;
 	}
 
-	void ShapeBuilder::UploadVerticesAsQuads() const
+	Shape ShapeBuilder::UploadVerticesAsQuads(const ShapeBuildingProperties& properties)
 	{
-		for (size_t i = 3; i < m_Vertices.size(); i += 4)
+		Shape shape;
+
+		for (size_t i = 4; i < m_Vertices.size(); i += 4)
 		{
-			const ShapeVertex& v1 = m_Vertices[i - 3];
-			const ShapeVertex& v2 = m_Vertices[i - 2];
-			const ShapeVertex& v3 = m_Vertices[i - 1];
-			const ShapeVertex& v4 = m_Vertices[i - 0];
+			Mesh quadMesh = m_MeshBuilder.GenerateQuadMesh(
+				std::array {
+					m_Vertices[i - 4].ToFilledMeshVertex(),
+					m_Vertices[i - 3].ToFilledMeshVertex(),
+					m_Vertices[i - 2].ToFilledMeshVertex(),
+					m_Vertices[i - 1].ToFilledMeshVertex()
+				},
+				QuadMeshProperties {
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
 
-			m_QuadRenderer->SubmitQuad({
-				CreateQuadProperties(v1, v2, v3, v4),
-			});
+			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
+				std::array {
+					m_Vertices[i - 4].ToStrokedMeshVertex(),
+					m_Vertices[i - 3].ToStrokedMeshVertex(),
+					m_Vertices[i - 2].ToStrokedMeshVertex(),
+					m_Vertices[i - 1].ToStrokedMeshVertex()
+				},
+				OutlinedMeshProperties {
+					.StrokeWeight = properties.StrokeWeight,
+					.JoinStyle = properties.JoinStyle,
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(quadMesh);
+			shape.StrokeShapes.emplace_back(outlinedMesh);
 		}
+
+		return shape;
 	}
 
-	void ShapeBuilder::UploadVerticesAsQuadStrip() const
+	Shape ShapeBuilder::UploadVerticesAsQuadStrip(const ShapeBuildingProperties& properties)
 	{
+		Shape shape;
+
 		for (size_t i = 3; i < m_Vertices.size(); i += 2)
 		{
-			const ShapeVertex& v1 = m_Vertices[i - 3];
-			const ShapeVertex& v2 = m_Vertices[i - 2];
-			const ShapeVertex& v3 = m_Vertices[i - 1];
-			const ShapeVertex& v4 = m_Vertices[i - 0];
+			Mesh quadMesh = m_MeshBuilder.GenerateQuadMesh(
+				std::array {
+					m_Vertices[i - 3].ToFilledMeshVertex(),
+					m_Vertices[i - 2].ToFilledMeshVertex(),
+					m_Vertices[i - 1].ToFilledMeshVertex(),
+					m_Vertices[i - 0].ToFilledMeshVertex()
+				},
+				QuadMeshProperties {
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
 
-			m_QuadRenderer->SubmitQuad({
-				CreateQuadProperties(v1, v2, v3, v4),
-			});
+			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
+				std::array{
+					m_Vertices[i - 3].ToStrokedMeshVertex(),
+					m_Vertices[i - 2].ToStrokedMeshVertex(),
+					m_Vertices[i - 1].ToStrokedMeshVertex(),
+					m_Vertices[i - 0].ToStrokedMeshVertex()
+				},
+				OutlinedMeshProperties {
+					.StrokeWeight = properties.StrokeWeight,
+					.JoinStyle = properties.JoinStyle,
+					.Depth = m_DepthProvider->GetAndIncrement(),
+				}
+			);
+
+			shape.FillShapes.emplace_back(quadMesh);
+			shape.StrokeShapes.emplace_back(outlinedMesh);
 		}
+
+		return shape;
 	}
-
-
-	QuadRenderer::QuadProperties ShapeBuilder::CreateQuadProperties(const ShapeVertex& v1, const ShapeVertex& v2, const ShapeVertex& v3, const ShapeVertex& v4)
-	{
-		// TODO(Felix): Compute size based on vertex positions
-		const float width = v2.Position.X - v1.Position.X;
-		const float height = v4.Position.Y - v1.Position.Y;
-
-		return {
-			QuadRenderer::QuadVertex{
-				.WorldPosition = v1.Position,
-				.LocalPosition = { 0.0f, 0.0f, },
-				.FillColor = v1.FillColor,
-				.StrokeColor = v1.StrokeColor,
-				.Size = { width, height },
-				.StrokeWeight = v1.StrokeWeight,
-				.BorderRadius = 0.0f,
-			},
-			QuadRenderer::QuadVertex{
-				.WorldPosition = v2.Position,
-				.LocalPosition = { 1.0f, 0.0f, },
-				.FillColor = v2.FillColor,
-				.StrokeColor = v2.StrokeColor,
-				.Size = { width, height },
-				.StrokeWeight = v2.StrokeWeight,
-				.BorderRadius = 0.0f,
-			},
-			QuadRenderer::QuadVertex{
-				.WorldPosition = v3.Position,
-				.LocalPosition = { 1.0f, 1.0f, },
-				.FillColor = v3.FillColor,
-				.StrokeColor = v3.StrokeColor,
-				.Size = { width, height },
-				.StrokeWeight = v3.StrokeWeight,
-				.BorderRadius = 0.0f,
-			},
-			QuadRenderer::QuadVertex{
-				.WorldPosition = v4.Position,
-				.LocalPosition = { 0.0f, 1.0f, },
-				.FillColor = v4.FillColor,
-				.StrokeColor = v4.StrokeColor,
-				.Size = { width, height },
-				.StrokeWeight = v4.StrokeWeight,
-				.BorderRadius = 0.0f,
-			},
-		};
-	}
-
 }

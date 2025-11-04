@@ -110,8 +110,8 @@ export namespace DGL
 	void Redraw();
 }
 
-import :RenderStyle;
-import :ShapeMode;
+export import :RenderStyle;
+export import :ShapeMode;
 
 export namespace DGL
 {
@@ -130,6 +130,7 @@ export namespace DGL
 	void Vertex(float x, float y);
 
 	void Rect(float x1, float y1, float x2, float y2);
+	void Point(float x, float y);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -151,6 +152,7 @@ import :InputListener;
 
 import :AsyncLogger;
 import :ShapeBuilder;
+import :MeshRenderer;
 
 enum struct ExitType
 {
@@ -168,8 +170,8 @@ struct DirectGLLibrary
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
 	DGL::RenderStyle								RenderStyle;
-	std::unique_ptr<DGL::QuadRenderer>				QuadRenderer;
 	std::unique_ptr<DGL::ShapeBuilder>				ShapeBuilder;
+	std::unique_ptr<DGL::MeshRenderer>				MeshRenderer;
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
 	int				ExitCode = 0;					//!< The return code to return on application shutdown

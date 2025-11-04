@@ -12,46 +12,63 @@ export module DirectGL:ShapeBuilder;
 
 import DirectGL.Math;
 
+import :MeshBuilder;
 import :ShapeMode;
-import :QuadRenderer;
 import :Color;
+import :DepthProvider;
 
 namespace DGL
 {
 	struct ShapeVertex
 	{
-		Math::Float3	Position;
-		color_t			FillColor;
-		color_t			StrokeColor;
-		float			StrokeWeight;
+		Math::Float2 Position;
+		color_t FillColor;
+		color_t StrokeColor;
+
+		MeshVertex ToFilledMeshVertex() const;
+		MeshVertex ToStrokedMeshVertex() const;
+	};
+
+	struct ShapeBuildingProperties
+	{
+		float StrokeWeight;
+		StrokeJoin JoinStyle;
+		StrokeCap StartCap;
+		StrokeCap EndCap;
+	};
+
+	struct Shape
+	{
+		std::vector<Mesh> FillShapes;
+		std::vector<Mesh> StrokeShapes;
 	};
 
 	class ShapeBuilder
 	{
 	public:
 
-		explicit ShapeBuilder(QuadRenderer& quadRenderer);
+		explicit ShapeBuilder(DepthProvider& depthProvider);
 
 		void Begin(ShapeMode mode);
-		void End();
+		Shape End(const ShapeBuildingProperties& properties);
 
 		void AddVertex(const ShapeVertex& vertex);
 
 	private:
 
-		void UploadVerticesAsPoints();
-		void UploadVerticesAsLines();
-		void UploadVerticesAsTriangles();
-		void UploadVerticesAsTriangleStrip();
-		void UploadVerticesAsTriangleFan();
-		void UploadVerticesAsQuads() const;
-		void UploadVerticesAsQuadStrip() const;
-
-		static QuadRenderer::QuadProperties CreateQuadProperties(const ShapeVertex& v1, const ShapeVertex& v2, const ShapeVertex& v3, const ShapeVertex& v4);
+		Shape UploadVerticesAsPoints(const ShapeBuildingProperties& properties);
+		Shape UploadVerticesAsLines(const ShapeBuildingProperties& properties);
+		Shape UploadVerticesAsTriangles(const ShapeBuildingProperties& properties);
+		Shape UploadVerticesAsTriangleStrip(const ShapeBuildingProperties& properties);
+		Shape UploadVerticesAsTriangleFan(const ShapeBuildingProperties& properties);
+		Shape UploadVerticesAsQuads(const ShapeBuildingProperties& properties);
+		Shape UploadVerticesAsQuadStrip(const ShapeBuildingProperties& properties);
 
 		std::optional<ShapeMode> m_CurrentShapeMode;
 		std::vector<ShapeVertex> m_Vertices;
-		QuadRenderer* m_QuadRenderer;
+
+		MeshBuilder m_MeshBuilder;
+		DepthProvider* m_DepthProvider;
 
 	};
 }

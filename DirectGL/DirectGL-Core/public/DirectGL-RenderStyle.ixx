@@ -6,6 +6,8 @@
 export module DirectGL:RenderStyle;
 
 import :Color;
+import :StrokeJoin;
+import :StrokeCap;
 
 export namespace DGL
 {
@@ -17,5 +19,9 @@ export namespace DGL
 		color_t StrokeColor;
 		bool	IsStrokeEnabled;
 		float	StrokeWeight;
+
+		StrokeJoin	JoinStyle;
+		StrokeCap	StartCap;
+		StrokeCap	EndCap;
 	};
 }

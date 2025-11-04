@@ -12,8 +12,6 @@ module DirectGL;
 
 import LogForge;
 
-import :BatchedQuadRenderer;
-
 /// <summary>
 /// Sketch interface to be implemented by the user
 /// </summary>
@@ -32,7 +30,6 @@ namespace DGL
 		Library.Context = std::make_unique<ContextWrapper>([] { return Library.Window.get(); });
 		Library.Window = std::make_unique<WindowWrapper>(std::make_shared<MonitorProviderCache>(CreateDefaultMonitorProvider()));
 
-
 		AppStartup startup;
 		startup.AddStartupTask(Library.Logger);
 		startup.AddStartupTask(std::make_shared<ConfigureDPIStartupTask>());
@@ -42,8 +39,9 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
-			Library.QuadRenderer = std::make_unique<BatchedQuadRenderer>(1000);
-			Library.ShapeBuilder = std::make_unique<ShapeBuilder>(*Library.QuadRenderer);
+			DepthProvider provider;
+			Library.ShapeBuilder = std::make_unique<ShapeBuilder>(provider);
+			Library.MeshRenderer = std::make_unique<MeshRenderer>();
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -104,10 +102,12 @@ namespace DGL
 					// Note that this needs to happen before we call the Draw function
 					Library.UserRequestedRedraw = false;
 
-					const auto [width, height] = GetWindowSize();
-					Library.QuadRenderer->BeginDraw(Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, width, height), -1.0f, 1.0f));
+					const auto [w, h] = GetWindowSize();
+
+					provider.Reset();
+					Library.MeshRenderer->BeginDraw(Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, w, h), -1.0f, 1.0f));
 					Library.Sketch->Draw(deltaTime.count());
-					Library.QuadRenderer->EndDraw();
+					Library.MeshRenderer->EndDraw();
 
 					// Present the rendered frame on screen
 					Library.Context->SwapBuffers();
@@ -259,7 +259,17 @@ namespace DGL
 
 	void EndShape()
 	{
-		Library.ShapeBuilder->End();
+		const RenderStyle& style = GetCurrentRenderStyle();
+
+		const Shape shape = Library.ShapeBuilder->End({
+			.StrokeWeight = style.StrokeWeight,
+			.JoinStyle = style.JoinStyle,
+			.StartCap = style.StartCap,
+			.EndCap = style.EndCap,
+		});
+
+		Library.MeshRenderer->Submit(shape.FillShapes);
+		Library.MeshRenderer->Submit(shape.StrokeShapes);
 	}
 
 	void Vertex(const float x, const float y)
@@ -267,10 +277,9 @@ namespace DGL
 		const RenderStyle& style = GetCurrentRenderStyle();
 
 		Library.ShapeBuilder->AddVertex({
-			.Position = { x, y, 0.0f },
+			.Position = { x, y },
 			.FillColor = style.FillColor,
-			.StrokeColor = style.StrokeColor,
-			.StrokeWeight = style.StrokeWeight,
+			.StrokeColor = style.StrokeColor
 		});
 	}
 
@@ -281,6 +290,13 @@ namespace DGL
 		Vertex(x2, y1);
 		Vertex(x2, y2);
 		Vertex(x1, y2);
+		EndShape();
+	}
+
+	void Point(const float x, const float y)
+	{
+		BeginShape(ShapeMode::Points);
+		Vertex(x, y);
 		EndShape();
 	}
 }
