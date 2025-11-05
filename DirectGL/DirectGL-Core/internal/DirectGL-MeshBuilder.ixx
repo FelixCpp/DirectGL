@@ -29,10 +29,10 @@ namespace DGL
 	{
 	public:
 
-		static Mesh GeneratePointMesh(
+		static Mesh GenerateEllipseMesh(
 			const Math::Float2& center,
 			const Math::Float4& color,
-			float radius,
+			Math::Radius radius,
 			uint32_t segments,
 			float depth
 		);
@@ -40,8 +40,7 @@ namespace DGL
 		static Mesh GenerateLineMesh(
 			const std::span<const Math::Float2, 2>& points,
 			const std::span<const Math::Float4, 2>& colors,
-			StrokeCap startCap,
-			StrokeCap endCap,
+			StrokeCap StrokeCap,
 			float strokeWeight,
 			uint32_t roundedCapSegments,
 			float depth
@@ -64,8 +63,7 @@ namespace DGL
 			const std::span<const Math::Float4>& colors,
 			float strokeWeight,
 			StrokeJoin joinStyle,
-			StrokeCap startCap,
-			StrokeCap endCap,
+			StrokeCap strokeCap,
 			bool closed,
 			float depth
 		);

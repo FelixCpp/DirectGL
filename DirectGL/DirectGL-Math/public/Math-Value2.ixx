@@ -77,9 +77,14 @@ export namespace DGL::Math
 		T Y;
 	};
 
-	export typedef Value2<float> Float2;
-	export typedef Value2<int32_t> Int2;
-	export typedef Value2<uint32_t> Uint2;
+	template <typename T> constexpr Value2<T> operator + (T scalar, const Value2<T>& vector);
+	template <typename T> constexpr Value2<T> operator - (T scalar, const Value2<T>& vector);
+	template <typename T> constexpr Value2<T> operator / (T scalar, const Value2<T>& vector);
+	template <typename T> constexpr Value2<T> operator * (T scalar, const Value2<T>& vector);
+
+	typedef Value2<float> Float2;
+	typedef Value2<int32_t> Int2;
+	typedef Value2<uint32_t> Uint2;
 }
 
 namespace DGL::Math
@@ -191,6 +196,11 @@ namespace DGL::Math
 	template <typename T> Value2<T>& Value2<T>::operator-=(const T value) { X -= value; Y -= value; return *this; }
 	template <typename T> Value2<T>& Value2<T>::operator/=(const T value) { X /= value; Y /= value; return *this; }
 	template <typename T> Value2<T>& Value2<T>::operator*=(const T value) { X *= value; Y *= value; return *this; }
+
+	template <typename T> constexpr Value2<T> operator+(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar + vector.X, scalar + vector.Y }; }
+	template <typename T> constexpr Value2<T> operator-(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar - vector.X, scalar - vector.Y }; }
+	template <typename T> constexpr Value2<T> operator/(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar / vector.X, scalar / vector.Y }; }
+	template <typename T> constexpr Value2<T> operator*(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar* vector.X, scalar* vector.Y }; }
 
 	template <typename T> inline constexpr Value2<T> Value2<T>::Zero = Value2{ T{}, T{} };
 	template <typename T> inline constexpr Value2<T> Value2<T>::One = Value2{ T{1}, T{1} };

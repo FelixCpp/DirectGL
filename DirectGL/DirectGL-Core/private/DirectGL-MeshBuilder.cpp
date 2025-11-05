@@ -12,7 +12,7 @@ import :MeshBuilder;
 
 namespace DGL
 {
-	Mesh MeshBuilder::GeneratePointMesh(const Math::Float2& center, const Math::Float4& color, float radius, uint32_t segments, float depth)
+	Mesh MeshBuilder::GenerateEllipseMesh(const Math::Float2& center, const Math::Float4& color, const Math::Radius radius, const uint32_t segments, float depth)
 	{
 		if (segments < 3)
 		{
@@ -37,8 +37,8 @@ namespace DGL
 			const float angle = angleStep * static_cast<float>(i);
 
 			// Compute the coordinate of the point on the circle's circumference
-			const float x = center.X + std::cos(angle) * radius;
-			const float y = center.Y + std::sin(angle) * radius;
+			const float x = center.X + std::cos(angle) * radius.X;
+			const float y = center.Y + std::sin(angle) * radius.Y;
 
 			const size_t vertexIndex = i + 1; // +1 to account for the center vertex at index 0
 			positions[vertexIndex] = { x, y, depth };
@@ -75,6 +75,7 @@ namespace DGL
 		// Add the positions
 		positions.emplace_back(point.X + offset.X + capOffset.X, point.Y + offset.Y + capOffset.Y, depth);
 		positions.emplace_back(point.X - offset.X + capOffset.X, point.Y - offset.Y + capOffset.Y, depth);
+
 		// Add the colors
 		colors.emplace_back(color);
 		colors.emplace_back(color);
@@ -99,15 +100,13 @@ namespace DGL
 		}
 	}
 
-	Mesh MeshBuilder::GenerateLineMesh(const std::span<const Math::Float2, 2>& points, const std::span<const Math::Float4, 2>& colors, StrokeCap startCap, StrokeCap endCap, float strokeWeight, uint32_t roundedCapSegments, float depth)
+	Mesh MeshBuilder::GenerateLineMesh(const std::span<const Math::Float2, 2>& points, const std::span<const Math::Float4, 2>& colors, StrokeCap strokeCap, float strokeWeight, uint32_t roundedCapSegments, float depth)
 	{
 		// Make some optimizations for degenerate lines
 		if (strokeWeight < 3.0f)
 		{
-			startCap = StrokeCap::Butt;
-			endCap = StrokeCap::Butt;
+			strokeCap = StrokeCap::Butt;
 		}
-
 
 		// Compute the direction vector of the line
 		const float halfStrokeWeight = strokeWeight * 0.5f;
@@ -119,11 +118,11 @@ namespace DGL
 		std::vector<Math::Float4> meshColors;
 
 		// Insert the start cap
-		switch (startCap)
+		switch (strokeCap.Start)
 		{
-			case StrokeCap::Butt: InsertButtLineCap(positions, meshColors, points[0], colors[0], offset, depth); break;
-			case StrokeCap::Square: InsertSquareLineCap(positions, meshColors, points[0], colors[0], -direction, offset, depth); break;
-			case StrokeCap::Round: InsertRoundLineCap(positions, meshColors, points[0], colors[0], startAngle, Math::Degrees(180.0f), halfStrokeWeight, roundedCapSegments, depth); break;
+			case StrokeCapType::Butt: InsertButtLineCap(positions, meshColors, points[0], colors[0], offset, depth); break;
+			case StrokeCapType::Square: InsertSquareLineCap(positions, meshColors, points[0], colors[0], -direction, offset, depth); break;
+			case StrokeCapType::Round: InsertRoundLineCap(positions, meshColors, points[0], colors[0], startAngle, Math::Degrees(180.0f), halfStrokeWeight, roundedCapSegments, depth); break;
 			default: System::Error("Unknown StrokeCap in MeshBuilder::GenerateLineMesh()");
 		}
 
@@ -131,11 +130,11 @@ namespace DGL
 		const size_t startPositionCount = positions.size();
 
 		// Insert the end cap
-		switch (endCap)
+		switch (strokeCap.End)
 		{
-			case StrokeCap::Butt: InsertButtLineCap(positions, meshColors, points[1], colors[1], offset, depth); break;
-			case StrokeCap::Square: InsertSquareLineCap(positions, meshColors, points[1], colors[1], direction, offset, depth); break;
-			case StrokeCap::Round: InsertRoundLineCap(positions, meshColors, points[1], colors[1], startAngle, Math::Degrees(-180.0f), halfStrokeWeight, roundedCapSegments, depth); break;
+			case StrokeCapType::Butt: InsertButtLineCap(positions, meshColors, points[1], colors[1], offset, depth); break;
+			case StrokeCapType::Square: InsertSquareLineCap(positions, meshColors, points[1], colors[1], direction, offset, depth); break;
+			case StrokeCapType::Round: InsertRoundLineCap(positions, meshColors, points[1], colors[1], startAngle, Math::Degrees(-180.0f), halfStrokeWeight, roundedCapSegments, depth); break;
 			default: System::Error("Unknown StrokeCap in MeshBuilder::GenerateLineMesh()");
 		}
 
@@ -207,7 +206,7 @@ namespace DGL
 		};
 	}
 
-	Mesh MeshBuilder::GenerateOutlinedMesh(const std::span<const Math::Float2>& points, const std::span<const Math::Float4>& colors, float strokeWeight, StrokeJoin joinStyle, StrokeCap startCap, StrokeCap endCap, bool closed, float depth)
+	Mesh MeshBuilder::GenerateOutlinedMesh(const std::span<const Math::Float2>& points, const std::span<const Math::Float4>& colors, float strokeWeight, StrokeJoin joinStyle, StrokeCap strokeCap, bool closed, float depth)
 	{
 		return {};
 	}

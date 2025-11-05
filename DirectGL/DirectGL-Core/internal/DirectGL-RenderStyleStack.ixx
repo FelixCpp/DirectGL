@@ -19,7 +19,7 @@ namespace DGL
 
 		RenderStyleStack();
 
-		void PushStyle();
+		void PushStyle(const RenderStyle& style);
 		void PopStyle();
 		RenderStyle& PeekStyle();
 

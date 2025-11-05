@@ -30,18 +30,13 @@ namespace DGL
 	{
 		float StrokeWeight;
 		StrokeJoin JoinStyle;
-		StrokeCap StartCap;
-		StrokeCap EndCap;
+		StrokeCap StrokeCap;
 		bool IsStrokeEnabled;
 		bool IsFillEnabled;
-		bool ShouldCloseOutline;
+		bool ShouldCloseStroke;
 	};
 
-	struct Shape
-	{
-		std::vector<Mesh> FillShapes;
-		std::vector<Mesh> StrokeShapes;
-	};
+	typedef std::vector<Mesh> Shape;
 
 	class ShapeBuilder
 	{

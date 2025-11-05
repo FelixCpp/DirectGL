@@ -69,15 +69,15 @@ namespace DGL
 		{
 			if (properties.IsStrokeEnabled)
 			{
-				Mesh pointMesh = MeshBuilder::GeneratePointMesh(
+				Mesh pointMesh = MeshBuilder::GenerateEllipseMesh(
 					m_Vertices[i].Position,
 					m_Vertices[i].StrokeColor,
-					properties.StrokeWeight,
+					Math::Radius::Circular(properties.StrokeWeight),
 					32, // TODO(Felix): Make configurable
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(pointMesh);
+				shape.emplace_back(pointMesh);
 			}
 		}
 
@@ -95,14 +95,13 @@ namespace DGL
 				Mesh lineMesh = MeshBuilder::GenerateLineMesh(
 					std::array{ m_Vertices[i - 1].Position, m_Vertices[i - 0].Position },
 					std::array{ m_Vertices[i - 1].StrokeColor, m_Vertices[i - 0].StrokeColor },
-					properties.StartCap,
-					properties.EndCap,
+					properties.StrokeCap,
 					properties.StrokeWeight,
 					12, // TODO(Felix): Make configurable
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(lineMesh);
+				shape.emplace_back(lineMesh);
 			}
 		}
 
@@ -127,7 +126,7 @@ namespace DGL
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(triangleMesh);
+				shape.emplace_back(triangleMesh);
 			}
 
 			if (properties.IsStrokeEnabled)
@@ -137,13 +136,12 @@ namespace DGL
 					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor, },
 					properties.StrokeWeight,
 					properties.JoinStyle,
-					properties.StartCap,
-					properties.EndCap,
-					properties.ShouldCloseOutline,
+					properties.StrokeCap,
+					properties.ShouldCloseStroke,
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.emplace_back(outlinedMesh);
 			}
 		}
 
@@ -168,7 +166,7 @@ namespace DGL
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(triangleMesh);
+				shape.emplace_back(triangleMesh);
 			}
 
 			if (properties.IsStrokeEnabled)
@@ -178,13 +176,12 @@ namespace DGL
 					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor },
 					properties.StrokeWeight,
 					properties.JoinStyle,
-					properties.StartCap,
-					properties.EndCap,
-					properties.ShouldCloseOutline,
+					properties.StrokeCap,
+					properties.ShouldCloseStroke,
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.emplace_back(outlinedMesh);
 			}
 		}
 
@@ -209,7 +206,7 @@ namespace DGL
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(triangleMesh);
+				shape.emplace_back(triangleMesh);
 			}
 
 			if (properties.IsStrokeEnabled)
@@ -219,13 +216,12 @@ namespace DGL
 					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor },
 					properties.StrokeWeight,
 					properties.JoinStyle,
-					properties.StartCap,
-					properties.EndCap,
-					properties.ShouldCloseOutline,
+					properties.StrokeCap,
+					properties.ShouldCloseStroke,
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.emplace_back(outlinedMesh);
 			}
 		}
 
@@ -251,7 +247,7 @@ namespace DGL
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(triangleMesh);
+				shape.emplace_back(triangleMesh);
 			}
 
 			if (properties.IsStrokeEnabled)
@@ -261,13 +257,12 @@ namespace DGL
 					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor, v3.StrokeColor },
 					properties.StrokeWeight,
 					properties.JoinStyle,
-					properties.StartCap,
-					properties.EndCap,
-					properties.ShouldCloseOutline,
+					properties.StrokeCap,
+					properties.ShouldCloseStroke,
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.emplace_back(outlinedMesh);
 			}
 		}
 
@@ -298,7 +293,7 @@ namespace DGL
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.FillShapes.emplace_back(triangleMesh);
+				shape.emplace_back(triangleMesh);
 			}
 
 			if (properties.IsStrokeEnabled)
@@ -308,13 +303,12 @@ namespace DGL
 					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor, v3.StrokeColor },
 					properties.StrokeWeight,
 					properties.JoinStyle,
-					properties.StartCap,
-					properties.EndCap,
-					properties.ShouldCloseOutline,
+					properties.StrokeCap,
+					properties.ShouldCloseStroke,
 					m_DepthProvider->GetAndIncrement()
 				);
 
-				shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.emplace_back(outlinedMesh);
 			}
 		}
 

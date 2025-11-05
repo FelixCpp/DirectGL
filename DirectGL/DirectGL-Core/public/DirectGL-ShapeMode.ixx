@@ -17,4 +17,10 @@ export namespace DGL
 		Quads,
 		QuadStrip,
 	};
+
+	enum class ShapeClosingMode
+	{
+		Open,
+		Closed,
+	};
 }

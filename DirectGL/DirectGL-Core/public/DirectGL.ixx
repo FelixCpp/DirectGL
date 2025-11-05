@@ -114,30 +114,33 @@ export import :RenderStyle;
 export import :ShapeMode;
 export import :StrokeCap;
 export import :StrokeJoin;
+export import :GraphicsLayer;
 
 export namespace DGL
 {
-	void PushStyle();
+	GraphicsLayer& PeekGraphicsLayer();
+
+	void PushStyle(bool extendCurrentStyle);
 	void PopStyle();
 	RenderStyle& PeekStyle();
 
 	void SetFillColor(color_t color);
+	void SetFillDisabled();
 
 	void SetStrokeColor(color_t color);
+	void SetStrokeDisabled();
 	void SetStrokeWeight(float weight);
-	void SetStrokeStartCap(StrokeCap startCap);
-	void SetStrokeEndCap(StrokeCap endCap);
+	void SetStrokeCap(StrokeCap strokeCap);
 	void SetStrokeJoin(StrokeJoin joinStyle);
 
-	void SetFillDisabled();
-	void SetStrokeDisabled();
-
 	void BeginShape(ShapeMode mode);
-	void EndShape();
+	void EndShape(ShapeClosingMode mode);
 	void Vertex(float x, float y);
 
 	void Background(color_t color);
 	void Rect(float x1, float y1, float x2, float y2);
+	void Ellipse(float x1, float y1, float x2, float y2);
+	void Circle(float x1, float y1, float xy2);
 	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
 }
@@ -163,6 +166,7 @@ import :AsyncLogger;
 import :ShapeBuilder;
 import :MeshRenderer;
 import :RenderStyleStack;
+import :MainGraphicsLayer;
 
 enum struct ExitType
 {
@@ -179,9 +183,9 @@ struct DirectGLLibrary
 	std::shared_ptr<DGL::AsyncLogger>				Logger;				//!< The logging channel to use
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
-	DGL::RenderStyleStack							RenderStyleStack;
+	std::unique_ptr<DGL::MainGraphicsLayer>			MainGraphicsLayer;
 	std::unique_ptr<DGL::ShapeBuilder>				ShapeBuilder;
-	std::unique_ptr<DGL::MeshRenderer>				MeshRenderer;
+	std::shared_ptr<DGL::MeshRenderer>				MeshRenderer;
 
 	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
 	int				ExitCode = 0;					//!< The return code to return on application shutdown

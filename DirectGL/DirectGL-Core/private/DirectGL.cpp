@@ -5,6 +5,7 @@
 #include <string>
 #include <string_view>
 #include <filesystem>
+#include <array>
 
 #include <glad/gl.h>
 
@@ -39,9 +40,12 @@ namespace DGL
 
 		startup.Run([&factory]
 		{
+			const auto [windowWidth, windowHeight] = static_cast<Math::Float2>(GetWindowSize());
+
 			DepthProvider provider;
 			Library.ShapeBuilder = std::make_unique<ShapeBuilder>(provider);
-			Library.MeshRenderer = std::make_unique<MeshRenderer>();
+			Library.MeshRenderer = std::make_shared<MeshRenderer>();
+			Library.MainGraphicsLayer = std::make_unique<MainGraphicsLayer>(Library.MeshRenderer, Math::FloatBoundary::FromLTWH(0.0f, 0.0f, windowWidth, windowHeight));
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -71,6 +75,7 @@ namespace DGL
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
 							glViewport(0, 0, resizeEvent.Width, resizeEvent.Height);
+							Library.MainGraphicsLayer->SetViewport(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(resizeEvent.Width), static_cast<float>(resizeEvent.Height)));
 
 							Redraw(); //!< Request a redraw after the window has been resized.
 							Info(std::format("Window has been resized: {}, {}", resizeEvent.Width, resizeEvent.Height));
@@ -215,145 +220,29 @@ namespace DGL
 
 namespace DGL
 {
-	void PushStyle()
-	{
-		Library.RenderStyleStack.PushStyle();
-	}
+	GraphicsLayer& PeekGraphicsLayer() { return *Library.MainGraphicsLayer; }
 
-	void PopStyle()
-	{
-		Library.RenderStyleStack.PopStyle();
-	}
+	void PushStyle(const bool extendCurrentStyle) { PeekGraphicsLayer().PushStyle(extendCurrentStyle); }
+	void PopStyle() { PeekGraphicsLayer().PopStyle(); }
+	RenderStyle& PeekStyle() { return PeekGraphicsLayer().PeekStyle(); }
 
-	RenderStyle& GetCurrentRenderStyle()
-	{
-		return Library.RenderStyleStack.PeekStyle();
-	}
+	void SetFillColor(const color_t color) { PeekGraphicsLayer().SetFillColor(color); }
+	void SetFillColorDisabled() { PeekGraphicsLayer().SetFillColorDisabled(); }
 
-	void SetFillColor(const color_t color)
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.FillColor = color;
-		style.IsFillEnabled = true;
-	}
+	void SetStrokeColor(const color_t color) { PeekGraphicsLayer().SetStrokeColor(color); }
+	void SetStrokeColorDisabled() { PeekGraphicsLayer().SetStrokeColorDisabled(); }
+	void SetStrokeWeight(const float weight) { PeekGraphicsLayer().SetStrokeWeight(weight); }
+	void SetStrokeJoin(const StrokeJoin joinStyle) { PeekGraphicsLayer().SetStrokeJoin(joinStyle); }
+	void SetStrokeCap(const StrokeCap strokeCap) { PeekGraphicsLayer().SetStrokeCap(strokeCap); }
 
-	void SetStrokeColor(const color_t color)
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.StrokeColor = color;
-		style.IsStrokeEnabled = true;
-	}
+	void BeginShape(const ShapeMode mode) { PeekGraphicsLayer().BeginShape(mode); }
+	void EndShape(const ShapeClosingMode mode) { PeekGraphicsLayer().EndShape(mode); }
+	void Vertex(const float x, const float y) { PeekGraphicsLayer().Vertex(x, y); }
 
-	void SetStrokeWeight(const float weight)
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.StrokeWeight = weight;
-	}
-
-	void SetStrokeStartCap(const StrokeCap startCap)
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.StartCap = startCap;
-	}
-
-	void SetStrokeEndCap(const StrokeCap endCap)
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.EndCap = endCap;
-	}
-
-	void SetStrokeJoin(const StrokeJoin joinStyle)
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.JoinStyle = joinStyle;
-	}
-
-	void SetFillDisabled()
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.IsFillEnabled = false;
-	}
-
-	void SetStrokeDisabled()
-	{
-		RenderStyle& style = GetCurrentRenderStyle();
-		style.IsStrokeEnabled = false;
-	}
-
-	void BeginShape(const ShapeMode mode)
-	{
-		Library.ShapeBuilder->Begin(mode);
-	}
-
-	void EndShape()
-	{
-		const RenderStyle& style = GetCurrentRenderStyle();
-
-		const Shape shape = Library.ShapeBuilder->End({
-			.StrokeWeight = style.StrokeWeight,
-			.JoinStyle = style.JoinStyle,
-			.StartCap = style.StartCap,
-			.EndCap = style.EndCap,
-			.IsStrokeEnabled = style.IsStrokeEnabled,
-			.IsFillEnabled = style.IsFillEnabled,
-			.ShouldCloseOutline = true,
-		});
-
-		Library.MeshRenderer->Submit(shape.FillShapes);
-		Library.MeshRenderer->Submit(shape.StrokeShapes);
-	}
-
-	void Vertex(const float x, const float y)
-	{
-		const RenderStyle& style = GetCurrentRenderStyle();
-
-		Library.ShapeBuilder->AddVertex({
-			.Position = { x, y },
-			.FillColor = style.FillColor,
-			.StrokeColor = style.StrokeColor
-		});
-	}
-
-	void Background(const color_t color)
-	{
-		const auto [width, height] = static_cast<Math::Float2>(GetWindowSize());
-
-		const Mesh mesh = MeshBuilder::GenerateQuadMesh(
-			std::array {
-				Math::Float2{ 0.0f, 0.0f },
-				Math::Float2{ width, 0.0f },
-				Math::Float2{ width, height },
-				Math::Float2{ 0.0f, height }
-			},
-			std::array { color, color, color, color },
-			0.0f
-		);
-
-		Library.MeshRenderer->Submit(std::array{ mesh });
-	}
-
-	void Rect(const float x1, const float y1, const float x2, const float y2)
-	{
-		BeginShape(ShapeMode::Quads);
-		Vertex(x1, y1);
-		Vertex(x2, y1);
-		Vertex(x2, y2);
-		Vertex(x1, y2);
-		EndShape();
-	}
-
-	void Point(const float x, const float y)
-	{
-		BeginShape(ShapeMode::Points);
-		Vertex(x, y);
-		EndShape();
-	}
-
-	void Line(const float x1, const float y1, const float x2, const float y2)
-	{
-		BeginShape(ShapeMode::Lines);
-		Vertex(x1, y1);
-		Vertex(x2, y2);
-		EndShape();
-	}
+	void Background(const color_t color) { PeekGraphicsLayer().Background(color); }
+	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekGraphicsLayer().Rect(x1, y1, x2, y2); }
+	void Ellipse(const float x1, const float y1, const float x2, const float y2) { PeekGraphicsLayer().Ellipse(x1, y1, x2, y2); }
+	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
+	void Point(const float x, const float y) { PeekGraphicsLayer().Point(x, y); }
+	void Line(const float x1, const float y1, const float x2, const float y2) { PeekGraphicsLayer().Line(x1, y1, x2, y2); }
 }

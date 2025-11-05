@@ -8,9 +8,9 @@ namespace DGL
 	{
 	}
 
-	void RenderStyleStack::PushStyle()
+	void RenderStyleStack::PushStyle(const RenderStyle& style)
 	{
-		m_RenderStyles.push(PeekStyle());
+		m_RenderStyles.push(style);
 	}
 
 	void RenderStyleStack::PopStyle()

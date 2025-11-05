@@ -8,20 +8,26 @@ export module DirectGL:RenderStyle;
 import :Color;
 import :StrokeJoin;
 import :StrokeCap;
+import :RectMode;
+import :EllipseMode;
+import :EllipseSegmentsMode;
 
 export namespace DGL
 {
 	struct RenderStyle
 	{
-		color_t	FillColor;
+		color_t	FillColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 		bool	IsFillEnabled = true;
 
-		color_t StrokeColor;
+		color_t StrokeColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 		bool	IsStrokeEnabled = true;
 		float	StrokeWeight = 1.0f;
 
 		StrokeJoin	JoinStyle = StrokeJoin::Miter;
-		StrokeCap	StartCap = StrokeCap::Round;
-		StrokeCap	EndCap = StrokeCap::Round;
+		StrokeCap	StrokeCap = StrokeCap::Round;
+
+		RectMode RectMode = RectModeLTWH();
+		EllipseMode EllipseMode = EllipseModeCenterRadius();
+		EllipseSegmentsMode EllipseSegmentsMode = EllipseSegmentsModeAdaptive();
 	};
 }

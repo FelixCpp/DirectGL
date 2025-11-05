@@ -24,15 +24,21 @@ namespace DGL
 
 	void MeshRenderer::Submit(const std::span<const Mesh>& meshes)
 	{
-		for (const auto& [positions, colors, indices] : meshes)
+		for (const Mesh& mesh : meshes)
 		{
-			// For each mesh we need to gather the positions and colors,
-			// transforming them into our RenderableMeshVertex format
-			// and storing them in the staging buffer.
-			// in order to upload them to the GPU for rendering later on.
-
-			// After we've transformed the mesh, we can submit it to the VertexRenderer
-			m_VertexRenderer.Submit(std::span(positions), std::span(colors), std::span(indices));
+			Submit(mesh);
 		}
 	}
+
+	void MeshRenderer::Submit(const Mesh& mesh)
+	{
+		// For each mesh we need to gather the positions and colors,
+		// transforming them into our RenderableMeshVertex format
+		// and storing them in the staging buffer.
+		// in order to upload them to the GPU for rendering later on.
+
+		// After we've transformed the mesh, we can submit it to the VertexRenderer
+		m_VertexRenderer.Submit(std::span(mesh.Positions), std::span(mesh.Colors), std::span(mesh.Indices));
+	}
+
 }
