@@ -21,10 +21,11 @@ layout (location = 1) in vec4 a_Color;
 layout (location = 0) out vec4 v_Color;
 
 uniform mat4 u_ProjectionViewMatrix;
+uniform mat4 u_ModelMatrix;
 
 void main()
 {
-	gl_Position = u_ProjectionViewMatrix * vec4(a_Position, 1.0);
+	gl_Position = u_ProjectionViewMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
 	v_Color = a_Color;
 }
 )";
@@ -89,11 +90,14 @@ namespace DGL
 		glDetachShader(m_ShaderProgram, fragmentShader);
 		glDeleteShader(vertexShader);
 		glDeleteShader(fragmentShader);
+
+		m_ProjectionViewMatrixLocation = glGetProgramResourceLocation(m_ShaderProgram, GL_UNIFORM, "u_ProjectionViewMatrix");
+		m_ModelMatrixLocation = glGetProgramResourceLocation(m_ShaderProgram, GL_UNIFORM, "u_ModelMatrix");
 	}
 
 	void VertexRenderer::BeginDraw(const Math::Matrix4x4& projectionViewMatrix)
 	{
-		glProgramUniformMatrix4fv(m_ShaderProgram, 0, 1, GL_FALSE, projectionViewMatrix.GetData());
+		glProgramUniformMatrix4fv(m_ShaderProgram, m_ProjectionViewMatrixLocation, 1, GL_FALSE, projectionViewMatrix.GetData());
 		m_DrawCalls = 0;
 	}
 
@@ -102,13 +106,15 @@ namespace DGL
 		Debug(std::format("VertexRenderer: Draw Calls this frame: {}", m_DrawCalls));
 	}
 
-	void VertexRenderer::Submit(const std::span<const Math::Float3>& positions, const std::span<const Math::Float4>& colors, const std::span<const uint32_t>& indices)
+	void VertexRenderer::Submit(const std::span<const Math::Float3>& positions, const std::span<const Math::Float4>& colors, const std::span<const uint32_t>& indices, const Math::Matrix4x4& modelMatrix)
 	{
 		glNamedBufferSubData(m_PositionBuffer, 0, positions.size_bytes(), positions.data());
 		glNamedBufferSubData(m_ColorBuffer, 0, colors.size_bytes(), colors.data());
 		glNamedBufferSubData(m_ElementBuffer, 0, indices.size_bytes(), indices.data());
 
 		glUseProgram(m_ShaderProgram);
+		glProgramUniformMatrix4fv(m_ShaderProgram, m_ModelMatrixLocation, 1, GL_FALSE, modelMatrix.GetData());
+
 		glBindVertexArray(m_VertexArray);
 		glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()), GL_UNSIGNED_INT, nullptr);
 

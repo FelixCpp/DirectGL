@@ -11,6 +11,7 @@ import :StrokeCap;
 import :RectMode;
 import :EllipseMode;
 import :EllipseSegmentsMode;
+import :MatrixStack;
 
 export namespace DGL
 {
@@ -29,5 +30,7 @@ export namespace DGL
 		RectMode RectMode = RectModeLTWH();
 		EllipseMode EllipseMode = EllipseModeCenterRadius();
 		EllipseSegmentsMode EllipseSegmentsMode = EllipseSegmentsModeAdaptive();
+
+		MatrixStack MatrixStack;
 	};
 }

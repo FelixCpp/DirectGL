@@ -22,6 +22,15 @@ namespace DGL
 		virtual void PopStyle() = 0;
 		virtual RenderStyle& PeekStyle() = 0;
 
+		virtual void PushMatrix(bool extendCurrentMatrix = true) = 0;
+		virtual void PopMatrix() = 0;
+		virtual Math::Matrix4x4& PeekMatrix() = 0;
+
+		virtual void Translate(float x, float y) = 0;
+		virtual void Rotate(Math::Angle angle) = 0;
+		virtual void Scale(float scaleX, float scaleY) = 0;
+		virtual void Shear(Math::Angle shearX, Math::Angle shearY) = 0;
+
 		virtual void SetRectMode(const RectMode& mode) = 0;
 		virtual void SetEllipseMode(const EllipseMode& mode) = 0;
 		virtual void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode) = 0;

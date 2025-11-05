@@ -29,7 +29,8 @@ namespace DGL
 		void Submit(
 			const std::span<const Math::Float3>& positions,
 			const std::span<const Math::Float4>& colors,
-			const std::span<const uint32_t>& indices
+			const std::span<const uint32_t>& indices,
+			const Math::Matrix4x4& modelMatrix
 		);
 
 	private:
@@ -42,6 +43,10 @@ namespace DGL
 		GLuint m_ElementBuffer;
 
 		GLuint m_ShaderProgram;
+
+		GLint m_ProjectionViewMatrixLocation;
+		GLint m_ModelMatrixLocation;
+
 		size_t m_DrawCalls;
 
 	};

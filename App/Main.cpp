@@ -24,7 +24,8 @@ public:
 		const auto [mx, my] = GetMousePosition();
 		Background({ 0.1f, 0.1f, 0.1f, 1.0f });
 		SetFillColor({ 1.0f, 0.0f, 0.0f, 1.0f });
-		Circle(mx, my, 50.0f);
+		Translate(mx, my);
+		Circle(0.0f, 0.0f, 50.0f);
 	}
 
 	void Destroy() override

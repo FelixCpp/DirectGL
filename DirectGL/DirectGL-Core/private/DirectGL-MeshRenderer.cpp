@@ -22,15 +22,15 @@ namespace DGL
 		m_VertexRenderer.EndDraw();
 	}
 
-	void MeshRenderer::Submit(const std::span<const Mesh>& meshes)
+	void MeshRenderer::Submit(const std::span<const Mesh>& meshes, const Math::Matrix4x4& modelMatrix)
 	{
 		for (const Mesh& mesh : meshes)
 		{
-			Submit(mesh);
+			Submit(mesh, modelMatrix);
 		}
 	}
 
-	void MeshRenderer::Submit(const Mesh& mesh)
+	void MeshRenderer::Submit(const Mesh& mesh, const Math::Matrix4x4& modelMatrix)
 	{
 		// For each mesh we need to gather the positions and colors,
 		// transforming them into our RenderableMeshVertex format
@@ -38,7 +38,7 @@ namespace DGL
 		// in order to upload them to the GPU for rendering later on.
 
 		// After we've transformed the mesh, we can submit it to the VertexRenderer
-		m_VertexRenderer.Submit(std::span(mesh.Positions), std::span(mesh.Colors), std::span(mesh.Indices));
+		m_VertexRenderer.Submit(std::span(mesh.Positions), std::span(mesh.Colors), std::span(mesh.Indices), modelMatrix);
 	}
 
 }

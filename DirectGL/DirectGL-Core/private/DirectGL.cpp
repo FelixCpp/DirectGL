@@ -226,6 +226,21 @@ namespace DGL
 	void PopStyle() { PeekGraphicsLayer().PopStyle(); }
 	RenderStyle& PeekStyle() { return PeekGraphicsLayer().PeekStyle(); }
 
+	const Math::FloatBoundary& GetViewport() { return Library.MainGraphicsLayer->GetViewport(); }
+
+	void PushMatrix(const bool extendCurrentMatrix) { PeekGraphicsLayer().PushMatrix(extendCurrentMatrix); }
+	void PopMatrix() { PeekGraphicsLayer().PopMatrix(); }
+	Math::Matrix4x4& PeekMatrix() { return PeekGraphicsLayer().PeekMatrix(); }
+
+	void Translate(const float x, const float y) { PeekGraphicsLayer().Translate(x, y); }
+	void Rotate(const Math::Angle angle) { PeekGraphicsLayer().Rotate(angle); }
+	void Scale(const float scaleX, const float scaleY) { PeekGraphicsLayer().Scale(scaleX, scaleY); }
+	void Shear(const Math::Angle shearX, const Math::Angle shearY) { PeekGraphicsLayer().Shear(shearX, shearY); }
+
+	void SetRectMode(const RectMode& mode) { PeekGraphicsLayer().SetRectMode(mode); }
+	void SetEllipseMode(const EllipseMode& mode) { PeekGraphicsLayer().SetEllipseMode(mode); }
+	void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode) { PeekGraphicsLayer().SetEllipseSegmentsMode(mode); }
+
 	void SetFillColor(const color_t color) { PeekGraphicsLayer().SetFillColor(color); }
 	void SetFillColorDisabled() { PeekGraphicsLayer().SetFillColorDisabled(); }
 

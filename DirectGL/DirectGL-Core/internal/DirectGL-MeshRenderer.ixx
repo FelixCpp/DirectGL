@@ -37,8 +37,8 @@ namespace DGL
 
 		void BeginDraw(const Math::Matrix4x4& projectionViewMatrix);
 		void EndDraw();
-		void Submit(const std::span<const Mesh>& meshes);
-		void Submit(const Mesh& mesh);
+		void Submit(const std::span<const Mesh>& meshes, const Math::Matrix4x4& modelMatrix);
+		void Submit(const Mesh& mesh, const Math::Matrix4x4& modelMatrix);
 
 	private:
 

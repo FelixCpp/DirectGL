@@ -114,15 +114,33 @@ export import :RenderStyle;
 export import :ShapeMode;
 export import :StrokeCap;
 export import :StrokeJoin;
+export import :RectMode;
+export import :EllipseMode;
+export import :EllipseSegmentsMode;
 export import :GraphicsLayer;
 
 export namespace DGL
 {
 	GraphicsLayer& PeekGraphicsLayer();
 
-	void PushStyle(bool extendCurrentStyle);
+	void PushStyle(bool extendCurrentStyle = true);
 	void PopStyle();
 	RenderStyle& PeekStyle();
+
+	const Math::FloatBoundary& GetViewport();
+
+	void PushMatrix(bool extendCurrentMatrix = true);
+	void PopMatrix();
+	Math::Matrix4x4& PeekMatrix();
+
+	void Translate(float x, float y);
+	void Rotate(Math::Angle angle);
+	void Scale(float scaleX, float scaleY);
+	void Shear(Math::Angle shearX, Math::Angle shearY);
+
+	void SetRectMode(const RectMode& mode);
+	void SetEllipseMode(const EllipseMode& mode);
+	void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode);
 
 	void SetFillColor(color_t color);
 	void SetFillDisabled();

@@ -13,6 +13,7 @@ import :GraphicsLayer;
 import :RenderStyleStack;
 import :MeshRenderer;
 import :DepthProvider;
+import :MainRenderTarget;
 
 namespace DGL
 {
@@ -34,6 +35,10 @@ namespace DGL
 		void PushStyle(bool extendCurrentStyle) override;
 		void PopStyle() override;
 		RenderStyle& PeekStyle() override;
+
+		void PushMatrix(bool extendCurrentMatrix) override;
+		void PopMatrix() override;
+		Math::Matrix4x4& PeekMatrix() override;
 
 		void SetRectMode(const RectMode& mode) override;
 		void SetEllipseMode(const EllipseMode& mode) override;
@@ -60,14 +65,14 @@ namespace DGL
 
 	private:
 
-		void Render(const Mesh& mesh);
+		void Render(const Mesh& mesh, const Math::Matrix4x4& modelMatrix);
 		float GetCurrentDepth();
 
 		RenderStyleStack m_RenderStyleStack;
 		std::weak_ptr<MeshRenderer> m_MeshRenderer;
 		DepthProvider m_DepthProvider;
+		MainRenderTarget m_RenderTarget;
 
-		Math::FloatBoundary m_Viewport;
 		Math::Matrix4x4 m_ProjectionMatrix;
 
 	};

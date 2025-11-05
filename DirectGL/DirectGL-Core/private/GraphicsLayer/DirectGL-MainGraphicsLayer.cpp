@@ -11,26 +11,27 @@ namespace DGL
 	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<MeshRenderer>& meshRenderer, const Math::FloatBoundary& viewport):
 		m_MeshRenderer(meshRenderer),
 		m_DepthProvider(0.0f, 1.0f / 20'000.0f),
-		m_Viewport(viewport),
+		m_RenderTarget(viewport),
 		m_ProjectionMatrix(Math::Matrix4x4::Orthographic(viewport, -1.0f, 1.0f))
 	{
 	}
 
 	void MainGraphicsLayer::SetViewport(const Math::FloatBoundary& viewport)
 	{
-		m_Viewport = viewport;
+		m_RenderTarget.SetViewport(viewport);
 		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(viewport, -1.0f, 1.0f);
 	}
 
 	const Math::FloatBoundary& MainGraphicsLayer::GetViewport() const
 	{
-		return m_Viewport;
+		return m_RenderTarget.GetViewport();
 	}
 
 	void MainGraphicsLayer::BeginDraw()
 	{
 		m_RenderStyleStack.Reset();
 		m_MeshRenderer.lock()->BeginDraw(m_ProjectionMatrix);
+		m_RenderTarget.Activate();
 	}
 
 	void MainGraphicsLayer::EndDraw()
@@ -51,6 +52,45 @@ namespace DGL
 	RenderStyle& MainGraphicsLayer::PeekStyle()
 	{
 		return m_RenderStyleStack.PeekStyle();
+	}
+
+	void MainGraphicsLayer::PushMatrix(const bool extendCurrentMatrix)
+	{
+		PeekStyle().MatrixStack.PushMatrix(extendCurrentMatrix);
+	}
+
+	void MainGraphicsLayer::PopMatrix()
+	{
+		PeekStyle().MatrixStack.PopMatrix();
+	}
+
+	Math::Matrix4x4& MainGraphicsLayer::PeekMatrix()
+	{
+		return PeekStyle().MatrixStack.PeekMatrix();
+	}
+
+	void MainGraphicsLayer::Translate(const float x, const float y)
+	{
+		Math::Matrix4x4& matrix = PeekMatrix();
+		matrix = matrix * Math::Matrix4x4::Translation(x, y, 0.0f);
+	}
+
+	void MainGraphicsLayer::Rotate(const Math::Angle angle)
+	{
+		Math::Matrix4x4& matrix = PeekMatrix();
+		matrix = matrix * Math::Matrix4x4::Rotation(angle);
+	}
+
+	void MainGraphicsLayer::Scale(const float scaleX, const float scaleY)
+	{
+		Math::Matrix4x4& matrix = PeekMatrix();
+		matrix = matrix * Math::Matrix4x4::Scaling(scaleX, scaleY, 1.0f);
+	}
+
+	void MainGraphicsLayer::Shear(const Math::Angle shearX, const Math::Angle shearY)
+	{
+		Math::Matrix4x4& matrix = PeekMatrix();
+		matrix = matrix * Math::Matrix4x4::Skew(shearX, shearY);
 	}
 
 	void MainGraphicsLayer::SetRectMode(const RectMode& mode)
@@ -132,7 +172,7 @@ namespace DGL
 
 	void MainGraphicsLayer::Background(const color_t color)
 	{
-		const auto [left, top, width, height] = m_Viewport;
+		const auto [left, top, width, height] = GetViewport();
 		const float right = left + width;
 		const float bottom = top + height;
 
@@ -147,7 +187,7 @@ namespace DGL
 			GetCurrentDepth()
 		);
 
-		Render(backgroundMesh);
+		Render(backgroundMesh, PeekMatrix());
 	}
 
 	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2)
@@ -169,7 +209,7 @@ namespace DGL
 				GetCurrentDepth()
 			);
 
-			Render(quadMesh);
+			Render(quadMesh, PeekMatrix());
 		}
 
 		if (style.IsStrokeEnabled)
@@ -181,7 +221,7 @@ namespace DGL
 				GetCurrentDepth()
 			);
 
-			Render(outlinedMesh);
+			Render(outlinedMesh, PeekMatrix());
 		}
 	}
 
@@ -195,7 +235,7 @@ namespace DGL
 		{
 			const size_t segments = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
 			const Mesh ellipseMesh = MeshBuilder::GenerateEllipseMesh(boundary.Center(), style.FillColor, radius, segments, GetCurrentDepth());
-			Render(ellipseMesh);
+			Render(ellipseMesh, PeekMatrix());
 		}
 
 		if (style.IsStrokeEnabled)
@@ -217,7 +257,7 @@ namespace DGL
 			GetCurrentDepth()
 		);
 
-		Render(pointMesh);
+		Render(pointMesh, PeekMatrix());
 	}
 
 	void MainGraphicsLayer::Line(const float x1, const float y1, const float x2, const float y2)
@@ -237,14 +277,14 @@ namespace DGL
 			GetCurrentDepth()
 		);
 
-		Render(lineMesh);
+		Render(lineMesh, PeekMatrix());
 	}
 
-	void MainGraphicsLayer::Render(const Mesh& mesh)
+	void MainGraphicsLayer::Render(const Mesh& mesh, const Math::Matrix4x4& modelMatrix)
 	{
 		if (const auto renderer = m_MeshRenderer.lock())
 		{
-			renderer->Submit(mesh);
+			renderer->Submit(mesh, modelMatrix);
 		}
 	}
 
