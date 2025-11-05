@@ -11,22 +11,6 @@ import :ShapeBuilder;
 
 namespace DGL
 {
-	MeshVertex ShapeVertex::ToFilledMeshVertex() const
-	{
-		return MeshVertex {
-			.Position = Position,
-			.Color = FillColor
-		};
-	}
-
-	MeshVertex ShapeVertex::ToStrokedMeshVertex() const
-	{
-		return MeshVertex {
-			.Position = Position,
-			.Color = StrokeColor
-		};
-	}
-
 	ShapeBuilder::ShapeBuilder(DepthProvider& depthProvider):
 		m_CurrentShapeMode(std::nullopt),
 		m_DepthProvider(&depthProvider)
@@ -83,16 +67,18 @@ namespace DGL
 
 		for (size_t i = 0; i < m_Vertices.size(); ++i)
 		{
-			Mesh pointMesh = m_MeshBuilder.GeneratePointMesh(
-				m_Vertices[i].ToFilledMeshVertex(),
-				PointMeshProperties {
-					.Radius = properties.StrokeWeight,
-					.Segments = 12, // TODO(Felix): Make configurable
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh pointMesh = MeshBuilder::GeneratePointMesh(
+					m_Vertices[i].Position,
+					m_Vertices[i].StrokeColor,
+					properties.StrokeWeight,
+					32, // TODO(Felix): Make configurable
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(pointMesh);
+				shape.FillShapes.emplace_back(pointMesh);
+			}
 		}
 
 		return shape;
@@ -104,21 +90,20 @@ namespace DGL
 
 		for (size_t i = 1; i < m_Vertices.size(); i += 2)
 		{
-			Mesh lineMesh = m_MeshBuilder.GenerateLineMesh(
-				std::array {
-					m_Vertices[i - 1].ToFilledMeshVertex(),
-					m_Vertices[i - 0].ToFilledMeshVertex()
-				},
-				LineMeshProperties {
-					.StartCap = properties.StartCap,
-					.EndCap = properties.EndCap,
-					.StrokeWeight = properties.StrokeWeight,
-					.RoundedCapSegments = 12, // TODO(Felix): Make configurable
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh lineMesh = MeshBuilder::GenerateLineMesh(
+					std::array{ m_Vertices[i - 1].Position, m_Vertices[i - 0].Position },
+					std::array{ m_Vertices[i - 1].StrokeColor, m_Vertices[i - 0].StrokeColor },
+					properties.StartCap,
+					properties.EndCap,
+					properties.StrokeWeight,
+					12, // TODO(Felix): Make configurable
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(lineMesh);
+				shape.FillShapes.emplace_back(lineMesh);
+			}
 		}
 
 		return shape;
@@ -130,32 +115,36 @@ namespace DGL
 
 		for (size_t i = 2; i < m_Vertices.size(); i += 3)
 		{
-			Mesh triangleMesh = m_MeshBuilder.GenerateTriangleMesh(
-				std::array {
-					m_Vertices[i - 2].ToFilledMeshVertex(),
-					m_Vertices[i - 1].ToFilledMeshVertex(),
-					m_Vertices[i - 0].ToFilledMeshVertex(),
-				},
-				TriangleMeshProperties {
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			const ShapeVertex& v0 = m_Vertices[i - 2];
+			const ShapeVertex& v1 = m_Vertices[i - 1];
+			const ShapeVertex& v2 = m_Vertices[i - 0];
 
-			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
-				std::array{
-					m_Vertices[i - 2].ToStrokedMeshVertex(),
-					m_Vertices[i - 1].ToStrokedMeshVertex(),
-					m_Vertices[i - 0].ToStrokedMeshVertex(),
-				},
-				OutlinedMeshProperties {
-					.StrokeWeight = properties.StrokeWeight,
-					.JoinStyle = properties.JoinStyle,
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsFillEnabled)
+			{
+				Mesh triangleMesh = MeshBuilder::GenerateTriangleMesh(
+					std::array{ v0.Position, v1.Position, v2.Position, },
+					std::array{ v0.FillColor, v1.FillColor, v2.FillColor, },
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(triangleMesh);
-			shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.FillShapes.emplace_back(triangleMesh);
+			}
+
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh outlinedMesh = MeshBuilder::GenerateOutlinedMesh(
+					std::array{ v0.Position, v1.Position, v2.Position, },
+					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor, },
+					properties.StrokeWeight,
+					properties.JoinStyle,
+					properties.StartCap,
+					properties.EndCap,
+					properties.ShouldCloseOutline,
+					m_DepthProvider->GetAndIncrement()
+				);
+
+				shape.StrokeShapes.emplace_back(outlinedMesh);
+			}
 		}
 
 		return shape;
@@ -167,32 +156,36 @@ namespace DGL
 
 		for (size_t i = 2; i < m_Vertices.size(); ++i)
 		{
-			Mesh triangleMesh = m_MeshBuilder.GenerateTriangleMesh(
-				std::array {
-					m_Vertices[i - 2].ToFilledMeshVertex(),
-					m_Vertices[i - 1].ToFilledMeshVertex(),
-					m_Vertices[i - 0].ToFilledMeshVertex()
-				},
-				TriangleMeshProperties {
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			const ShapeVertex& v0 = m_Vertices[i - 2];
+			const ShapeVertex& v1 = m_Vertices[i - 1];
+			const ShapeVertex& v2 = m_Vertices[i - 0];
 
-			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
-				std::array{
-					m_Vertices[i - 2].ToStrokedMeshVertex(),
-					m_Vertices[i - 1].ToStrokedMeshVertex(),
-					m_Vertices[i - 0].ToStrokedMeshVertex()
-				},
-				OutlinedMeshProperties {
-					.StrokeWeight = properties.StrokeWeight,
-					.JoinStyle = properties.JoinStyle,
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsFillEnabled)
+			{
+				Mesh triangleMesh = MeshBuilder::GenerateTriangleMesh(
+					std::array{ v0.Position, v1.Position, v2.Position },
+					std::array{ v0.FillColor, v1.FillColor, v2.FillColor },
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(triangleMesh);
-			shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.FillShapes.emplace_back(triangleMesh);
+			}
+
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh outlinedMesh = MeshBuilder::GenerateOutlinedMesh(
+					std::array{ v0.Position, v1.Position, v2.Position },
+					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor },
+					properties.StrokeWeight,
+					properties.JoinStyle,
+					properties.StartCap,
+					properties.EndCap,
+					properties.ShouldCloseOutline,
+					m_DepthProvider->GetAndIncrement()
+				);
+
+				shape.StrokeShapes.emplace_back(outlinedMesh);
+			}
 		}
 
 		return shape;
@@ -204,32 +197,36 @@ namespace DGL
 
 		for (size_t i = 2; i < m_Vertices.size(); ++i)
 		{
-			Mesh triangleMesh = m_MeshBuilder.GenerateTriangleMesh(
-				std::array {
-					m_Vertices[0].ToFilledMeshVertex(),
-					m_Vertices[i - 1].ToFilledMeshVertex(),
-					m_Vertices[i - 0].ToFilledMeshVertex()
-				},
-				TriangleMeshProperties {
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			const ShapeVertex& v0 = m_Vertices[0];
+			const ShapeVertex& v1 = m_Vertices[i - 1];
+			const ShapeVertex& v2 = m_Vertices[i - 0];
 
-			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
-				std::array{
-					m_Vertices[0].ToStrokedMeshVertex(),
-					m_Vertices[i - 1].ToStrokedMeshVertex(),
-					m_Vertices[i - 0].ToStrokedMeshVertex()
-				},
-				OutlinedMeshProperties {
-					.StrokeWeight = properties.StrokeWeight,
-					.JoinStyle = properties.JoinStyle,
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsFillEnabled)
+			{
+				Mesh triangleMesh = MeshBuilder::GenerateTriangleMesh(
+					std::array{ v0.Position, v1.Position, v2.Position },
+					std::array{ v0.FillColor, v1.FillColor, v2.FillColor },
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(triangleMesh);
-			shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.FillShapes.emplace_back(triangleMesh);
+			}
+
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh outlinedMesh = MeshBuilder::GenerateOutlinedMesh(
+					std::array{ v0.Position, v1.Position, v2.Position },
+					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor },
+					properties.StrokeWeight,
+					properties.JoinStyle,
+					properties.StartCap,
+					properties.EndCap,
+					properties.ShouldCloseOutline,
+					m_DepthProvider->GetAndIncrement()
+				);
+
+				shape.StrokeShapes.emplace_back(outlinedMesh);
+			}
 		}
 
 		return shape;
@@ -239,36 +236,39 @@ namespace DGL
 	{
 		Shape shape;
 
-		for (size_t i = 4; i < m_Vertices.size(); i += 4)
+		for (size_t i = 3; i < m_Vertices.size(); i += 4)
 		{
-			Mesh quadMesh = m_MeshBuilder.GenerateQuadMesh(
-				std::array {
-					m_Vertices[i - 4].ToFilledMeshVertex(),
-					m_Vertices[i - 3].ToFilledMeshVertex(),
-					m_Vertices[i - 2].ToFilledMeshVertex(),
-					m_Vertices[i - 1].ToFilledMeshVertex()
-				},
-				QuadMeshProperties {
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			const ShapeVertex& v0 = m_Vertices[i - 3];
+			const ShapeVertex& v1 = m_Vertices[i - 2];
+			const ShapeVertex& v2 = m_Vertices[i - 1];
+			const ShapeVertex& v3 = m_Vertices[i - 0];
 
-			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
-				std::array {
-					m_Vertices[i - 4].ToStrokedMeshVertex(),
-					m_Vertices[i - 3].ToStrokedMeshVertex(),
-					m_Vertices[i - 2].ToStrokedMeshVertex(),
-					m_Vertices[i - 1].ToStrokedMeshVertex()
-				},
-				OutlinedMeshProperties {
-					.StrokeWeight = properties.StrokeWeight,
-					.JoinStyle = properties.JoinStyle,
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsFillEnabled)
+			{
+				Mesh triangleMesh = MeshBuilder::GenerateQuadMesh(
+					std::array{ v0.Position, v1.Position, v2.Position, v3.Position },
+					std::array{ v0.FillColor, v1.FillColor, v2.FillColor, v3.FillColor },
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(quadMesh);
-			shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.FillShapes.emplace_back(triangleMesh);
+			}
+
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh outlinedMesh = MeshBuilder::GenerateOutlinedMesh(
+					std::array{ v0.Position, v1.Position, v2.Position, v3.Position },
+					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor, v3.StrokeColor },
+					properties.StrokeWeight,
+					properties.JoinStyle,
+					properties.StartCap,
+					properties.EndCap,
+					properties.ShouldCloseOutline,
+					m_DepthProvider->GetAndIncrement()
+				);
+
+				shape.StrokeShapes.emplace_back(outlinedMesh);
+			}
 		}
 
 		return shape;
@@ -278,36 +278,44 @@ namespace DGL
 	{
 		Shape shape;
 
+		// Index = 4
+		// First iteration = Vertices 0,1,2,3
+		// Index += 2
+		// Second iteration = Vertices 2,3,4,5
+
 		for (size_t i = 3; i < m_Vertices.size(); i += 2)
 		{
-			Mesh quadMesh = m_MeshBuilder.GenerateQuadMesh(
-				std::array {
-					m_Vertices[i - 3].ToFilledMeshVertex(),
-					m_Vertices[i - 2].ToFilledMeshVertex(),
-					m_Vertices[i - 1].ToFilledMeshVertex(),
-					m_Vertices[i - 0].ToFilledMeshVertex()
-				},
-				QuadMeshProperties {
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			const ShapeVertex& v0 = m_Vertices[i - 3];
+			const ShapeVertex& v1 = m_Vertices[i - 2];
+			const ShapeVertex& v2 = m_Vertices[i - 1];
+			const ShapeVertex& v3 = m_Vertices[i - 0];
 
-			Mesh outlinedMesh = m_MeshBuilder.GenerateOutlinedMesh(
-				std::array{
-					m_Vertices[i - 3].ToStrokedMeshVertex(),
-					m_Vertices[i - 2].ToStrokedMeshVertex(),
-					m_Vertices[i - 1].ToStrokedMeshVertex(),
-					m_Vertices[i - 0].ToStrokedMeshVertex()
-				},
-				OutlinedMeshProperties {
-					.StrokeWeight = properties.StrokeWeight,
-					.JoinStyle = properties.JoinStyle,
-					.Depth = m_DepthProvider->GetAndIncrement(),
-				}
-			);
+			if (properties.IsFillEnabled)
+			{
+				Mesh triangleMesh = MeshBuilder::GenerateQuadMesh(
+					std::array{ v0.Position, v1.Position, v2.Position, v3.Position },
+					std::array{ v0.FillColor, v1.FillColor, v2.FillColor, v3.FillColor },
+					m_DepthProvider->GetAndIncrement()
+				);
 
-			shape.FillShapes.emplace_back(quadMesh);
-			shape.StrokeShapes.emplace_back(outlinedMesh);
+				shape.FillShapes.emplace_back(triangleMesh);
+			}
+
+			if (properties.IsStrokeEnabled)
+			{
+				Mesh outlinedMesh = MeshBuilder::GenerateOutlinedMesh(
+					std::array{ v0.Position, v1.Position, v2.Position, v3.Position },
+					std::array{ v0.StrokeColor, v1.StrokeColor, v2.StrokeColor, v3.StrokeColor },
+					properties.StrokeWeight,
+					properties.JoinStyle,
+					properties.StartCap,
+					properties.EndCap,
+					properties.ShouldCloseOutline,
+					m_DepthProvider->GetAndIncrement()
+				);
+
+				shape.StrokeShapes.emplace_back(outlinedMesh);
+			}
 		}
 
 		return shape;

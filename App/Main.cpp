@@ -2,46 +2,32 @@
 
 import DirectGL;
 
-class DirectGLGame : public DGL::Sketch
+using namespace DGL;
+
+class DirectGLGame : public Sketch
 {
 public:
 
 	bool Setup() override
 	{
-		DGL::SetWindowSize(1600, 1080);
+		SetWindowSize(1600, 1080);
 
 		return true;
 	}
 
-	void Event(const DGL::WindowEvent& event) override
+	void Event(const WindowEvent& event) override
 	{
 	}
 
 	void Draw(const float deltaTime) override
 	{
-		DGL::SetFillColor({ 1.0f, 0.0f, 0.0f, 1.0f });
-		DGL::SetStrokeColor({ 0.0f, 1.0f, 0.0f, 1.0f });
-		DGL::SetStrokeWeight(10.0f);
+		SetStrokeColor({ 1.0f, 1.0f, 1.0f, 1.0f });
 
-		DGL::BeginShape(DGL::ShapeMode::Points);
-		DGL::Vertex(100.0f, 100.0f);
-		DGL::Vertex(300.0f, 100.0f);
-		DGL::Vertex(300.0f, 300.0f);
-		DGL::Vertex(100.0f, 300.0f);
-		DGL::EndShape();
+		Background({ 0.1f, 0.1f, 0.1f, 1.0f });
+		Line(800.0f, 540.0f, GetMousePosition().X, GetMousePosition().Y);
 
-		DGL::BeginShape(DGL::ShapeMode::Triangles);
-		DGL::SetFillColor({ 1.0f, 0.0f, 0.0f, 1.0f });
-		DGL::Vertex(400.0f, 100.0f);
-		DGL::SetFillColor({ 0.0f, 1.0f, 0.0f, 1.0f });
-		DGL::Vertex(600.0f, 100.0f);
-		DGL::SetFillColor({ 0.0f, 0.0f, 1.0f, 1.0f });
-		DGL::Vertex(600.0f, 300.0f);
-
-		DGL::Vertex(400.0f, 100.0f);
-		DGL::Vertex(600.0f, 300.0f);
-		DGL::Vertex(400.0f, 300.0f);
-		DGL::EndShape();
+		SetFillColor({ 1.0f, 0.0f, 0.0f, 1.0f });
+		Rect(100.0f, 100.0f, 300.0f, 300.0f);
 	}
 
 	void Destroy() override
@@ -52,7 +38,7 @@ public:
 
 int main()
 {
-	return DGL::Launch([]
+	return Launch([]
 	{
 		return std::make_unique<DirectGLGame>();
 	});

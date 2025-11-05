@@ -215,9 +215,19 @@ namespace DGL
 
 namespace DGL
 {
+	void PushStyle()
+	{
+		Library.RenderStyleStack.PushStyle();
+	}
+
+	void PopStyle()
+	{
+		Library.RenderStyleStack.PopStyle();
+	}
+
 	RenderStyle& GetCurrentRenderStyle()
 	{
-		return Library.RenderStyle;
+		return Library.RenderStyleStack.PeekStyle();
 	}
 
 	void SetFillColor(const color_t color)
@@ -238,6 +248,24 @@ namespace DGL
 	{
 		RenderStyle& style = GetCurrentRenderStyle();
 		style.StrokeWeight = weight;
+	}
+
+	void SetStrokeStartCap(const StrokeCap startCap)
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.StartCap = startCap;
+	}
+
+	void SetStrokeEndCap(const StrokeCap endCap)
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.EndCap = endCap;
+	}
+
+	void SetStrokeJoin(const StrokeJoin joinStyle)
+	{
+		RenderStyle& style = GetCurrentRenderStyle();
+		style.JoinStyle = joinStyle;
 	}
 
 	void SetFillDisabled()
@@ -266,6 +294,9 @@ namespace DGL
 			.JoinStyle = style.JoinStyle,
 			.StartCap = style.StartCap,
 			.EndCap = style.EndCap,
+			.IsStrokeEnabled = style.IsStrokeEnabled,
+			.IsFillEnabled = style.IsFillEnabled,
+			.ShouldCloseOutline = true,
 		});
 
 		Library.MeshRenderer->Submit(shape.FillShapes);
@@ -283,6 +314,24 @@ namespace DGL
 		});
 	}
 
+	void Background(const color_t color)
+	{
+		const auto [width, height] = static_cast<Math::Float2>(GetWindowSize());
+
+		const Mesh mesh = MeshBuilder::GenerateQuadMesh(
+			std::array {
+				Math::Float2{ 0.0f, 0.0f },
+				Math::Float2{ width, 0.0f },
+				Math::Float2{ width, height },
+				Math::Float2{ 0.0f, height }
+			},
+			std::array { color, color, color, color },
+			0.0f
+		);
+
+		Library.MeshRenderer->Submit(std::array{ mesh });
+	}
+
 	void Rect(const float x1, const float y1, const float x2, const float y2)
 	{
 		BeginShape(ShapeMode::Quads);
@@ -297,6 +346,14 @@ namespace DGL
 	{
 		BeginShape(ShapeMode::Points);
 		Vertex(x, y);
+		EndShape();
+	}
+
+	void Line(const float x1, const float y1, const float x2, const float y2)
+	{
+		BeginShape(ShapeMode::Lines);
+		Vertex(x1, y1);
+		Vertex(x2, y2);
 		EndShape();
 	}
 }

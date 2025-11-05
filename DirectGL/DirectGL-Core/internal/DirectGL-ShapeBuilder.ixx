@@ -24,9 +24,6 @@ namespace DGL
 		Math::Float2 Position;
 		color_t FillColor;
 		color_t StrokeColor;
-
-		MeshVertex ToFilledMeshVertex() const;
-		MeshVertex ToStrokedMeshVertex() const;
 	};
 
 	struct ShapeBuildingProperties
@@ -35,6 +32,9 @@ namespace DGL
 		StrokeJoin JoinStyle;
 		StrokeCap StartCap;
 		StrokeCap EndCap;
+		bool IsStrokeEnabled;
+		bool IsFillEnabled;
+		bool ShouldCloseOutline;
 	};
 
 	struct Shape
@@ -67,7 +67,6 @@ namespace DGL
 		std::optional<ShapeMode> m_CurrentShapeMode;
 		std::vector<ShapeVertex> m_Vertices;
 
-		MeshBuilder m_MeshBuilder;
 		DepthProvider* m_DepthProvider;
 
 	};

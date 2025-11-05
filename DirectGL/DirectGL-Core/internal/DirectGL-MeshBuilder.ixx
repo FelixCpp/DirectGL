@@ -19,40 +19,6 @@ import :StrokeCap;
 
 namespace DGL
 {
-
-	struct LineMeshProperties
-	{
-		StrokeCap StartCap;
-		StrokeCap EndCap;
-		float StrokeWeight;
-		uint32_t RoundedCapSegments;
-		float Depth;
-	};
-
-	struct PointMeshProperties
-	{
-		float Radius;
-		uint32_t Segments;
-		float Depth;
-	};
-
-	struct TriangleMeshProperties
-	{
-		float Depth;
-	};
-
-	struct QuadMeshProperties
-	{
-		float Depth;
-	};
-
-	struct OutlinedMeshProperties
-	{
-		float StrokeWeight;
-		StrokeJoin JoinStyle;
-		float Depth;
-	};
-
 	/**
 	 * This class is responsible for building meshes from various shapes.
 	 *
@@ -63,29 +29,45 @@ namespace DGL
 	{
 	public:
 
-		Mesh GeneratePointMesh(
-			const MeshVertex& vertex,
-			const PointMeshProperties& properties
+		static Mesh GeneratePointMesh(
+			const Math::Float2& center,
+			const Math::Float4& color,
+			float radius,
+			uint32_t segments,
+			float depth
 		);
 
-		Mesh GenerateLineMesh(
-			const std::span<const MeshVertex, 2>& vertices,
-			const LineMeshProperties& properties
+		static Mesh GenerateLineMesh(
+			const std::span<const Math::Float2, 2>& points,
+			const std::span<const Math::Float4, 2>& colors,
+			StrokeCap startCap,
+			StrokeCap endCap,
+			float strokeWeight,
+			uint32_t roundedCapSegments,
+			float depth
 		);
 
-		Mesh GenerateTriangleMesh(
-			const std::span<const MeshVertex, 3>& vertices,
-			const TriangleMeshProperties& properties
+		static Mesh GenerateTriangleMesh(
+			const std::span<const Math::Float2, 3>& points,
+			const std::span<const Math::Float4, 3>& colors,
+			float depth
 		);
 
-		Mesh GenerateQuadMesh(
-			const std::span<const MeshVertex, 4>& vertices,
-			const QuadMeshProperties& properties
+		static Mesh GenerateQuadMesh(
+			const std::span<const Math::Float2, 4>& points,
+			const std::span<const Math::Float4, 4>& colors,
+			float depth
 		);
 
-		Mesh GenerateOutlinedMesh(
-			const std::span<const MeshVertex>& vertices,
-			const OutlinedMeshProperties& properties
+		static Mesh GenerateOutlinedMesh(
+			const std::span<const Math::Float2>& points,
+			const std::span<const Math::Float4>& colors,
+			float strokeWeight,
+			StrokeJoin joinStyle,
+			StrokeCap startCap,
+			StrokeCap endCap,
+			bool closed,
+			float depth
 		);
 
 	};

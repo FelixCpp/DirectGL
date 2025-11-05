@@ -112,15 +112,22 @@ export namespace DGL
 
 export import :RenderStyle;
 export import :ShapeMode;
+export import :StrokeCap;
+export import :StrokeJoin;
 
 export namespace DGL
 {
-	RenderStyle& GetRenderStyle();
+	void PushStyle();
+	void PopStyle();
+	RenderStyle& PeekStyle();
 
 	void SetFillColor(color_t color);
 
 	void SetStrokeColor(color_t color);
 	void SetStrokeWeight(float weight);
+	void SetStrokeStartCap(StrokeCap startCap);
+	void SetStrokeEndCap(StrokeCap endCap);
+	void SetStrokeJoin(StrokeJoin joinStyle);
 
 	void SetFillDisabled();
 	void SetStrokeDisabled();
@@ -129,8 +136,10 @@ export namespace DGL
 	void EndShape();
 	void Vertex(float x, float y);
 
+	void Background(color_t color);
 	void Rect(float x1, float y1, float x2, float y2);
 	void Point(float x, float y);
+	void Line(float x1, float y1, float x2, float y2);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -153,6 +162,7 @@ import :InputListener;
 import :AsyncLogger;
 import :ShapeBuilder;
 import :MeshRenderer;
+import :RenderStyleStack;
 
 enum struct ExitType
 {
@@ -169,7 +179,7 @@ struct DirectGLLibrary
 	std::shared_ptr<DGL::AsyncLogger>				Logger;				//!< The logging channel to use
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
-	DGL::RenderStyle								RenderStyle;
+	DGL::RenderStyleStack							RenderStyleStack;
 	std::unique_ptr<DGL::ShapeBuilder>				ShapeBuilder;
 	std::unique_ptr<DGL::MeshRenderer>				MeshRenderer;
 

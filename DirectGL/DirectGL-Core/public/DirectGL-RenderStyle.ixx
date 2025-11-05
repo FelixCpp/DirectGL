@@ -14,14 +14,14 @@ export namespace DGL
 	struct RenderStyle
 	{
 		color_t	FillColor;
-		bool	IsFillEnabled;
+		bool	IsFillEnabled = true;
 
 		color_t StrokeColor;
-		bool	IsStrokeEnabled;
-		float	StrokeWeight;
+		bool	IsStrokeEnabled = true;
+		float	StrokeWeight = 1.0f;
 
-		StrokeJoin	JoinStyle;
-		StrokeCap	StartCap;
-		StrokeCap	EndCap;
+		StrokeJoin	JoinStyle = StrokeJoin::Miter;
+		StrokeCap	StartCap = StrokeCap::Round;
+		StrokeCap	EndCap = StrokeCap::Round;
 	};
 }

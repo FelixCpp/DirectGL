@@ -9,33 +9,34 @@ module;
 
 export module DirectGL:Mesh;
 
-import :MeshVertex;
+import :Color;
 
 namespace DGL
 {
 	/**
-	 * This structure represents a mesh consisting of vertices and indices.
+	 * This structure represents a mesh consisting of vertices (positions, colors) and indices.
 	 * The data contained within the structure are meant to be rendered as individual
 	 * triangles.
+	 *
+	 * Note that there has to be a 1:1 correspondence between the number of positions
+	 * and colors; each position must have an associated color.
 	 */
 	struct Mesh
 	{
 		/**
-		 * The vertices that make up the mesh.
+		 * The positions of each vertex in the mesh.
 		 */
-		std::vector<MeshVertex>	Vertices;
+		std::vector<Math::Float3> Positions;
+
+		/**
+		 * The colors associated with each vertex in the mesh.
+		 */
+		std::vector<Math::Float4> Colors;
 
 		/**
 		 * Indices into the vertex array that define the triangles
 		 * of the mesh.
 		 */
-		std::vector<uint32_t>	Indices;
-
-		/**
-		 * The depth at which the mesh should be rendered.
-		 * This is used for layering multiple meshes on top of
-		 * each other.
-		 */
-		float Depth;
+		std::vector<uint32_t> Indices;
 	};
 }
