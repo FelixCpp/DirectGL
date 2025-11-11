@@ -43,7 +43,7 @@ void EnemySpawner::Update(const float deltaTime)
 			Enemies.erase(Enemies.begin() + i);
 		}
 	}
-
+	
 	// Update all death animations and remove the finished ones
 	for (size_t i = DeathAnimations.size(); i-- > 0;)
 	{
@@ -79,7 +79,7 @@ void EnemySpawner::SpawnEnemy()
 	const DGL::Math::Float2 spawnOffset = randomDirection * (SpawnRadius + DGL::Math::Random(500.0f));
 	const DGL::Math::Float2 spawnPosition = SpawnCenter->GetPosition() + spawnOffset;
 
-	if (DGL::Math::Random(1.0f) < 0.7f)
+	if (DGL::Math::Random(1.0f) < 0.9f)
 	{
 		Enemies.push_back(std::make_unique<NormalEnemy>(spawnPosition));
 	}
