@@ -11,7 +11,7 @@ export module DirectGL:EllipseMode;
 
 import DirectGL.Math;
 
-namespace DGL
+export namespace DGL
 {
 	typedef std::function<Math::FloatBoundary(float x1, float y1, float x2, float y2)> EllipseMode;
 

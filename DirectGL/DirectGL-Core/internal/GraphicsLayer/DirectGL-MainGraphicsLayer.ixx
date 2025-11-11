@@ -40,6 +40,11 @@ namespace DGL
 		void PopMatrix() override;
 		Math::Matrix4x4& PeekMatrix() override;
 
+		void Translate(float x, float y) override;
+		void Rotate(Math::Angle angle) override;
+		void Scale(float scaleX, float scaleY) override;
+		void Shear(Math::Angle shearX, Math::Angle shearY) override;
+
 		void SetRectMode(const RectMode& mode) override;
 		void SetEllipseMode(const EllipseMode& mode) override;
 		void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode) override;
@@ -53,6 +58,8 @@ namespace DGL
 		void SetStrokeJoin(StrokeJoin joinStyle) override;
 		void SetStrokeCap(StrokeCap strokeCap) override;
 
+		void SetBlendMode(const BlendMode& blendMode) override;
+
 		void BeginShape(ShapeMode mode) override;
 		void EndShape(ShapeClosingMode mode) override;
 		void Vertex(float x, float y) override;
@@ -62,10 +69,11 @@ namespace DGL
 		void Ellipse(float x1, float y1, float x2, float y2) override;
 		void Point(float x, float y) override;
 		void Line(float x1, float y1, float x2, float y2) override;
+		void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
 
 	private:
 
-		void Render(const Mesh& mesh, const Math::Matrix4x4& modelMatrix);
+		void Render(const Mesh& mesh, const BlendMode& blendMode, const Math::Matrix4x4& modelMatrix);
 		float GetCurrentDepth();
 
 		RenderStyleStack m_RenderStyleStack;

@@ -5,9 +5,9 @@
 
 export module DirectGL:MainRenderTarget;
 
-import :RenderTarget;
-
 import DirectGL.Math;
+
+import :RenderTarget;
 
 namespace DGL
 {

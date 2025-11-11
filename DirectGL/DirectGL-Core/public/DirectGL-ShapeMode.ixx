@@ -11,6 +11,7 @@ export namespace DGL
 	{
 		Points,
 		Lines,
+		LineStrip,
 		Triangles,
 		TriangleStrip,
 		TriangleFan,

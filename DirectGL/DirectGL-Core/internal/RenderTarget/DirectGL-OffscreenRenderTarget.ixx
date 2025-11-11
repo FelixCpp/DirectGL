@@ -9,9 +9,9 @@ module;
 
 export module DirectGL:OffscreenRenderTarget;
 
-import :RenderTarget;
-
 import DirectGL.Math;
+
+import :RenderTarget;
 
 namespace DGL
 {

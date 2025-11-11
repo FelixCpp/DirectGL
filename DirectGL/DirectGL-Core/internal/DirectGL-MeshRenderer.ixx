@@ -12,33 +12,20 @@ export module DirectGL:MeshRenderer;
 
 import :Mesh;
 import :VertexRenderer;
+import :BlendMode;
 
 namespace DGL
 {
 	class MeshRenderer
 	{
-	private:
-
-		struct RenderableMeshVertex
-		{
-			Math::Float3 Position;
-			Math::Float4 Color;
-		};
-
-		struct RenderableMesh
-		{
-			std::vector<RenderableMeshVertex> Vertices;
-			std::vector<uint32_t> Indices;
-		};
-
 	public:
 
 		MeshRenderer();
 
 		void BeginDraw(const Math::Matrix4x4& projectionViewMatrix);
 		void EndDraw();
-		void Submit(const std::span<const Mesh>& meshes, const Math::Matrix4x4& modelMatrix);
-		void Submit(const Mesh& mesh, const Math::Matrix4x4& modelMatrix);
+		void Submit(const std::span<const Mesh>& meshes, const BlendMode& blendMode, const Math::Matrix4x4& modelMatrix);
+		void Submit(const Mesh& mesh, const BlendMode& blendMode, const Math::Matrix4x4& modelMatrix);
 
 	private:
 

@@ -15,6 +15,6 @@ export namespace DGL
 {
 	typedef std::function<size_t(Math::Radius radius, Math::Angle sweep)> EllipseSegmentsMode;
 
-	const EllipseSegmentsMode& EllipseSegmentsModeFixed(size_t count);
-	const EllipseSegmentsMode& EllipseSegmentsModeAdaptive(float tolerance = 0.5f);
+	EllipseSegmentsMode EllipseSegmentsModeFixed(size_t count);
+	EllipseSegmentsMode EllipseSegmentsModeAdaptive(float tolerance = 0.5f);
 }

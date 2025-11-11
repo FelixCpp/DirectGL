@@ -5,12 +5,13 @@ module;
 module DirectGL;
 
 import :MainGraphicsLayer;
+import :MeshBuilder;
 
 namespace DGL
 {
 	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<MeshRenderer>& meshRenderer, const Math::FloatBoundary& viewport):
 		m_MeshRenderer(meshRenderer),
-		m_DepthProvider(0.0f, 1.0f / 20'000.0f),
+		m_DepthProvider(-1.0f, 1.0f / 20'000.0f),
 		m_RenderTarget(viewport),
 		m_ProjectionMatrix(Math::Matrix4x4::Orthographic(viewport, -1.0f, 1.0f))
 	{
@@ -30,6 +31,7 @@ namespace DGL
 	void MainGraphicsLayer::BeginDraw()
 	{
 		m_RenderStyleStack.Reset();
+		m_DepthProvider.Reset();
 		m_MeshRenderer.lock()->BeginDraw(m_ProjectionMatrix);
 		m_RenderTarget.Activate();
 	}
@@ -155,19 +157,22 @@ namespace DGL
 		style.StrokeCap = strokeCap;
 	}
 
-	void MainGraphicsLayer::BeginShape(ShapeMode mode)
+	void MainGraphicsLayer::SetBlendMode(const BlendMode& blendMode)
 	{
-
+		RenderStyle& style = PeekStyle();
+		style.BlendMode = blendMode;
 	}
 
-	void MainGraphicsLayer::EndShape(ShapeClosingMode mode)
+	void MainGraphicsLayer::BeginShape(const ShapeMode mode)
 	{
+	}
 
+	void MainGraphicsLayer::EndShape(const ShapeClosingMode mode)
+	{
 	}
 
 	void MainGraphicsLayer::Vertex(float x, float y)
 	{
-
 	}
 
 	void MainGraphicsLayer::Background(const color_t color)
@@ -176,71 +181,92 @@ namespace DGL
 		const float right = left + width;
 		const float bottom = top + height;
 
-		const Mesh backgroundMesh = MeshBuilder::GenerateQuadMesh(
-			std::array {
-				Math::Float2 { left, top },
-				Math::Float2 { right, top },
-				Math::Float2 { right, bottom },
-				Math::Float2 { left, bottom }
-			},
-			std::array { color, color, color, color },
-			GetCurrentDepth()
+		const float depth = GetCurrentDepth();
+		const std::array backgroundPoints = MeshBuilder::GenerateQuadPoints(
+			{ left, top },
+			{ right, top },
+			{ right, bottom },
+			{ left, bottom }
 		);
 
-		Render(backgroundMesh, PeekMatrix());
+		const Mesh backgroundMesh = MeshBuilder::GenerateFilledQuadMesh(
+			backgroundPoints,
+			std::array { color, color, color, color },
+			depth
+		);
+
+		Render(backgroundMesh, BlendMode::Opaque, PeekMatrix());
 	}
 
 	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2)
 	{
 		const RenderStyle& style = PeekStyle();
+
+		// If there's no fill or stroke, we can skip rendering entirely
+		if (not style.IsFillEnabled and not style.IsStrokeEnabled)
+		{
+			return;
+		}
+
 		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
 
 		const Math::Float2 topLeft = boundary.TopLeft();
 		const Math::Float2 topRight = boundary.TopRight();
 		const Math::Float2 bottomRight = boundary.BottomRight();
 		const Math::Float2 bottomLeft = boundary.BottomLeft();
-		const std::array corners = { topLeft, topRight, bottomRight, bottomLeft };
+		const std::array rectPoints = MeshBuilder::GenerateQuadPoints(topLeft, topRight, bottomRight, bottomLeft);
 
 		if (style.IsFillEnabled)
 		{
-			const Mesh quadMesh = MeshBuilder::GenerateQuadMesh(
-				corners,
+			const Mesh quadMesh = MeshBuilder::GenerateFilledQuadMesh(
+				rectPoints,
 				std::array { style.FillColor, style.FillColor, style.FillColor, style.FillColor },
 				GetCurrentDepth()
 			);
 
-			Render(quadMesh, PeekMatrix());
+			Render(quadMesh, style.BlendMode, PeekMatrix());
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			const Mesh outlinedMesh = MeshBuilder::GenerateOutlinedMesh(
-				corners,
-				std::array { style.StrokeColor, style.StrokeColor, style.StrokeColor, style.StrokeColor },
-				style.StrokeWeight, style.JoinStyle, style.StrokeCap, true, // Should close stroke
-				GetCurrentDepth()
+			const Mesh outlinedRectMesh = MeshBuilder::GenerateOutlinedMesh(
+				rectPoints,
+				std::array { style.StrokeColor, style.StrokeColor, style.StrokeColor, style.StrokeColor }, 
+				style.StrokeWeight, style.JoinStyle, 32, GetCurrentDepth()
 			);
 
-			Render(outlinedMesh, PeekMatrix());
+			Render(outlinedRectMesh, style.BlendMode, PeekMatrix());
 		}
 	}
 
 	void MainGraphicsLayer::Ellipse(const float x1, const float y1, const float x2, const float y2)
 	{
 		const RenderStyle& style = PeekStyle();
+
+		// If there's no fill or stroke, we can skip rendering entirely
+		if (not style.IsFillEnabled and not style.IsStrokeEnabled)
+		{
+			return;
+		}
+
 		const Math::FloatBoundary boundary = style.EllipseMode(x1, y1, x2, y2);
 		const Math::Radius radius = Math::Radius::Elliptical(boundary.Width / 2.0f, boundary.Height / 2.0f);
+		const Math::Float2 center = boundary.Center();
+		const size_t segmentCount = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
+		const std::vector<Math::Float2> ellipsePoints = MeshBuilder::GenerateEllipsePoints(center, radius, segmentCount);
 
 		if (style.IsFillEnabled)
 		{
-			const size_t segments = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
-			const Mesh ellipseMesh = MeshBuilder::GenerateEllipseMesh(boundary.Center(), style.FillColor, radius, segments, GetCurrentDepth());
-			Render(ellipseMesh, PeekMatrix());
+			const std::vector ellipseColors(segmentCount, style.FillColor);
+			const Mesh filledEllipseMesh = MeshBuilder::GenerateFilledEllipseMesh(center, ellipsePoints, ellipseColors, GetCurrentDepth());
+			Render(filledEllipseMesh, style.BlendMode, PeekMatrix());
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			// TODO(Felix): Implement stroked ellipse
+			const std::vector ellipseColors(segmentCount, style.StrokeColor);
+			const Mesh outlinedEllipseMesh = MeshBuilder::GenerateOutlinedMesh(ellipsePoints, ellipseColors, style.StrokeWeight, style.JoinStyle, 32, GetCurrentDepth());
+			Render(outlinedEllipseMesh, style.BlendMode, PeekMatrix());
 		}
 	}
 
@@ -248,16 +274,11 @@ namespace DGL
 	{
 		const RenderStyle& style = PeekStyle();
 		const size_t segments = style.EllipseSegmentsMode(Math::Radius::Circular(style.StrokeWeight), Math::Degrees(360.0f));
+		const std::vector ellipsePoints = MeshBuilder::GenerateEllipsePoints({ x, y }, Math::Radius::Circular(style.StrokeWeight / 2.0f), segments);
+		const std::vector ellipseColors(segments, style.StrokeColor);
 
-		const Mesh pointMesh = MeshBuilder::GenerateEllipseMesh(
-			{ x, y },
-			style.StrokeColor,
-			Math::Radius::Circular(style.StrokeWeight),
-			segments,
-			GetCurrentDepth()
-		);
-
-		Render(pointMesh, PeekMatrix());
+		const Mesh pointMesh = MeshBuilder::GenerateFilledEllipseMesh({ x, y }, ellipsePoints, ellipseColors, GetCurrentDepth());
+		Render(pointMesh, style.BlendMode, PeekMatrix());
 	}
 
 	void MainGraphicsLayer::Line(const float x1, const float y1, const float x2, const float y2)
@@ -277,14 +298,52 @@ namespace DGL
 			GetCurrentDepth()
 		);
 
-		Render(lineMesh, PeekMatrix());
+		Render(lineMesh, style.BlendMode, PeekMatrix());
 	}
 
-	void MainGraphicsLayer::Render(const Mesh& mesh, const Math::Matrix4x4& modelMatrix)
+	void MainGraphicsLayer::Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3)
+	{
+		const RenderStyle& style = PeekStyle();
+
+		// If there's no fill or stroke, we can skip rendering entirely
+		if (not style.IsFillEnabled and not style.IsStrokeEnabled)
+		{
+			return;
+		}
+
+		const std::array trianglePoints = MeshBuilder::GenerateTrianglePoints({ x1, y1 }, { x2, y2 }, { x3, y3 });
+
+		if (style.IsFillEnabled)
+		{
+			const Mesh filledTriangleMesh = MeshBuilder::GenerateFilledTriangleMesh(
+				trianglePoints,
+				std::array { style.FillColor, style.FillColor, style.FillColor },
+				GetCurrentDepth()
+			);
+
+			Render(filledTriangleMesh, style.BlendMode, PeekMatrix());
+		}
+
+		if (style.IsStrokeEnabled)
+		{
+			const Mesh outlinedTriangleMesh = MeshBuilder::GenerateOutlinedMesh(
+				trianglePoints,
+				std::array { style.StrokeColor, style.StrokeColor, style.StrokeColor },
+				style.StrokeWeight,
+				style.JoinStyle,
+				32,
+				GetCurrentDepth()
+			);
+
+			Render(outlinedTriangleMesh, style.BlendMode, PeekMatrix());
+		}
+	}
+
+	void MainGraphicsLayer::Render(const Mesh& mesh, const BlendMode& blendMode, const Math::Matrix4x4& modelMatrix)
 	{
 		if (const auto renderer = m_MeshRenderer.lock())
 		{
-			renderer->Submit(mesh, modelMatrix);
+			renderer->Submit(mesh, blendMode, modelMatrix);
 		}
 	}
 

@@ -24,14 +24,14 @@ project("DirectGL-Core")
         "DirectGL-Context",
         "DirectGL-Monitor",
         "DirectGL-Window",
+        "DirectGL-DPI",
 
         -- DirectGL-Utility
         "DirectGL-Startup",
-        
+        "DirectGL-ControlFlow",
 
         -- Utilities
         "LogForge",
-        "Preconditions",
 
         -- Third-Party
         "Glad",

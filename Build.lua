@@ -15,7 +15,6 @@ workspace("DirectGL")
 
     group("Utilities")
         include("Utilities/Logging/Build-LogForge.lua")
-        include("Utilities/Preconditions/Build-Preconditions.lua")
         include("Utilities/Premake/Build-Premake.lua")
 
     group("Libraries")
@@ -32,9 +31,11 @@ workspace("DirectGL")
         include("DirectGL/DirectGL-Context/Build-Context.lua")
         include("DirectGL/DirectGL-Monitor/Build-Monitor.lua")
         include("DirectGL/DirectGL-Window/Build-Window.lua")
+        include("DirectGL/DirectGL-DPI/Build-DPI.lua")
 
         -- Utility Libraries
         include("DirectGL/DirectGL-Startup/Build-Startup.lua")
+        include("DirectGL/DirectGL-ControlFlow/Build-ControlFlow.lua")
 
     group("") -- Root group
         include("App/Build-App.lua")

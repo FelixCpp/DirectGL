@@ -3,9 +3,11 @@
 // Author       : Felix Busch
 // Created Date : 2025/10/07
 
-export module DirectGL.Math:Radius;
+module;
 
-import :Remap;
+#include <utility>
+
+export module DirectGL.Math:Radius;
 
 export namespace DGL::Math
 {
@@ -46,8 +48,8 @@ namespace DGL::Math
 		return Radius{ radiusX, radiusY };
 	}
 
-	constexpr float Radius::Max() const { return Math::Max(X, Y); }
-	constexpr float Radius::Min() const { return Math::Min(X, Y); }
+	constexpr float Radius::Max() const { return std::max(X, Y); }
+	constexpr float Radius::Min() const { return std::min(X, Y); }
 
 	constexpr Radius::Radius(const float radiusX, const float radiusY) :
 		X(radiusX), Y(radiusY)

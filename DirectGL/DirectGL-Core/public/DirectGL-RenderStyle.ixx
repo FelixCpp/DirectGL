@@ -12,6 +12,7 @@ import :RectMode;
 import :EllipseMode;
 import :EllipseSegmentsMode;
 import :MatrixStack;
+import :BlendMode;
 
 export namespace DGL
 {
@@ -31,6 +32,7 @@ export namespace DGL
 		EllipseMode EllipseMode = EllipseModeCenterRadius();
 		EllipseSegmentsMode EllipseSegmentsMode = EllipseSegmentsModeAdaptive();
 
+		BlendMode BlendMode = BlendMode::Alpha;
 		MatrixStack MatrixStack;
 	};
 }

@@ -6,7 +6,8 @@ project("App")
 	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
 
 	files({
-		"Main.cpp",
+		"public/**.ixx",
+		"private/**.cpp"
 	})
 
 	links({

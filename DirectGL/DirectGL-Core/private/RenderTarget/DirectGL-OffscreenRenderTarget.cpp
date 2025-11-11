@@ -45,7 +45,7 @@ namespace DGL
 
 	void OffscreenRenderTarget::Activate()
 	{
-		glViewport(static_cast<GLsizei>(0), static_cast<GLsizei>(0), static_cast<GLsizei>(m_Viewport.Width), static_cast<GLsizei>(m_Viewport.Height));
+		glViewport(static_cast<GLsizei>(m_Viewport.Left), static_cast<GLsizei>(m_Viewport.Top), static_cast<GLsizei>(m_Viewport.Width), static_cast<GLsizei>(m_Viewport.Height));
 		glBindFramebuffer(GL_FRAMEBUFFER, m_Framebuffer);
 	}
 }

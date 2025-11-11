@@ -7,6 +7,7 @@ module;
 
 #include <cstdint>
 #include <span>
+#include <array>
 
 export module DirectGL:MeshBuilder;
 
@@ -29,14 +30,6 @@ namespace DGL
 	{
 	public:
 
-		static Mesh GenerateEllipseMesh(
-			const Math::Float2& center,
-			const Math::Float4& color,
-			Math::Radius radius,
-			uint32_t segments,
-			float depth
-		);
-
 		static Mesh GenerateLineMesh(
 			const std::span<const Math::Float2, 2>& points,
 			const std::span<const Math::Float4, 2>& colors,
@@ -46,25 +39,31 @@ namespace DGL
 			float depth
 		);
 
-		static Mesh GenerateTriangleMesh(
-			const std::span<const Math::Float2, 3>& points,
-			const std::span<const Math::Float4, 3>& colors,
+		static std::vector<Math::Float2> GenerateEllipsePoints(
+			Math::Float2 center,
+			Math::Radius radius,
+			size_t segments
+		);
+
+		static Mesh GenerateFilledEllipseMesh(
+			Math::Float2 centerPoint,
+			const std::span<const Math::Float2>& points,
+			const std::span<const Math::Float4>& colors,
 			float depth
 		);
 
-		static Mesh GenerateQuadMesh(
-			const std::span<const Math::Float2, 4>& points,
-			const std::span<const Math::Float4, 4>& colors,
-			float depth
-		);
+		static std::array<Math::Float2, 4> GenerateQuadPoints(const Math::Float2& a, const Math::Float2& b, const Math::Float2& c, const Math::Float2& d);
+		static Mesh GenerateFilledQuadMesh(const std::span<const Math::Float2, 4>& points, const std::span<const Math::Float4, 4>& colors, float depth);
+
+		static std::array<Math::Float2, 3> GenerateTrianglePoints(const Math::Float2& v0, const Math::Float2& v1, const Math::Float2& v2);
+		static Mesh GenerateFilledTriangleMesh(const std::span<const Math::Float2, 3>& points, const std::span<const Math::Float4, 3>& colors, float depth);
 
 		static Mesh GenerateOutlinedMesh(
 			const std::span<const Math::Float2>& points,
 			const std::span<const Math::Float4>& colors,
 			float strokeWeight,
-			StrokeJoin joinStyle,
-			StrokeCap strokeCap,
-			bool closed,
+			StrokeJoin strokeJoin,
+			uint32_t roundedJoinSegments,
 			float depth
 		);
 

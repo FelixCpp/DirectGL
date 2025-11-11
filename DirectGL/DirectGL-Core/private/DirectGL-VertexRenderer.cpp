@@ -49,7 +49,8 @@ namespace DGL
 		m_PositionBuffer(0),
 		m_ColorBuffer(0),
 		m_ElementBuffer(0),
-		m_ShaderProgram(0)
+		m_ShaderProgram(0),
+		m_DrawCalls(0)
 	{
 		glCreateBuffers(1, &m_PositionBuffer);
 		glNamedBufferStorage(m_PositionBuffer, 1024 * sizeof(Math::Float3), nullptr, GL_DYNAMIC_STORAGE_BIT);
@@ -97,13 +98,15 @@ namespace DGL
 
 	void VertexRenderer::BeginDraw(const Math::Matrix4x4& projectionViewMatrix)
 	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		glProgramUniformMatrix4fv(m_ShaderProgram, m_ProjectionViewMatrixLocation, 1, GL_FALSE, projectionViewMatrix.GetData());
 		m_DrawCalls = 0;
 	}
 
 	void VertexRenderer::EndDraw()
 	{
-		Debug(std::format("VertexRenderer: Draw Calls this frame: {}", m_DrawCalls));
+		//Debug(std::format("VertexRenderer: Draw Calls this frame: {}", m_DrawCalls));
 	}
 
 	void VertexRenderer::Submit(const std::span<const Math::Float3>& positions, const std::span<const Math::Float4>& colors, const std::span<const uint32_t>& indices, const Math::Matrix4x4& modelMatrix)

@@ -42,8 +42,6 @@ namespace DGL
 		{
 			const auto [windowWidth, windowHeight] = static_cast<Math::Float2>(GetWindowSize());
 
-			DepthProvider provider;
-			Library.ShapeBuilder = std::make_unique<ShapeBuilder>(provider);
 			Library.MeshRenderer = std::make_shared<MeshRenderer>();
 			Library.MainGraphicsLayer = std::make_unique<MainGraphicsLayer>(Library.MeshRenderer, Math::FloatBoundary::FromLTWH(0.0f, 0.0f, windowWidth, windowHeight));
 
@@ -70,11 +68,10 @@ namespace DGL
 						[](const WindowEvent::Closed&)
 						{
 							Info("Window close event received");
-							Quit();
+							if (Library.HandleCloseAutomatically) Quit();
 						},
 						[&](const WindowEvent::Resized& resizeEvent)
 						{
-							glViewport(0, 0, resizeEvent.Width, resizeEvent.Height);
 							Library.MainGraphicsLayer->SetViewport(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, static_cast<float>(resizeEvent.Width), static_cast<float>(resizeEvent.Height)));
 
 							Redraw(); //!< Request a redraw after the window has been resized.
@@ -109,10 +106,9 @@ namespace DGL
 
 					const auto [w, h] = GetWindowSize();
 
-					provider.Reset();
-					Library.MeshRenderer->BeginDraw(Math::Matrix4x4::Orthographic(Math::FloatBoundary::FromLTWH(0.0f, 0.0f, w, h), -1.0f, 1.0f));
+					Library.MainGraphicsLayer->BeginDraw();
 					Library.Sketch->Draw(deltaTime.count());
-					Library.MeshRenderer->EndDraw();
+					Library.MainGraphicsLayer->EndDraw();
 
 					// Present the rendered frame on screen
 					Library.Context->SwapBuffers();
@@ -216,48 +212,53 @@ namespace DGL
 	void ToggleLoop() { Library.IsPaused = not Library.IsPaused; }
 	bool IsLooping() { return not Library.IsPaused; }
 	void Redraw() { Library.UserRequestedRedraw = true; }
+	void SetAutoCloseEnabled(const bool enabled) { Library.HandleCloseAutomatically = enabled; }
+	bool IsAutoCloseEnabled() { return Library.HandleCloseAutomatically; }
 }
 
 namespace DGL
 {
-	GraphicsLayer& PeekGraphicsLayer() { return *Library.MainGraphicsLayer; }
+	GraphicsLayer& PeekLayer() { return *Library.MainGraphicsLayer; }
 
-	void PushStyle(const bool extendCurrentStyle) { PeekGraphicsLayer().PushStyle(extendCurrentStyle); }
-	void PopStyle() { PeekGraphicsLayer().PopStyle(); }
-	RenderStyle& PeekStyle() { return PeekGraphicsLayer().PeekStyle(); }
+	void PushStyle(const bool extendCurrentStyle) { PeekLayer().PushStyle(extendCurrentStyle); }
+	void PopStyle() { PeekLayer().PopStyle(); }
+	RenderStyle& PeekStyle() { return PeekLayer().PeekStyle(); }
 
 	const Math::FloatBoundary& GetViewport() { return Library.MainGraphicsLayer->GetViewport(); }
 
-	void PushMatrix(const bool extendCurrentMatrix) { PeekGraphicsLayer().PushMatrix(extendCurrentMatrix); }
-	void PopMatrix() { PeekGraphicsLayer().PopMatrix(); }
-	Math::Matrix4x4& PeekMatrix() { return PeekGraphicsLayer().PeekMatrix(); }
+	void PushMatrix(const bool extendCurrentMatrix) { PeekLayer().PushMatrix(extendCurrentMatrix); }
+	void PopMatrix() { PeekLayer().PopMatrix(); }
+	Math::Matrix4x4& PeekMatrix() { return PeekLayer().PeekMatrix(); }
 
-	void Translate(const float x, const float y) { PeekGraphicsLayer().Translate(x, y); }
-	void Rotate(const Math::Angle angle) { PeekGraphicsLayer().Rotate(angle); }
-	void Scale(const float scaleX, const float scaleY) { PeekGraphicsLayer().Scale(scaleX, scaleY); }
-	void Shear(const Math::Angle shearX, const Math::Angle shearY) { PeekGraphicsLayer().Shear(shearX, shearY); }
+	void Translate(const float x, const float y) { PeekLayer().Translate(x, y); }
+	void Rotate(const Math::Angle angle) { PeekLayer().Rotate(angle); }
+	void Scale(const float scaleX, const float scaleY) { PeekLayer().Scale(scaleX, scaleY); }
+	void Shear(const Math::Angle shearX, const Math::Angle shearY) { PeekLayer().Shear(shearX, shearY); }
 
-	void SetRectMode(const RectMode& mode) { PeekGraphicsLayer().SetRectMode(mode); }
-	void SetEllipseMode(const EllipseMode& mode) { PeekGraphicsLayer().SetEllipseMode(mode); }
-	void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode) { PeekGraphicsLayer().SetEllipseSegmentsMode(mode); }
+	void SetRectMode(const RectMode& mode) { PeekLayer().SetRectMode(mode); }
+	void SetEllipseMode(const EllipseMode& mode) { PeekLayer().SetEllipseMode(mode); }
+	void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode) { PeekLayer().SetEllipseSegmentsMode(mode); }
 
-	void SetFillColor(const color_t color) { PeekGraphicsLayer().SetFillColor(color); }
-	void SetFillColorDisabled() { PeekGraphicsLayer().SetFillColorDisabled(); }
+	void SetFillColor(const color_t color) { PeekLayer().SetFillColor(color); }
+	void SetFillColorDisabled() { PeekLayer().SetFillColorDisabled(); }
 
-	void SetStrokeColor(const color_t color) { PeekGraphicsLayer().SetStrokeColor(color); }
-	void SetStrokeColorDisabled() { PeekGraphicsLayer().SetStrokeColorDisabled(); }
-	void SetStrokeWeight(const float weight) { PeekGraphicsLayer().SetStrokeWeight(weight); }
-	void SetStrokeJoin(const StrokeJoin joinStyle) { PeekGraphicsLayer().SetStrokeJoin(joinStyle); }
-	void SetStrokeCap(const StrokeCap strokeCap) { PeekGraphicsLayer().SetStrokeCap(strokeCap); }
+	void SetStrokeColor(const color_t color) { PeekLayer().SetStrokeColor(color); }
+	void SetStrokeColorDisabled() { PeekLayer().SetStrokeColorDisabled(); }
+	void SetStrokeWeight(const float weight) { PeekLayer().SetStrokeWeight(weight); }
+	void SetStrokeJoin(const StrokeJoin joinStyle) { PeekLayer().SetStrokeJoin(joinStyle); }
+	void SetStrokeCap(const StrokeCap strokeCap) { PeekLayer().SetStrokeCap(strokeCap); }
 
-	void BeginShape(const ShapeMode mode) { PeekGraphicsLayer().BeginShape(mode); }
-	void EndShape(const ShapeClosingMode mode) { PeekGraphicsLayer().EndShape(mode); }
-	void Vertex(const float x, const float y) { PeekGraphicsLayer().Vertex(x, y); }
+	void SetBlendMode(const BlendMode& blendMode) { PeekLayer().SetBlendMode(blendMode); }
 
-	void Background(const color_t color) { PeekGraphicsLayer().Background(color); }
-	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekGraphicsLayer().Rect(x1, y1, x2, y2); }
-	void Ellipse(const float x1, const float y1, const float x2, const float y2) { PeekGraphicsLayer().Ellipse(x1, y1, x2, y2); }
+	void BeginShape(const ShapeMode mode) { PeekLayer().BeginShape(mode); }
+	void EndShape(const ShapeClosingMode mode) { PeekLayer().EndShape(mode); }
+	void Vertex(const float x, const float y) { PeekLayer().Vertex(x, y); }
+
+	void Background(const color_t color) { PeekLayer().Background(color); }
+	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Rect(x1, y1, x2, y2); }
+	void Ellipse(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Ellipse(x1, y1, x2, y2); }
 	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
-	void Point(const float x, const float y) { PeekGraphicsLayer().Point(x, y); }
-	void Line(const float x1, const float y1, const float x2, const float y2) { PeekGraphicsLayer().Line(x1, y1, x2, y2); }
+	void Point(const float x, const float y) { PeekLayer().Point(x, y); }
+	void Line(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Line(x1, y1, x2, y2); }
+	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { PeekLayer().Triangle(x1, y1, x2, y2, x3, y3); }
 }

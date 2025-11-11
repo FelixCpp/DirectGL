@@ -1,21 +1,29 @@
-project("Preconditions")
+project("DirectGL-DPI")
 	kind("StaticLib")
 	language("C++")
 	cppdialect("C++23")
 	targetdir("%{wks.location}/build/bin/" .. OutputDir .. "/%{prj.name}")
 	objdir("%{wks.location}/build/bin-int/" .. OutputDir .. "/%{prj.name}")
-	
+
 	files({
-		"public/Preconditions.ixx",
-		"public/Preconditions-FinalAction.ixx",
-		"public/Preconditions-Preconditions.ixx",
-		"public/Preconditions-Standard.ixx",
+		"public/DPI.ixx",
 	})
 	
+	links({
+		"DirectGL-Logging",
+	})
+
+	filter("system:windows")
+		systemversion("latest")
+		defines({ "DPI_PLATFORM_WINDOWS" })
+		files({
+			"private/Win32/DPIImplWin32.cpp",
+		})
+
 	filter("configurations:Debug")
 		runtime("Debug")
-		symbols("on")
+		symbols("On")
 
 	filter("configurations:Release")
 		runtime("Release")
-		optimize("on")
+		optimize("On")

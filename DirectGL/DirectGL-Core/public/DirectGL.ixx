@@ -23,7 +23,7 @@ import LogForge;
 
 import DirectGL.Input;
 import DirectGL.Logging;
-import DirectGL.Window;
+export import DirectGL.Window;
 import DirectGL.Monitor;
 
 /////////////////////////////// - IMPORTS - ///////////////////////////////
@@ -75,6 +75,7 @@ export namespace DGL
 
 	using KeyboardKey = Input::KeyboardKey;
 	using MouseButton = Input::MouseButton;
+	//using WindowEvent = WindowEvent;
 
 	[[nodiscard]] bool IsKeyPressed(KeyboardKey key);
 	[[nodiscard]] bool IsKeyDown(KeyboardKey key);
@@ -108,6 +109,9 @@ export namespace DGL
 	void ToggleLoop();
 	bool IsLooping();
 	void Redraw();
+
+	void SetAutoCloseEnabled(bool enabled);
+	bool IsAutoCloseEnabled();
 }
 
 export import :RenderStyle;
@@ -118,10 +122,11 @@ export import :RectMode;
 export import :EllipseMode;
 export import :EllipseSegmentsMode;
 export import :GraphicsLayer;
+export import :BlendMode;
 
 export namespace DGL
 {
-	GraphicsLayer& PeekGraphicsLayer();
+	GraphicsLayer& PeekLayer();
 
 	void PushStyle(bool extendCurrentStyle = true);
 	void PopStyle();
@@ -143,13 +148,15 @@ export namespace DGL
 	void SetEllipseSegmentsMode(const EllipseSegmentsMode& mode);
 
 	void SetFillColor(color_t color);
-	void SetFillDisabled();
+	void SetFillColorDisabled();
 
 	void SetStrokeColor(color_t color);
-	void SetStrokeDisabled();
+	void SetStrokeColorDisabled();
 	void SetStrokeWeight(float weight);
 	void SetStrokeCap(StrokeCap strokeCap);
 	void SetStrokeJoin(StrokeJoin joinStyle);
+
+	void SetBlendMode(const BlendMode& blendMode);
 
 	void BeginShape(ShapeMode mode);
 	void EndShape(ShapeClosingMode mode);
@@ -161,6 +168,7 @@ export namespace DGL
 	void Circle(float x1, float y1, float xy2);
 	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
+	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -181,7 +189,6 @@ import :WindowStartupTask;
 import :InputListener;
 
 import :AsyncLogger;
-import :ShapeBuilder;
 import :MeshRenderer;
 import :RenderStyleStack;
 import :MainGraphicsLayer;
@@ -202,15 +209,15 @@ struct DirectGLLibrary
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
 	std::unique_ptr<DGL::MainGraphicsLayer>			MainGraphicsLayer;
-	std::unique_ptr<DGL::ShapeBuilder>				ShapeBuilder;
 	std::shared_ptr<DGL::MeshRenderer>				MeshRenderer;
 
-	ExitType		ExitType = ExitType::Quit;		//!< The exit code to return on application shutdown
-	int				ExitCode = 0;					//!< The return code to return on application shutdown
-	bool			CloseRequested = false;			//!< Whether a restart of the application was requested
-	uint64_t		FrameCount = 0;					//!< The number of frames that have been rendered since application start
-	bool			IsPaused = false;				//!< Whether the application is currently paused
-	bool			UserRequestedRedraw = false;	//!< Whether the user requested a redraw (call to Sketch::Draw function).
+	ExitType		ExitType = ExitType::Quit;			//!< The exit code to return on application shutdown
+	int				ExitCode = 0;						//!< The return code to return on application shutdown
+	bool			CloseRequested = false;				//!< Whether a restart of the application was requested
+	uint64_t		FrameCount = 0;						//!< The number of frames that have been rendered since application start
+	bool			IsPaused = false;					//!< Whether the application is currently paused
+	bool			UserRequestedRedraw = false;		//!< Whether the user requested a redraw (call to Sketch::Draw function).
+	bool			HandleCloseAutomatically = true;	//!< Whether close events should be handled automatically by quitting the application.
 };
 
 module :private;

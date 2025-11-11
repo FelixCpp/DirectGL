@@ -1,16 +1,16 @@
-﻿// Project Name : Preconditions
-// File Name    : Preconditions-Standard.ixx
+﻿// Project Name : DirectGL
+// File Name    : ControlFlow-Todo.ixx
 // Author       : Felix Busch
-// Created Date : 2025/10/06
+// Created Date : 2025/11/10
 
 module;
 
 #include <stdexcept>
 #include <format>
 
-export module Preconditions:Standard;
+export module DirectGL.ControlFlow:Todo;
 
-export namespace System
+export namespace DGL
 {
 	[[noreturn]] inline void TODO()
 	{

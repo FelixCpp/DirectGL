@@ -8,7 +8,6 @@ module;
 export module DirectGL.Math:Value2;
 
 import :Angle;
-import :Random;
 
 export namespace DGL::Math
 {
@@ -116,7 +115,7 @@ namespace DGL::Math
 		return Value2{ std::cos(radians), std::sin(radians) };
 	}
 
-	template <typename T> constexpr Value2<T> Value2<T>::Random() { return FromAngle(Degrees(Math::Random(360.0f))); }
+	template <typename T> constexpr Value2<T> Value2<T>::Random() { return FromAngle(Angle::Random()); }
 
 	template <typename T> T Value2<T>::Length() const { return static_cast<T>(std::sqrt(LengthSquared())); }
 	template <typename T> constexpr T Value2<T>::LengthSquared() const { return X * X + Y * Y; }
@@ -200,7 +199,7 @@ namespace DGL::Math
 	template <typename T> constexpr Value2<T> operator+(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar + vector.X, scalar + vector.Y }; }
 	template <typename T> constexpr Value2<T> operator-(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar - vector.X, scalar - vector.Y }; }
 	template <typename T> constexpr Value2<T> operator/(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar / vector.X, scalar / vector.Y }; }
-	template <typename T> constexpr Value2<T> operator*(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar* vector.X, scalar* vector.Y }; }
+	template <typename T> constexpr Value2<T> operator*(T scalar, const Value2<T>& vector) { return Value2<T>{ scalar * vector.X, scalar * vector.Y }; }
 
 	template <typename T> inline constexpr Value2<T> Value2<T>::Zero = Value2{ T{}, T{} };
 	template <typename T> inline constexpr Value2<T> Value2<T>::One = Value2{ T{1}, T{1} };

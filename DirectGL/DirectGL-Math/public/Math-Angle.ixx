@@ -30,6 +30,8 @@ export namespace DGL::Math
 		constexpr Angle operator * (float scalar) const;
 		constexpr Angle operator / (float scalar) const;
 
+		static Angle Random();
+
 		static const Angle Zero;
 
 	private:

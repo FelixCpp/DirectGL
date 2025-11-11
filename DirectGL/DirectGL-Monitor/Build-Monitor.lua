@@ -13,6 +13,7 @@ project("DirectGL-Monitor")
 		"public/Monitor-MonitorProviderCache.ixx",
 
 		-- Private
+		"private/Monitor-MonitorProvider.cpp",
 		"private/Monitor-MonitorProviderCache.cpp",
 	})
 
