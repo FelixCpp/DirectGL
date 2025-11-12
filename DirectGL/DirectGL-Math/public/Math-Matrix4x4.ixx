@@ -37,6 +37,7 @@ export namespace DGL::Math
 
 		constexpr Float2 TransformPoint(const Float2& point) const;
 		constexpr Float3 TransformPoint(const Float3& point) const;
+		constexpr Float2 TransformVector(const Float2& vector) const;
 		constexpr FloatBoundary TransformBoundary(const FloatBoundary& boundary) const;
 
 		static constexpr Matrix4x4 Translation(float x, float y, float z);
@@ -128,6 +129,13 @@ namespace DGL::Math
 		const float y = m_Data[1] * point.X + m_Data[5] * point.Y + m_Data[9] * point.Z + m_Data[13];
 		const float z = m_Data[2] * point.X + m_Data[6] * point.Y + m_Data[10] * point.Z + m_Data[14];
 		return Float3(x, y, z);
+	}
+
+	constexpr Float2 Matrix4x4::TransformVector(const Float2& vector) const
+	{
+		const float x = m_Data[0] * vector.X + m_Data[4] * vector.Y;
+		const float y = m_Data[1] * vector.X + m_Data[5] * vector.Y;
+		return Float2(x, y);
 	}
 
 	constexpr FloatBoundary Matrix4x4::TransformBoundary(const FloatBoundary& boundary) const

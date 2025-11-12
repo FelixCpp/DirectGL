@@ -3,10 +3,15 @@
 // Author       : Felix Busch
 // Created Date : 2025/11/05
 
+module;
+
+#include <string_view>
+
 export module DirectGL:GraphicsLayer;
 
 import :RenderStyle;
 import :ShapeMode;
+import :Font;
 
 namespace DGL
 {
@@ -45,6 +50,12 @@ namespace DGL
 		virtual void SetStrokeCap(StrokeCap strokeCap) = 0;
 
 		virtual void SetBlendMode(const BlendMode& blendMode) = 0;
+		virtual void SetClipRectMode(const RectMode& mode) = 0;
+		virtual void SetClipRect(float x1, float y1, float x2, float y2) = 0;
+		virtual void SetClipRectDisabled() = 0;
+
+		virtual void SetTextSize(float textSize) = 0;
+		virtual void SetTextFont(const Font* font) = 0;
 
 		virtual void BeginShape(ShapeMode mode) = 0;
 		virtual void EndShape(ShapeClosingMode mode) = 0;
@@ -56,5 +67,6 @@ namespace DGL
 		virtual void Point(float x, float y) = 0;
 		virtual void Line(float x1, float y1, float x2, float y2) = 0;
 		virtual void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) = 0;
+		virtual void Text(std::string_view text, float x, float y) = 0;
 	};
 }

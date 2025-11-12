@@ -1,26 +1,25 @@
 module;
 
 #include <array>
+#include <optional>
+#include <string_view>
 
 module DirectGL;
 
 import :MainGraphicsLayer;
-import :MeshBuilder;
 
 namespace DGL
 {
-	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<MeshRenderer>& meshRenderer, const Math::FloatBoundary& viewport):
-		m_MeshRenderer(meshRenderer),
-		m_DepthProvider(-1.0f, 1.0f / 20'000.0f),
-		m_RenderTarget(viewport),
-		m_ProjectionMatrix(Math::Matrix4x4::Orthographic(viewport, -1.0f, 1.0f))
+	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<Renderer2D>& renderer, const Math::FloatBoundary& viewport):
+		m_Renderer(renderer),
+		m_RenderTarget(viewport)
 	{
 	}
 
 	void MainGraphicsLayer::SetViewport(const Math::FloatBoundary& viewport)
 	{
 		m_RenderTarget.SetViewport(viewport);
-		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(viewport, -1.0f, 1.0f);
+		m_Renderer.lock()->SetViewport(viewport);
 	}
 
 	const Math::FloatBoundary& MainGraphicsLayer::GetViewport() const
@@ -31,14 +30,13 @@ namespace DGL
 	void MainGraphicsLayer::BeginDraw()
 	{
 		m_RenderStyleStack.Reset();
-		m_DepthProvider.Reset();
-		m_MeshRenderer.lock()->BeginDraw(m_ProjectionMatrix);
+		m_Renderer.lock()->BeginFrame();
 		m_RenderTarget.Activate();
 	}
 
 	void MainGraphicsLayer::EndDraw()
 	{
-		m_MeshRenderer.lock()->EndDraw();
+		m_Renderer.lock()->EndFrame();
 	}
 
 	void MainGraphicsLayer::PushStyle(const bool extendCurrentStyle)
@@ -163,6 +161,37 @@ namespace DGL
 		style.BlendMode = blendMode;
 	}
 
+	void MainGraphicsLayer::SetClipRectMode(const RectMode& mode)
+	{
+		RenderStyle& style = PeekStyle();
+		style.ClipRectMode = mode;
+	}
+
+	void MainGraphicsLayer::SetClipRect(const float x1, const float y1, const float x2, const float y2)
+	{
+		RenderStyle& style = PeekStyle();
+		style.ClipRect = Math::IntBoundary::FromLTWH(static_cast<int>(x1), static_cast<int>(y1), static_cast<int>(x2), static_cast<int>(y2));
+		style.IsClipRectEnabled = true;
+	}
+
+	void MainGraphicsLayer::SetClipRectDisabled()
+	{
+		RenderStyle& style = PeekStyle();
+		style.IsClipRectEnabled = false;
+	}
+
+	void MainGraphicsLayer::SetTextSize(const float textSize)
+	{
+		RenderStyle& style = PeekStyle();
+		style.TextSize = textSize;
+	}
+
+	void MainGraphicsLayer::SetTextFont(const Font* font)
+	{
+		RenderStyle& style = PeekStyle();
+		style.font = font;
+	}
+
 	void MainGraphicsLayer::BeginShape(const ShapeMode mode)
 	{
 	}
@@ -177,25 +206,10 @@ namespace DGL
 
 	void MainGraphicsLayer::Background(const color_t color)
 	{
-		const auto [left, top, width, height] = GetViewport();
-		const float right = left + width;
-		const float bottom = top + height;
-
-		const float depth = GetCurrentDepth();
-		const std::array backgroundPoints = MeshBuilder::GenerateQuadPoints(
-			{ left, top },
-			{ right, top },
-			{ right, bottom },
-			{ left, bottom }
-		);
-
-		const Mesh backgroundMesh = MeshBuilder::GenerateFilledQuadMesh(
-			backgroundPoints,
-			std::array { color, color, color, color },
-			depth
-		);
-
-		Render(backgroundMesh, BlendMode::Opaque, PeekMatrix());
+		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
+		{
+			renderer->FillRectangle(GetViewport(), color, std::nullopt, Math::Matrix4x4::Identity, BlendMode::Opaque);
+		}
 	}
 
 	void MainGraphicsLayer::Rect(const float x1, const float y1, const float x2, const float y2)
@@ -208,34 +222,18 @@ namespace DGL
 			return;
 		}
 
+		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
 		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
-
-		const Math::Float2 topLeft = boundary.TopLeft();
-		const Math::Float2 topRight = boundary.TopRight();
-		const Math::Float2 bottomRight = boundary.BottomRight();
-		const Math::Float2 bottomLeft = boundary.BottomLeft();
-		const std::array rectPoints = MeshBuilder::GenerateQuadPoints(topLeft, topRight, bottomRight, bottomLeft);
+		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
 
 		if (style.IsFillEnabled)
 		{
-			const Mesh quadMesh = MeshBuilder::GenerateFilledQuadMesh(
-				rectPoints,
-				std::array { style.FillColor, style.FillColor, style.FillColor, style.FillColor },
-				GetCurrentDepth()
-			);
-
-			Render(quadMesh, style.BlendMode, PeekMatrix());
+			renderer->FillRectangle(boundary, style.FillColor, clipRect, PeekMatrix(), style.BlendMode);
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			const Mesh outlinedRectMesh = MeshBuilder::GenerateOutlinedMesh(
-				rectPoints,
-				std::array { style.StrokeColor, style.StrokeColor, style.StrokeColor, style.StrokeColor }, 
-				style.StrokeWeight, style.JoinStyle, 32, GetCurrentDepth()
-			);
-
-			Render(outlinedRectMesh, style.BlendMode, PeekMatrix());
+			renderer->DrawRectangle(boundary, style.StrokeColor, style.StrokeWeight, clipRect, PeekMatrix(), style.BlendMode);
 		}
 	}
 
@@ -249,56 +247,52 @@ namespace DGL
 			return;
 		}
 
+		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
+
 		const Math::FloatBoundary boundary = style.EllipseMode(x1, y1, x2, y2);
 		const Math::Radius radius = Math::Radius::Elliptical(boundary.Width / 2.0f, boundary.Height / 2.0f);
 		const Math::Float2 center = boundary.Center();
 		const size_t segmentCount = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
-		const std::vector<Math::Float2> ellipsePoints = MeshBuilder::GenerateEllipsePoints(center, radius, segmentCount);
+		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
 
 		if (style.IsFillEnabled)
 		{
-			const std::vector ellipseColors(segmentCount, style.FillColor);
-			const Mesh filledEllipseMesh = MeshBuilder::GenerateFilledEllipseMesh(center, ellipsePoints, ellipseColors, GetCurrentDepth());
-			Render(filledEllipseMesh, style.BlendMode, PeekMatrix());
+			renderer->FillEllipse(center, radius, style.FillColor, segmentCount, clipRect, PeekMatrix(), style.BlendMode);
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			const std::vector ellipseColors(segmentCount, style.StrokeColor);
-			const Mesh outlinedEllipseMesh = MeshBuilder::GenerateOutlinedMesh(ellipsePoints, ellipseColors, style.StrokeWeight, style.JoinStyle, 32, GetCurrentDepth());
-			Render(outlinedEllipseMesh, style.BlendMode, PeekMatrix());
+			renderer->DrawEllipse(center, radius, style.StrokeWeight, style.StrokeColor, segmentCount, clipRect, PeekMatrix(), style.BlendMode);
 		}
 	}
 
-	void MainGraphicsLayer::Point(float x, float y)
+	void MainGraphicsLayer::Point(const float x, const float y)
 	{
-		const RenderStyle& style = PeekStyle();
-		const size_t segments = style.EllipseSegmentsMode(Math::Radius::Circular(style.StrokeWeight), Math::Degrees(360.0f));
-		const std::vector ellipsePoints = MeshBuilder::GenerateEllipsePoints({ x, y }, Math::Radius::Circular(style.StrokeWeight / 2.0f), segments);
-		const std::vector ellipseColors(segments, style.StrokeColor);
+		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
+		{
+			const RenderStyle& style = PeekStyle();
+			const Math::Radius radius = Math::Radius::Circular(style.StrokeWeight / 2.0f);
+			const size_t segments = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
+			const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
 
-		const Mesh pointMesh = MeshBuilder::GenerateFilledEllipseMesh({ x, y }, ellipsePoints, ellipseColors, GetCurrentDepth());
-		Render(pointMesh, style.BlendMode, PeekMatrix());
+			renderer->FillEllipse(Math::Float2{ x, y }, radius, style.StrokeColor, segments, clipRect, PeekMatrix(), style.BlendMode);
+		}
 	}
 
 	void MainGraphicsLayer::Line(const float x1, const float y1, const float x2, const float y2)
 	{
-		const RenderStyle& style = PeekStyle();
-		const size_t segments = style.EllipseSegmentsMode(Math::Radius::Circular(style.StrokeWeight), Math::Degrees(180.0f));
+		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
+		{
+			const Math::Float2 start = { x1, y1 };
+			const Math::Float2 end = { x2, y2 };
 
-		const Math::Float2 start = { x1, y1 };
-		const Math::Float2 end = { x2, y2 };
+			const RenderStyle& style = PeekStyle();
+			const size_t segments = style.EllipseSegmentsMode(Math::Radius::Circular(style.StrokeWeight), Math::Degrees(180.0f));
+			const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+			const Math::Matrix4x4& modelMatrix = PeekMatrix();
 
-		const Mesh lineMesh = MeshBuilder::GenerateLineMesh(
-			std::array { start, end },
-			std::array { style.StrokeColor, style.StrokeColor },
-			style.StrokeCap,
-			style.StrokeWeight,
-			segments,
-			GetCurrentDepth()
-		);
-
-		Render(lineMesh, style.BlendMode, PeekMatrix());
+			renderer->FillLine(start, end, style.StrokeWeight, style.StrokeColor, style.StrokeCap, segments, clipRect, modelMatrix, style.BlendMode);
+		}
 	}
 
 	void MainGraphicsLayer::Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3)
@@ -311,44 +305,38 @@ namespace DGL
 			return;
 		}
 
-		const std::array trianglePoints = MeshBuilder::GenerateTrianglePoints({ x1, y1 }, { x2, y2 }, { x3, y3 });
+		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
+		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+		const Math::Matrix4x4& modelMatrix = PeekMatrix();
+
+		const Math::Float2 p1{ x1, y1 };
+		const Math::Float2 p2{ x2, y2 };
+		const Math::Float2 p3{ x3, y3 };
 
 		if (style.IsFillEnabled)
 		{
-			const Mesh filledTriangleMesh = MeshBuilder::GenerateFilledTriangleMesh(
-				trianglePoints,
-				std::array { style.FillColor, style.FillColor, style.FillColor },
-				GetCurrentDepth()
-			);
-
-			Render(filledTriangleMesh, style.BlendMode, PeekMatrix());
+			renderer->FillTriangle(p1, p2, p3, style.FillColor, clipRect, modelMatrix, style.BlendMode);
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			const Mesh outlinedTriangleMesh = MeshBuilder::GenerateOutlinedMesh(
-				trianglePoints,
-				std::array { style.StrokeColor, style.StrokeColor, style.StrokeColor },
-				style.StrokeWeight,
-				style.JoinStyle,
-				32,
-				GetCurrentDepth()
-			);
-
-			Render(outlinedTriangleMesh, style.BlendMode, PeekMatrix());
+			renderer->DrawTriangle(p1, p2, p3, style.StrokeWeight, style.StrokeColor, clipRect, modelMatrix, style.BlendMode);
 		}
 	}
 
-	void MainGraphicsLayer::Render(const Mesh& mesh, const BlendMode& blendMode, const Math::Matrix4x4& modelMatrix)
+	void MainGraphicsLayer::Text(const std::string_view text, float x, float y)
 	{
-		if (const auto renderer = m_MeshRenderer.lock())
+		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
 		{
-			renderer->Submit(mesh, blendMode, modelMatrix);
-		}
-	}
+			const RenderStyle& style = PeekStyle();
+			const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+			const Math::Matrix4x4& modelMatrix = PeekMatrix();
+			const Font* font = style.font;
 
-	float MainGraphicsLayer::GetCurrentDepth()
-	{
-		return m_DepthProvider.GetAndIncrement();
+			if (font != nullptr)
+			{
+				renderer->DrawText(text, *font, style.TextSize, { x, y }, style.FillColor, clipRect, modelMatrix, style.BlendMode);
+			}
+		}
 	}
 }

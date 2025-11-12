@@ -13,6 +13,7 @@ import :EllipseMode;
 import :EllipseSegmentsMode;
 import :MatrixStack;
 import :BlendMode;
+import :Font;
 
 export namespace DGL
 {
@@ -25,12 +26,19 @@ export namespace DGL
 		bool	IsStrokeEnabled = true;
 		float	StrokeWeight = 1.0f;
 
+		float TextSize		= 12.0f;
+		const Font* font	= nullptr;
+
 		StrokeJoin	JoinStyle = StrokeJoin::Miter;
 		StrokeCap	StrokeCap = StrokeCap::Round;
 
-		RectMode RectMode = RectModeLTWH();
-		EllipseMode EllipseMode = EllipseModeCenterRadius();
-		EllipseSegmentsMode EllipseSegmentsMode = EllipseSegmentsModeAdaptive();
+		Math::IntBoundary	ClipRect;
+		bool				IsClipRectEnabled = false;
+
+		RectMode			ClipRectMode		= RectModeLTWH();
+		RectMode			RectMode			= RectModeLTWH();
+		EllipseMode			EllipseMode			= EllipseModeCenterRadius();
+		EllipseSegmentsMode EllipseSegmentsMode	= EllipseSegmentsModeAdaptive();
 
 		BlendMode BlendMode = BlendMode::Alpha;
 		MatrixStack MatrixStack;

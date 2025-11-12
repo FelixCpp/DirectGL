@@ -42,8 +42,8 @@ namespace DGL
 		{
 			const auto [windowWidth, windowHeight] = static_cast<Math::Float2>(GetWindowSize());
 
-			Library.MeshRenderer = std::make_shared<MeshRenderer>();
-			Library.MainGraphicsLayer = std::make_unique<MainGraphicsLayer>(Library.MeshRenderer, Math::FloatBoundary::FromLTWH(0.0f, 0.0f, windowWidth, windowHeight));
+			Library.Renderer = std::make_shared<Renderer2D>();
+			Library.MainGraphicsLayer = std::make_unique<MainGraphicsLayer>(Library.Renderer, Math::FloatBoundary::FromLTWH(0.0f, 0.0f, windowWidth, windowHeight));
 
 			Library.Sketch = factory();
 			if (Library.Sketch == nullptr or not Library.Sketch->Setup())
@@ -249,6 +249,12 @@ namespace DGL
 	void SetStrokeCap(const StrokeCap strokeCap) { PeekLayer().SetStrokeCap(strokeCap); }
 
 	void SetBlendMode(const BlendMode& blendMode) { PeekLayer().SetBlendMode(blendMode); }
+	void SetClipRectMode(const RectMode& mode) { PeekLayer().SetClipRectMode(mode); }
+	void SetClipRect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().SetClipRect(x1, y1, x2, y2); }
+	void SetClipRectDisabled() { PeekLayer().SetClipRectDisabled(); }
+
+	void SetTextSize(const float textSize) { PeekLayer().SetTextSize(textSize); }
+	void SetTextFont(const Font* font) { PeekLayer().SetTextFont(font); }
 
 	void BeginShape(const ShapeMode mode) { PeekLayer().BeginShape(mode); }
 	void EndShape(const ShapeClosingMode mode) { PeekLayer().EndShape(mode); }
@@ -261,4 +267,5 @@ namespace DGL
 	void Point(const float x, const float y) { PeekLayer().Point(x, y); }
 	void Line(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Line(x1, y1, x2, y2); }
 	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { PeekLayer().Triangle(x1, y1, x2, y2, x3, y3); }
+	void Text(const std::string_view text, const float x, const float y) { PeekLayer().Text(text, x, y); }
 }

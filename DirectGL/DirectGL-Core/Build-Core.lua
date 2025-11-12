@@ -34,13 +34,15 @@ project("DirectGL-Core")
         "LogForge",
 
         -- Third-Party
+        "Freetype",
         "Glad",
         "Stb"
     })
 
     includedirs({
+        "%{wks.location}/Libraries/FreeType/include",
         "%{wks.location}/Libraries/Glad/include",
-        "%{wks.location}/Libraries/Stb/include"
+        "%{wks.location}/Libraries/Stb/include",
     })
 
     filter("files:**.ixx")

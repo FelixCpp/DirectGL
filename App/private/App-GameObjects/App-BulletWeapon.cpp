@@ -10,7 +10,7 @@ import :BulletWeapon;
 
 using namespace DGL;
 
-inline static constexpr float BULLET_SPEED = 1000.0f;
+inline static constexpr float BULLET_SPEED = 500.0f;
 
 enum class ShootMode
 {

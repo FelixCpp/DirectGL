@@ -6,13 +6,13 @@
 module;
 
 #include <memory>
+#include <string_view>
 
 export module DirectGL:MainGraphicsLayer;
 
 import :GraphicsLayer;
 import :RenderStyleStack;
-import :MeshRenderer;
-import :DepthProvider;
+import :Renderer2D;
 import :MainRenderTarget;
 
 namespace DGL
@@ -22,7 +22,7 @@ namespace DGL
 	public:
 
 		explicit MainGraphicsLayer(
-			const std::weak_ptr<MeshRenderer>& meshRenderer,
+			const std::weak_ptr<Renderer2D>& renderer,
 			const Math::FloatBoundary& viewport
 		);
 
@@ -59,6 +59,12 @@ namespace DGL
 		void SetStrokeCap(StrokeCap strokeCap) override;
 
 		void SetBlendMode(const BlendMode& blendMode) override;
+		void SetClipRectMode(const RectMode& mode) override;
+		void SetClipRect(float x1, float y1, float x2, float y2) override;
+		void SetClipRectDisabled() override;
+
+		void SetTextSize(float textSize) override;
+		void SetTextFont(const Font* font) override;
 
 		void BeginShape(ShapeMode mode) override;
 		void EndShape(ShapeClosingMode mode) override;
@@ -70,18 +76,13 @@ namespace DGL
 		void Point(float x, float y) override;
 		void Line(float x1, float y1, float x2, float y2) override;
 		void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
+		void Text(std::string_view text, float x, float y) override;
 
 	private:
 
-		void Render(const Mesh& mesh, const BlendMode& blendMode, const Math::Matrix4x4& modelMatrix);
-		float GetCurrentDepth();
-
 		RenderStyleStack m_RenderStyleStack;
-		std::weak_ptr<MeshRenderer> m_MeshRenderer;
-		DepthProvider m_DepthProvider;
+		std::weak_ptr<Renderer2D> m_Renderer;
 		MainRenderTarget m_RenderTarget;
-
-		Math::Matrix4x4 m_ProjectionMatrix;
 
 	};
 }

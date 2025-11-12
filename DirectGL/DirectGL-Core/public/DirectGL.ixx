@@ -123,6 +123,7 @@ export import :EllipseMode;
 export import :EllipseSegmentsMode;
 export import :GraphicsLayer;
 export import :BlendMode;
+export import :Font;
 
 export namespace DGL
 {
@@ -157,6 +158,12 @@ export namespace DGL
 	void SetStrokeJoin(StrokeJoin joinStyle);
 
 	void SetBlendMode(const BlendMode& blendMode);
+	void SetClipRectMode(const RectMode& mode);
+	void SetClipRect(float x1, float y1, float x2, float y2);
+	void SetClipRectDisabled();
+
+	void SetTextSize(float textSize);
+	void SetTextFont(const Font* font);
 
 	void BeginShape(ShapeMode mode);
 	void EndShape(ShapeClosingMode mode);
@@ -169,6 +176,7 @@ export namespace DGL
 	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
+	void Text(std::string_view text, float x, float y);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -189,9 +197,9 @@ import :WindowStartupTask;
 import :InputListener;
 
 import :AsyncLogger;
-import :MeshRenderer;
 import :RenderStyleStack;
 import :MainGraphicsLayer;
+import :Renderer2D;
 
 enum struct ExitType
 {
@@ -209,7 +217,7 @@ struct DirectGLLibrary
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
 	std::unique_ptr<DGL::MainGraphicsLayer>			MainGraphicsLayer;
-	std::shared_ptr<DGL::MeshRenderer>				MeshRenderer;
+	std::shared_ptr<DGL::Renderer2D>				Renderer;			//!< The 2D renderer to use
 
 	ExitType		ExitType = ExitType::Quit;			//!< The exit code to return on application shutdown
 	int				ExitCode = 0;						//!< The return code to return on application shutdown
