@@ -255,6 +255,7 @@ namespace DGL
 
 	void SetTextSize(const float textSize) { PeekLayer().SetTextSize(textSize); }
 	void SetTextFont(const Font* font) { PeekLayer().SetTextFont(font); }
+	void SetTextAlign(const TextAlignment alignment) { PeekLayer().SetTextAlign(alignment); }
 
 	void BeginShape(const ShapeMode mode) { PeekLayer().BeginShape(mode); }
 	void EndShape(const ShapeClosingMode mode) { PeekLayer().EndShape(mode); }
@@ -267,5 +268,5 @@ namespace DGL
 	void Point(const float x, const float y) { PeekLayer().Point(x, y); }
 	void Line(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Line(x1, y1, x2, y2); }
 	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { PeekLayer().Triangle(x1, y1, x2, y2, x3, y3); }
-	void Text(const std::string_view text, const float x, const float y) { PeekLayer().Text(text, x, y); }
+	Math::Float2 Text(const std::string_view text, const float x, const float y) { return PeekLayer().Text(text, x, y); }
 }

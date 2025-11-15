@@ -1,0 +1,3 @@
+[submodule "Libraries/Freetype"]
+	path = Libraries/Freetype
+	url = https://github.com/FelixCpp/freetype.git

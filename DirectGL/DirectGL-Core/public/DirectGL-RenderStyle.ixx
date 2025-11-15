@@ -14,6 +14,7 @@ import :EllipseSegmentsMode;
 import :MatrixStack;
 import :BlendMode;
 import :Font;
+import :TextAlignment;
 
 export namespace DGL
 {
@@ -26,8 +27,9 @@ export namespace DGL
 		bool	IsStrokeEnabled = true;
 		float	StrokeWeight = 1.0f;
 
-		float TextSize		= 12.0f;
-		const Font* font	= nullptr;
+		float TextSize			= 12.0f;
+		const Font* font		= nullptr;
+		TextAlignment TextAlign	= TextAlignment::TopLeft;
 
 		StrokeJoin	JoinStyle = StrokeJoin::Miter;
 		StrokeCap	StrokeCap = StrokeCap::Round;

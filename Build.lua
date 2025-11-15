@@ -18,7 +18,7 @@ workspace("DirectGL")
         include("Utilities/Premake/Build-Premake.lua")
 
     group("Libraries")
-        include("Libraries/Build-FreeType.lua")
+        include("Libraries/Freetype/Build-FreeType.lua")
         include("Libraries/Glad/Build-Glad.lua")
         include("Libraries/Stb/Build-Stb.lua")
 

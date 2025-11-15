@@ -25,7 +25,7 @@ void EnemySpawner::Update(const float deltaTime)
 {
 	// Spawn new enemies at regular intervals
 	TimeSinceLastSpawn += deltaTime;
-	if (TimeSinceLastSpawn >= SpawnInterval)
+	while (TimeSinceLastSpawn >= SpawnInterval)
 	{
 		SpawnEnemy();
 	}
@@ -88,5 +88,5 @@ void EnemySpawner::SpawnEnemy()
 		Enemies.push_back(std::make_unique<TankEnemy>(spawnPosition));
 	}
 
-	TimeSinceLastSpawn = 0.0f;
+	TimeSinceLastSpawn -= SpawnInterval;
 }

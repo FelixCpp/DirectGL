@@ -155,10 +155,10 @@ namespace DGL
 		style.StrokeCap = strokeCap;
 	}
 
-	void MainGraphicsLayer::SetBlendMode(const BlendMode& blendMode)
+	void MainGraphicsLayer::SetBlendMode(const BlendMode& mode)
 	{
 		RenderStyle& style = PeekStyle();
-		style.BlendMode = blendMode;
+		style.BlendMode = mode;
 	}
 
 	void MainGraphicsLayer::SetClipRectMode(const RectMode& mode)
@@ -180,16 +180,22 @@ namespace DGL
 		style.IsClipRectEnabled = false;
 	}
 
-	void MainGraphicsLayer::SetTextSize(const float textSize)
+	void MainGraphicsLayer::SetTextSize(const float size)
 	{
 		RenderStyle& style = PeekStyle();
-		style.TextSize = textSize;
+		style.TextSize = size;
 	}
 
 	void MainGraphicsLayer::SetTextFont(const Font* font)
 	{
 		RenderStyle& style = PeekStyle();
 		style.font = font;
+	}
+
+	void MainGraphicsLayer::SetTextAlign(const TextAlignment alignment)
+	{
+		RenderStyle& style = PeekStyle();
+		style.TextAlign = alignment;
 	}
 
 	void MainGraphicsLayer::BeginShape(const ShapeMode mode)
@@ -324,7 +330,7 @@ namespace DGL
 		}
 	}
 
-	void MainGraphicsLayer::Text(const std::string_view text, float x, float y)
+	Math::Float2 MainGraphicsLayer::Text(const std::string_view text, float x, float y)
 	{
 		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
 		{
@@ -335,8 +341,10 @@ namespace DGL
 
 			if (font != nullptr)
 			{
-				renderer->DrawText(text, *font, style.TextSize, { x, y }, style.FillColor, clipRect, modelMatrix, style.BlendMode);
+				return renderer->DrawText(text, *font, style.TextSize, { x, y }, style.TextAlign, style.FillColor, clipRect, modelMatrix, style.BlendMode);
 			}
 		}
+
+		return Math::Float2::Zero;
 	}
 }

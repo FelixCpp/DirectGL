@@ -124,6 +124,7 @@ export import :EllipseSegmentsMode;
 export import :GraphicsLayer;
 export import :BlendMode;
 export import :Font;
+export import :TextAlignment;
 
 export namespace DGL
 {
@@ -164,6 +165,7 @@ export namespace DGL
 
 	void SetTextSize(float textSize);
 	void SetTextFont(const Font* font);
+	void SetTextAlign(TextAlignment alignment);
 
 	void BeginShape(ShapeMode mode);
 	void EndShape(ShapeClosingMode mode);
@@ -176,7 +178,7 @@ export namespace DGL
 	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
-	void Text(std::string_view text, float x, float y);
+	Math::Float2 Text(std::string_view text, float x, float y);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////

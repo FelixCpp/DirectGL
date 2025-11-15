@@ -10,7 +10,7 @@ import :BulletWeapon;
 
 using namespace DGL;
 
-inline static constexpr float BULLET_SPEED = 500.0f;
+inline static constexpr float BULLET_SPEED = 750.0f;
 
 enum class ShootMode
 {
@@ -20,7 +20,7 @@ enum class ShootMode
 
 ShootMode GetShootMode()
 {
-	return ShootMode::Single;
+	return ShootMode::Multishot;
 }
 
 BulletWeapon::BulletWeapon(const PositionProvider& emissionPosition, const float shootInterval, const float shootRadius):
@@ -40,49 +40,52 @@ void BulletWeapon::Shoot(std::vector<std::unique_ptr<Enemy>>& enemies)
 		return; // Cannot shoot yet
 	}
 
-	const auto& position = EmissionPosition->GetPosition();
-	const std::vector<SortedEnemy> sortedEnemies = GetSortedEnemies(enemies);
-
-	const size_t targetCount = []
+	while (TimeElapsedSinceLastShot >= ShootInterval)
 	{
-		switch (GetShootMode())
+		const auto& position = EmissionPosition->GetPosition();
+		const std::vector<SortedEnemy> sortedEnemies = GetSortedEnemies(enemies);
+
+		const size_t targetCount = []
 		{
+			switch (GetShootMode())
+			{
 			case ShootMode::Single: return 1;
 			case ShootMode::Multishot: return 2;
 			default: return 1;
-		};
-	}();
+			};
+		}();
 
-	const auto targets = sortedEnemies | std::ranges::views::take(targetCount); //!< Get the first N targets to shoot at
+		const auto targets = sortedEnemies | std::ranges::views::take(targetCount); //!< Get the first N targets to shoot at
 
-	// Iterate over the list of sorted enemies and shoot at the first one in sight
-	for (const SortedEnemy& enemy : targets)
-	{
-		// Compute the distance from the weapon to the enemy's border pointing towards the weapon
-		const float distanceToEnemyBorder = enemy.Distance - enemy.Enemy->Size.Length() / 2.0f;
+		// Iterate over the list of sorted enemies and shoot at the first one in sight
+		for (const SortedEnemy& enemy : targets)
+		{
+			// Compute the distance from the weapon to the enemy's border pointing towards the weapon
+			const float distanceToEnemyBorder = enemy.Distance - enemy.Enemy->Size.Length() / 2.0f;
 
-		// Compute the bullet lifetime it will take to reach the enemy
-		// Note that we consider the enemy's velocity here to lead the shot correctly
-		const float bulletLifeTime = distanceToEnemyBorder / (BULLET_SPEED + enemy.Enemy->Velocity.Length());
+			// Compute the bullet lifetime it will take to reach the enemy
+			// Note that we consider the enemy's velocity here to lead the shot correctly
+			const float bulletLifeTime = distanceToEnemyBorder / (BULLET_SPEED + enemy.Enemy->Velocity.Length());
 
-		// Compute the direction & velocity of the bullet
-		const Math::Float2 direction = enemy.Difference / enemy.Distance;
-		const Math::Float2 bulletVelocity = direction * BULLET_SPEED;
+			// Compute the direction & velocity of the bullet
+			const Math::Float2 direction = enemy.Difference / enemy.Distance;
+			const Math::Float2 bulletVelocity = direction * BULLET_SPEED;
 
-		Bullets.push_back(Bullet { 
-			.Position = position,
-			.Velocity = bulletVelocity,
-			.LifeTime = bulletLifeTime,
-			.TimeAlive = 0.0f
-		});
+			Bullets.push_back(Bullet{
+				.Position = position,
+				.Velocity = bulletVelocity,
+				.LifeTime = bulletLifeTime,
+				.TimeAlive = 0.0f
+			});
 
-		enemy.Enemy->ApplyDamage(DelayedDamage {
-			.Amount = 1,
-			.Delay = bulletLifeTime
-		});
+			enemy.Enemy->ApplyDamage(DelayedDamage{
+				.Amount = 1,
+				.Delay = bulletLifeTime
+			});
+		}
+
+		TimeElapsedSinceLastShot -= ShootInterval;
 	}
-
-	TimeElapsedSinceLastShot = 0.0f;
 }
 
 void BulletWeapon::Update(const float deltaTime)

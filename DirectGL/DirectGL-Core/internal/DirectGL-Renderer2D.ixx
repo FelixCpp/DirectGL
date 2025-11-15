@@ -18,6 +18,7 @@ import DirectGL.Math;
 import :BlendMode;
 import :StrokeCap;
 import :Font;
+import :TextAlignment;
 
 namespace DGL
 {
@@ -92,9 +93,11 @@ namespace DGL
 
 		void FillLine(const Math::Float2& p1, const Math::Float2& p2, float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
-		void DrawText(std::string_view text, const Font& font, float fontSize, const Math::Float2& position, const Math::Float4& color, const ClipRect& clipRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		Math::Float2 DrawText(std::string_view text, const Font& font, float fontSize, const Math::Float2& position, TextAlignment textAlign, const Math::Float4& color, const ClipRect& clipRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 	private:
+
+		void Texture(const Math::FloatBoundary& boundary, uint32_t textureId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 		void AddDrawCommand(const DrawCommand2D& command);
 		void Flush();

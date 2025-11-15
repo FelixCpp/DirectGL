@@ -58,13 +58,14 @@ namespace DGL
 		void SetStrokeJoin(StrokeJoin joinStyle) override;
 		void SetStrokeCap(StrokeCap strokeCap) override;
 
-		void SetBlendMode(const BlendMode& blendMode) override;
+		void SetBlendMode(const BlendMode& mode) override;
 		void SetClipRectMode(const RectMode& mode) override;
 		void SetClipRect(float x1, float y1, float x2, float y2) override;
 		void SetClipRectDisabled() override;
 
-		void SetTextSize(float textSize) override;
+		void SetTextSize(float size) override;
 		void SetTextFont(const Font* font) override;
+		void SetTextAlign(TextAlignment alignment) override;
 
 		void BeginShape(ShapeMode mode) override;
 		void EndShape(ShapeClosingMode mode) override;
@@ -76,7 +77,7 @@ namespace DGL
 		void Point(float x, float y) override;
 		void Line(float x1, float y1, float x2, float y2) override;
 		void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
-		void Text(std::string_view text, float x, float y) override;
+		Math::Float2 Text(std::string_view text, float x, float y) override;
 
 	private:
 

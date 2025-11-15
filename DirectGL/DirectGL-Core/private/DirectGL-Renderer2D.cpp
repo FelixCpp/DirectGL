@@ -7,6 +7,7 @@
 #include <utility>
 #include <array>
 #include <string_view>
+#include <format>
 
 module DirectGL;
 
@@ -48,10 +49,12 @@ void main()
 {
 	if (u_IsText == 1) {
 		if (u_IsSdfText == 1) {
+			float edge			= 0.5;
 			float distance		= texture(u_Texture, v_TexCoord).r;
 			float smoothing		= fwidth(distance);
-			float alpha			= smoothstep(0.5 - smoothing, 0.5 + smoothing, distance);
+			float alpha			= smoothstep(edge - smoothing, edge + smoothing, distance);
 			o_FragColor			= vec4(v_Color.rgb, alpha) * v_Color;
+			//o_FragColor = vec4(distance, distance, distance, 1.0);
 		} else {
 			float sampled = texture(u_Texture, v_TexCoord).r;
 			o_FragColor = vec4(v_Color.rgb, v_Color.a * sampled);
@@ -534,126 +537,50 @@ namespace DGL
 		});
 	}
 
-	void Renderer2D::DrawText(const std::string_view text, const Font& font, const float fontSize, const Math::Float2& position, const Math::Float4& color, const ClipRect& clipRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	Math::Float2 Renderer2D::DrawText(const std::string_view text, const Font& font, const float fontSize, const Math::Float2& position, const TextAlignment textAlignment, const Math::Float4& color, const ClipRect& clipRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
 	{
-		//if (false) {
-		//	// Draw the entire texture for debugging purposes
-		//	const Math::Float3 positions[] = {
-		//		Math::Float3{ 100.0f, 100.0f, m_Depth },
-		//		Math::Float3{ 300.0f, 100.0f, m_Depth },
-		//		Math::Float3{ 300.0f, 300.0f, m_Depth },
-		//		Math::Float3{ 100.0f, 300.0f, m_Depth },
-		//	};
-		//
-		//	const Glyph* a = font.GetGlyph('j');
-		//
-		//	const Math::Float2 textureCoordinates[] = {
-		//		Math::Float2 { a->TextureCoordinates.TopLeft() },
-		//		Math::Float2 { a->TextureCoordinates.TopRight()},
-		//		Math::Float2 { a->TextureCoordinates.BottomRight()},
-		//		Math::Float2 { a->TextureCoordinates.BottomLeft() },
-		//	};
-		//
-		//	const std::vector vertices = {
-		//		Vertex2D{.Position = positions[0], .TexCoord = textureCoordinates[0], .Color = color },
-		//		Vertex2D{.Position = positions[1], .TexCoord = textureCoordinates[1], .Color = color },
-		//		Vertex2D{.Position = positions[2], .TexCoord = textureCoordinates[2], .Color = color },
-		//		Vertex2D{.Position = positions[3], .TexCoord = textureCoordinates[3], .Color = color },
-		//	};
-		//
-		//	const std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 };
-		//
-		//	AddDrawCommand(DrawCommand2D{
-		//		.Vertices = std::span(vertices),
-		//		.Indices = std::span(indices),
-		//		.ClippingRect = clipRect,
-		//		.BlendMode = blendMode,
-		//		.TextureId = font.GetTextureId(),
-		//		.IsText = true,
-		//	});
-		//
-		//	return;
-		//}
+		const float pixelScale = font.GetPixelScale(fontSize);
 
-		// Compute the font scale we need to apply for the glyphs to be rendered at the desired size
-		const float fontScale = font.GetPixelScale(fontSize);
-
-		// Define a position that we will update as we render each character
-		Math::Float2 pos = position;
+		Math::Float2 drawPosition = position;
 
 		std::vector<Vertex2D> vertices;
+		std::vector<uint32_t> indices;
 		for (const char character : text)
 		{
-			//if (character == '\n')
-			//{
-			//	pos.X = position.X;
-			//	pos.Y += font.GetLineHeight();
-			//	continue;
-			//}
-
 			const Glyph* glyph = font.GetGlyph(character);
-			//if (glyph == nullptr)
-			//{
-			//	glyph = font.GetGlyph(' ');
-			//	if (glyph == nullptr) continue;
-			//}
-			//
-			//if (character == ' ')
-			//{
-			//	pos.X += static_cast<float>(glyph->Advance.X) * fontScale;
-			//	continue;
-			//}
+			if (glyph == nullptr)
+			{
+				continue;
+			}
 
-			// Compute the position and size of the glyph quad
-			const float xpos	= pos.X + glyph->Bearing.Left * fontScale;
-			const float ypos	= pos.Y - glyph->Bearing.Top * fontScale;
-			const float width	= glyph->TextureSize.X * fontScale;
-			const float height	= glyph->TextureSize.Y * fontScale;
+			const auto[uvLeft, uvTop, uvWidth, uvHeight] = glyph->UVRect;
+			const float uvRight = uvLeft + uvWidth;
+			const float uvBottom = uvTop + uvHeight;
 
-			// Define the vertices for the glyph quad
-			const Math::Float3 positions[] = {
-				modelMatrix.TransformPoint(Math::Float3{ xpos,         ypos + height, m_Depth }),
-				modelMatrix.TransformPoint(Math::Float3{ xpos + width, ypos + height, m_Depth }),
-				modelMatrix.TransformPoint(Math::Float3{ xpos + width, ypos         , m_Depth }),
-				modelMatrix.TransformPoint(Math::Float3{ xpos,         ypos         , m_Depth }),
-			};
+			const float glyphLeft = drawPosition.X;
+			const float glyphTop = drawPosition.Y - glyph->Bearing.Y * pixelScale;
+			const float glyphWidth = glyph->Size.X * pixelScale;
+			const float glyphHeight = glyph->Size.Y * pixelScale;
+			const float glyphRight = glyphLeft + glyphWidth;
+			const float glyphBottom = glyphTop + glyphHeight;
 
-			// Define the texture coordinates for the glyph quad
-			const auto [uvLeft, uvTop, uvWidth, uvHeight] = glyph->TextureCoordinates;
-			const Math::Float2 textureCoordinates[] = {
-				Math::Float2{ uvLeft,           uvTop + uvHeight },
-				Math::Float2{ uvLeft + uvWidth, uvTop + uvHeight },
-				Math::Float2{ uvLeft + uvWidth, uvTop            },
-				Math::Float2{ uvLeft,           uvTop            },
-			};
+			vertices.append_range(std::initializer_list{
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphLeft, glyphTop, m_Depth }), .TexCoord = { uvLeft, uvTop }, .Color = color },
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphRight, glyphTop, m_Depth }), .TexCoord = { uvRight, uvTop }, .Color = color },
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphRight, glyphBottom, m_Depth }), .TexCoord = { uvRight, uvBottom }, .Color = color },
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphLeft, glyphBottom, m_Depth }), .TexCoord = { uvLeft, uvBottom }, .Color = color },
+			});
 
-			// Convert the glyph quad into vertices
-			Vertex2D glyphVertices[] = {
-				Vertex2D{ .Position = positions[0], .TexCoord = textureCoordinates[0], .Color = color },
-				Vertex2D{ .Position = positions[1], .TexCoord = textureCoordinates[1], .Color = color },
-				Vertex2D{ .Position = positions[2], .TexCoord = textureCoordinates[2], .Color = color },
-				Vertex2D{ .Position = positions[3], .TexCoord = textureCoordinates[3], .Color = color },
-			};
+			indices.append_range(std::initializer_list{
+				static_cast<uint32_t>(vertices.size() - 4),
+				static_cast<uint32_t>(vertices.size() - 3),
+				static_cast<uint32_t>(vertices.size() - 2),
+				static_cast<uint32_t>(vertices.size() - 2),
+				static_cast<uint32_t>(vertices.size() - 1),
+				static_cast<uint32_t>(vertices.size() - 4),
+			});
 
-			// Append the glyph vertices to the vertex list
-			vertices.insert_range(vertices.end(), glyphVertices);
-
-			pos.X += static_cast<float>(glyph->Advance.X) * fontScale;
-		}
-
-		// Generate indices in 0, 1, 2, 2, 3, 0 pattern for quads
-		const size_t quadCount = vertices.size() / 4;
-		std::vector<uint32_t> indices;
-		indices.reserve(quadCount * 6);
-		for (size_t i = 0; i < quadCount; ++i)
-		{
-			const uint32_t vertexOffset = static_cast<uint32_t>(i * 4);
-			indices.push_back(vertexOffset + 0);
-			indices.push_back(vertexOffset + 1);
-			indices.push_back(vertexOffset + 2);
-			indices.push_back(vertexOffset + 2);
-			indices.push_back(vertexOffset + 3);
-			indices.push_back(vertexOffset + 0);
+			drawPosition.X += glyph->Advance * pixelScale;
 		}
 
 		AddDrawCommand(DrawCommand2D {
@@ -663,9 +590,42 @@ namespace DGL
 			.BlendMode = blendMode,
 			.TextureId = font.GetTextureId(),
 			.IsText = true,
-			.IsSdfText = true,
+			.IsSdfText = false,
+		});
+
+		return {};
+	}
+
+	void Renderer2D::Texture(const Math::FloatBoundary& boundary, const uint32_t textureId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	{
+		const auto [left, top, width, height] = boundary;
+		const std::array corners = {
+			modelMatrix.TransformPoint(Math::Float2{ left,         top          }),
+			modelMatrix.TransformPoint(Math::Float2{ left + width, top          }),
+			modelMatrix.TransformPoint(Math::Float2{ left + width, top + height }),
+			modelMatrix.TransformPoint(Math::Float2{ left,         top + height }),
+		};
+
+		const Vertex2D vertices[] = {
+			Vertex2D{ .Position = Math::Float3{ corners[0], m_Depth },	.TexCoord = Math::Float2{ 0.0f, 0.0f },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[1], m_Depth },	.TexCoord = Math::Float2{ 1.0f, 0.0f },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[2], m_Depth },	.TexCoord = Math::Float2{ 1.0f, 1.0f },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[3], m_Depth },	.TexCoord = Math::Float2{ 0.0f, 1.0f },	.Color = color },
+		};
+
+		const uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
+
+		AddDrawCommand(DrawCommand2D {
+			.Vertices = std::span(vertices),
+			.Indices = std::span(indices),
+			.ClippingRect = clippingRect,
+			.BlendMode = blendMode,
+			.TextureId = textureId,
+			.IsText = false,
+			.IsSdfText = false,
 		});
 	}
+
 
 	void Renderer2D::AddDrawCommand(const DrawCommand2D& command)
 	{
