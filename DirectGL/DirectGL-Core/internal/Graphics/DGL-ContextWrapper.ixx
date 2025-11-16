@@ -28,12 +28,15 @@ namespace DGL
 		void Teardown() override;
 
 		void SetVerticalSyncEnabled(bool enabled) override;
+		bool IsVerticalSyncEnabled();
+
 		void SwapBuffers() override;
 
 	private:
 
 		WindowProvider m_WindowProvider;
 		std::unique_ptr<Context> m_Context;
+		bool m_IsVerticalSyncEnabled;
 
 	};
 }

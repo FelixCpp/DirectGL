@@ -11,7 +11,8 @@ export module DirectGL:GraphicsLayer;
 
 import :RenderStyle;
 import :ShapeMode;
-import :Font;
+import :Image2D;
+import :ImageSampler;
 
 namespace DGL
 {
@@ -55,8 +56,12 @@ namespace DGL
 		virtual void SetClipRectDisabled() = 0;
 
 		virtual void SetTextSize(float size) = 0;
-		virtual void SetTextFont(const Font* font) = 0;
+		//virtual void SetTextFont(const Font* font) = 0;
 		virtual void SetTextAlign(TextAlignment alignment) = 0;
+
+		virtual void SetImageTint(color_t tint) = 0;
+		virtual void SetImageMode(const RectMode& mode) = 0;
+		virtual void SetImageSampler(const ImageSampler* sampler) = 0;
 
 		virtual void BeginShape(ShapeMode mode) = 0;
 		virtual void EndShape(ShapeClosingMode mode) = 0;
@@ -64,10 +69,12 @@ namespace DGL
 
 		virtual void Background(color_t color) = 0;
 		virtual void Rect(float x1, float y1, float x2, float y2) = 0;
+		virtual void RoundedRect(float x1, float y1, float x2, float y2, const Math::BorderRadius& borderRadius) = 0;
 		virtual void Ellipse(float x1, float y1, float x2, float y2) = 0;
 		virtual void Point(float x, float y) = 0;
 		virtual void Line(float x1, float y1, float x2, float y2) = 0;
 		virtual void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) = 0;
-		virtual Math::Float2 Text(std::string_view text, float x, float y) = 0;
+		virtual void Text(std::string_view text, float x, float y) = 0;
+		virtual void Image(const Image2D& image, float x1, float y1, float x2, float y2, float sourceLeft, float sourceTop, float sourceWidth, float sourceHeight) = 0;
 	};
 }

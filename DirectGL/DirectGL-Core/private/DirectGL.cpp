@@ -53,11 +53,14 @@ namespace DGL
 			}
 
 			Library.Window->SetVisible(true);
+			Library.FrameRateLimiter.SetTargetFrameRate(160);
 
 			std::chrono::duration<float> deltaTime{ 0.0f };
 			auto lastFrameTime = std::chrono::high_resolution_clock::now();
 			while (not Library.CloseRequested)
 			{
+				Library.FrameRateLimiter.BeginFrame();
+
 				// Before we process events, we need to update the input listener
 				Library.InputListener.Update();
 
@@ -98,6 +101,7 @@ namespace DGL
 					Library.Sketch->Event(*event);
 				}
 
+
 				// Let the user render the next frame
 				if (not Library.IsPaused or Library.FrameCount == 0 or Library.UserRequestedRedraw)
 				{
@@ -120,6 +124,7 @@ namespace DGL
 
 				// Increment the number of frames processed
 				++Library.FrameCount;
+				Library.FrameRateLimiter.EndFrame();
 			}
 
 			Library.Sketch->Destroy();
@@ -214,6 +219,12 @@ namespace DGL
 	void Redraw() { Library.UserRequestedRedraw = true; }
 	void SetAutoCloseEnabled(const bool enabled) { Library.HandleCloseAutomatically = enabled; }
 	bool IsAutoCloseEnabled() { return Library.HandleCloseAutomatically; }
+	void SetVerticalSyncEnabled(const bool enabled) { Library.Context->SetVerticalSyncEnabled(enabled); }
+	bool IsVerticalSyncEnabled() { return Library.Context->IsVerticalSyncEnabled(); }
+	void SetTargetFrameRate(const uint32_t frameRate) { Library.FrameRateLimiter.SetTargetFrameRate(frameRate); }
+	void SetTargetFrameRateDisabled() { SetTargetFrameRate(0); }
+	uint32_t GetTargetFrameRate() { return Library.FrameRateLimiter.GetTargetFrameRate(); }
+	uint32_t GetCurrentFrameRate() { return Library.FrameRateLimiter.GetCurrentFrameRate(); }
 }
 
 namespace DGL
@@ -254,8 +265,15 @@ namespace DGL
 	void SetClipRectDisabled() { PeekLayer().SetClipRectDisabled(); }
 
 	void SetTextSize(const float textSize) { PeekLayer().SetTextSize(textSize); }
-	void SetTextFont(const Font* font) { PeekLayer().SetTextFont(font); }
+	//void SetTextFont(const Font* font) { PeekLayer().SetTextFont(font); }
 	void SetTextAlign(const TextAlignment alignment) { PeekLayer().SetTextAlign(alignment); }
+
+	void SetImageOpacity(const float opacity) { color_t& tint = PeekStyle().ImageTint; SetImageTint({ tint.X, tint.Y, tint.Z, opacity }); }
+	void SetImageAlpha(const uint8_t alpha) { SetImageOpacity(static_cast<float>(alpha) / 255.0f); }
+
+	void SetImageTint(const color_t tint) { PeekLayer().SetImageTint(tint); }
+	void SetImageMode(const RectMode& mode) { PeekLayer().SetImageMode(mode); }
+	void SetImageSampler(const ImageSampler* sampler) { PeekLayer().SetImageSampler(sampler); }
 
 	void BeginShape(const ShapeMode mode) { PeekLayer().BeginShape(mode); }
 	void EndShape(const ShapeClosingMode mode) { PeekLayer().EndShape(mode); }
@@ -263,10 +281,14 @@ namespace DGL
 
 	void Background(const color_t color) { PeekLayer().Background(color); }
 	void Rect(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Rect(x1, y1, x2, y2); }
+	void RoundedRect(const float x1, const float y1, const float x2, const float y2, const Math::BorderRadius& borderRadius) { PeekLayer().RoundedRect(x1, y1, x2, y2, borderRadius); }
 	void Ellipse(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Ellipse(x1, y1, x2, y2); }
 	void Circle(const float x1, const float y1, const float xy2) { Ellipse(x1, y1, xy2, xy2); }
 	void Point(const float x, const float y) { PeekLayer().Point(x, y); }
 	void Line(const float x1, const float y1, const float x2, const float y2) { PeekLayer().Line(x1, y1, x2, y2); }
 	void Triangle(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3) { PeekLayer().Triangle(x1, y1, x2, y2, x3, y3); }
-	Math::Float2 Text(const std::string_view text, const float x, const float y) { return PeekLayer().Text(text, x, y); }
+	void Text(const std::string_view text, const float x, const float y) { return PeekLayer().Text(text, x, y); }
+	void Image(const Image2D& image, const float x1, const float y1) { Image(image, x1, y1, static_cast<float>(image.GetSize().X), static_cast<float>(image.GetSize().Y)); }
+	void Image(const Image2D& image, const float x1, const float y1, const float x2, const float y2) { Image(image, x1, y1, x2, y2, 0.0f, 0.0f, static_cast<float>(image.GetSize().X), static_cast<float>(image.GetSize().Y)); }
+	void Image(const Image2D& image, const float x1, const float y1, const float x2, const float y2, const float sourceLeft, const float sourceTop, const float sourceWidth, const float sourceHeight) { PeekLayer().Image(image, x1, y1, x2, y2, sourceLeft, sourceTop, sourceWidth, sourceHeight); }
 }

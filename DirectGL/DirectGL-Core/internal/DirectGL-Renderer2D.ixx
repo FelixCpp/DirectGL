@@ -17,8 +17,8 @@ import DirectGL.Math;
 
 import :BlendMode;
 import :StrokeCap;
-import :Font;
 import :TextAlignment;
+import :Image2D;
 
 namespace DGL
 {
@@ -49,18 +49,16 @@ namespace DGL
 		ClipRect					ClippingRect;
 		BlendMode					BlendMode;
 		uint32_t					TextureId;
-		bool						IsText;
-		bool						IsSdfText;
+		uint32_t					TextureSamplerId;
 	};
 
 	struct DrawListItem
 	{
 		uint32_t		TextureId;
+		uint32_t		TextureSamplerId;
 		size_t			IndexCount;
 		ClipRect		ClippingRect;
 		BlendMode		BlendMode;
-		bool			IsText;
-		bool			IsSdfText;
 	};
 
 	struct OutlineDefinition
@@ -85,6 +83,9 @@ namespace DGL
 		void FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 		void DrawRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, float strokeWeight, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
+		void FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void DrawRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, float strokeWeight, const Math::Float4& color, size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+
 		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, float strokeWeight, const Math::Float4& color, size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
@@ -92,12 +93,9 @@ namespace DGL
 		void DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, float strokeWeight, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 		void FillLine(const Math::Float2& p1, const Math::Float2& p2, float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-
-		Math::Float2 DrawText(std::string_view text, const Font& font, float fontSize, const Math::Float2& position, TextAlignment textAlign, const Math::Float4& color, const ClipRect& clipRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, uint32_t samplerId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 	private:
-
-		void Texture(const Math::FloatBoundary& boundary, uint32_t textureId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 		void AddDrawCommand(const DrawCommand2D& command);
 		void Flush();
@@ -115,6 +113,7 @@ namespace DGL
 		uint32_t m_ShaderProgramId;
 
 		uint32_t m_WhiteTextureId;
+		uint32_t m_DefaultSamplerId;
 
 		size_t m_VertexBufferCapacity;
 		size_t m_ElementBufferCapacity;

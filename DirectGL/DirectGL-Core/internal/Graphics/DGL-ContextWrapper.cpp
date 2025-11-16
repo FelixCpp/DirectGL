@@ -7,7 +7,8 @@ module DirectGL;
 namespace DGL
 {
 	ContextWrapper::ContextWrapper(const WindowProvider& windowProvider) :
-		m_WindowProvider(windowProvider)
+		m_WindowProvider(windowProvider),
+		m_IsVerticalSyncEnabled(false)
 	{
 	}
 
@@ -47,6 +48,12 @@ namespace DGL
 	{
 		Debug(std::format("Setting vertical sync to {}", enabled));
 		m_Context->SetVerticalSyncEnabled(enabled);
+		m_IsVerticalSyncEnabled = enabled;
+	}
+
+	bool ContextWrapper::IsVerticalSyncEnabled()
+	{
+		return m_IsVerticalSyncEnabled;
 	}
 
 	void ContextWrapper::SwapBuffers()

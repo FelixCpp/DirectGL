@@ -28,6 +28,4 @@ private:
 	EnemySpawner m_Spawner;
 	BulletWeapon m_Weapon;
 
-	std::unique_ptr<DGL::Font> m_Font;
-
 };

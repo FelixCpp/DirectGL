@@ -49,6 +49,7 @@ export namespace DGL
 		static const BlendMode Multiply;
 		static const BlendMode Additive;
 		static const BlendMode Opaque;
+		static const BlendMode Invert;
 
 		Factor SourceColorFactor;
 		Factor DestinationColorFactor;
@@ -92,5 +93,10 @@ namespace DGL
 	inline constexpr BlendMode BlendMode::Opaque = BlendMode(
 		Factor::One, Factor::Zero, Equation::Add,
 		Factor::One, Factor::Zero, Equation::Add
+	);
+
+	inline constexpr BlendMode BlendMode::Invert = BlendMode(
+		Factor::OneMinusDstColor, Factor::Zero, Equation::Add,
+		Factor::OneMinusDstAlpha, Factor::Zero, Equation::Add
 	);
 }

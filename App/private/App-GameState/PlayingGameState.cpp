@@ -1,12 +1,4 @@
-﻿module;
-
-#include <memory>
-#include <vector>
-
-
-#include <format>
-
-module App;
+﻿module App;
 
 import DirectGL;
 
@@ -16,9 +8,9 @@ PlayingGameState::PlayingGameState() :
 	m_PositionProvider{ DGL::GetViewport().Center() },
 	m_Tower{ m_PositionProvider },
 	m_Spawner{ m_PositionProvider, 0.25f, 400.0f, },
-	m_Weapon{ m_PositionProvider, 0.2f, 400.0f, },
-	m_Font(DGL::Font::CreateFromFile("C:\\Windows\\Fonts\\arial.ttf", 120))
-{}
+	m_Weapon{ m_PositionProvider, 0.2f, 400.0f, }
+{
+}
 
 void PlayingGameState::Event(const DGL::WindowEvent& event)
 {
@@ -30,12 +22,9 @@ void PlayingGameState::Event(const DGL::WindowEvent& event)
 		[](const auto&) {}
 	);
 }
-float f;
 
 void PlayingGameState::Update(float deltaTime)
 {
-	f += deltaTime * 13.0f;
-
 	if (DGL::IsKeyDown(DGL::Input::KeyboardKey::Space))
 	{
 		deltaTime *= 10.0f;
@@ -50,19 +39,13 @@ void PlayingGameState::Update(float deltaTime)
 void PlayingGameState::Show() const
 {
 	DGL::Background({ 0.1f, 0.1f, 0.1f, 1.0f });
+	DGL::RoundedRect(100.0f, 100.0f, 300.0f, 300.0f, DGL::Math::BorderRadius::Only(DGL::Math::BorderRadiusOnly {
+		.TopLeft = DGL::Math::Radius::Elliptical(50.0f, 20.0f),
+		.TopRight = DGL::Math::Radius::Elliptical(10.0f, 20.0f),
+		.BottomRight = DGL::Math::Radius::Elliptical(20.0f, 20.0f),
+		.BottomLeft = DGL::Math::Radius::Elliptical(10.0f, 50.0f),
+	}));
 
-	const auto [mx, my] = (DGL::Math::Float2)DGL::GetMousePosition() * 0.0f + DGL::Math::Float2{ 200.0f, 200.0f };
-
-	// Render the number of enemies currently on screen
-	//DGL::SetTextSize(120.0f);
-	//DGL::SetTextFont(m_Font.get());
-	//DGL::SetTextAlign(DGL::TextAlignment::TopLeft);
-	//DGL::Text("Hello, World!", mx, my);
-	//
-	//DGL::SetStrokeWeight(4.0f);
-	//DGL::SetStrokeColor({ 1.0f, 0.0f, 0.0f, 1.0f });
-	//DGL::Point(mx, my);
-	
 	m_Tower.Show();
 	m_Weapon.Show();
 	m_Spawner.Show();

@@ -112,6 +112,15 @@ export namespace DGL
 
 	void SetAutoCloseEnabled(bool enabled);
 	bool IsAutoCloseEnabled();
+
+	void SetVerticalSyncEnabled(bool enabled);
+	bool IsVerticalSyncEnabled();
+
+	void SetTargetFrameRate(uint32_t frameRate);
+	void SetTargetFrameRateDisabled();
+	uint32_t GetTargetFrameRate();
+	uint32_t GetFrameRate();
+
 }
 
 export import :RenderStyle;
@@ -123,8 +132,12 @@ export import :EllipseMode;
 export import :EllipseSegmentsMode;
 export import :GraphicsLayer;
 export import :BlendMode;
-export import :Font;
 export import :TextAlignment;
+
+export import :Image2D;
+export import :ImageSampler;
+export import :ImageSamplerFilterMode;
+export import :ImageSamplerWrapMode;
 
 export namespace DGL
 {
@@ -164,8 +177,14 @@ export namespace DGL
 	void SetClipRectDisabled();
 
 	void SetTextSize(float textSize);
-	void SetTextFont(const Font* font);
+	//void SetTextFont(const Font* font);
 	void SetTextAlign(TextAlignment alignment);
+
+	void SetImageOpacity(float opacity);
+	void SetImageAlpha(uint8_t alpha);
+	void SetImageTint(color_t tint);
+	void SetImageMode(const RectMode& mode);
+	void SetImageSampler(const ImageSampler* sampler);
 
 	void BeginShape(ShapeMode mode);
 	void EndShape(ShapeClosingMode mode);
@@ -173,12 +192,16 @@ export namespace DGL
 
 	void Background(color_t color);
 	void Rect(float x1, float y1, float x2, float y2);
+	void RoundedRect(float x1, float y1, float x2, float y2, const Math::BorderRadius& borderRadius);
 	void Ellipse(float x1, float y1, float x2, float y2);
 	void Circle(float x1, float y1, float xy2);
 	void Point(float x, float y);
 	void Line(float x1, float y1, float x2, float y2);
 	void Triangle(float x1, float y1, float x2, float y2, float x3, float y3);
-	Math::Float2 Text(std::string_view text, float x, float y);
+	void Text(std::string_view text, float x, float y);
+	void Image(const Image2D& image, float x1, float y1);
+	void Image(const Image2D& image, float x1, float y1, float x2, float y2);
+	void Image(const Image2D& image, float x1, float y1, float x2, float y2, float sourceLeft, float sourceTop, float sourceWidth, float sourceHeight);
 }
 
 //////////////////////////////// - Non-API - //////////////////////////////
@@ -202,6 +225,7 @@ import :AsyncLogger;
 import :RenderStyleStack;
 import :MainGraphicsLayer;
 import :Renderer2D;
+import :FrameRateLimiter;
 
 enum struct ExitType
 {
@@ -218,6 +242,7 @@ struct DirectGLLibrary
 	std::shared_ptr<DGL::AsyncLogger>				Logger;				//!< The logging channel to use
 
 	DGL::InputListener								InputListener;		//!< The input listener to use
+	DGL::FrameRateLimiter							FrameRateLimiter;	//!< The frame rate limiter to use
 	std::unique_ptr<DGL::MainGraphicsLayer>			MainGraphicsLayer;
 	std::shared_ptr<DGL::Renderer2D>				Renderer;			//!< The 2D renderer to use
 

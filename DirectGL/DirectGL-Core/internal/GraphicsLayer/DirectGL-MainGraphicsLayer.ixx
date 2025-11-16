@@ -64,8 +64,12 @@ namespace DGL
 		void SetClipRectDisabled() override;
 
 		void SetTextSize(float size) override;
-		void SetTextFont(const Font* font) override;
+		//void SetTextFont(const Font* font) override;
 		void SetTextAlign(TextAlignment alignment) override;
+
+		void SetImageTint(color_t tint) override;
+		void SetImageMode(const RectMode& mode) override;
+		void SetImageSampler(const ImageSampler* sampler) override;
 
 		void BeginShape(ShapeMode mode) override;
 		void EndShape(ShapeClosingMode mode) override;
@@ -73,11 +77,13 @@ namespace DGL
 
 		void Background(color_t color) override;
 		void Rect(float x1, float y1, float x2, float y2) override;
+		void RoundedRect(float x1, float y1, float x2, float y2, const Math::BorderRadius& borderRadius) override;
 		void Ellipse(float x1, float y1, float x2, float y2) override;
 		void Point(float x, float y) override;
 		void Line(float x1, float y1, float x2, float y2) override;
 		void Triangle(float x1, float y1, float x2, float y2, float x3, float y3) override;
-		Math::Float2 Text(std::string_view text, float x, float y) override;
+		void Text(std::string_view text, float x, float y) override;
+		void Image(const Image2D& image, float x1, float y1, float x2, float y2, float sourceLeft, float sourceTop, float sourceWidth, float sourceHeight) override;
 
 	private:
 

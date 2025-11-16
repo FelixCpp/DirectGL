@@ -8,6 +8,7 @@
 #include <array>
 #include <string_view>
 #include <format>
+#include <algorithm>
 
 module DirectGL;
 
@@ -41,27 +42,11 @@ layout (location = 0) out vec4 o_FragColor;
 layout (location = 0) in vec4 v_Color;
 layout (location = 1) in vec2 v_TexCoord;
 
-uniform int u_IsText;
-uniform int u_IsSdfText;
-uniform sampler2D u_Texture;
+layout (binding = 0) uniform sampler2D u_Texture;
 
 void main()
 {
-	if (u_IsText == 1) {
-		if (u_IsSdfText == 1) {
-			float edge			= 0.5;
-			float distance		= texture(u_Texture, v_TexCoord).r;
-			float smoothing		= fwidth(distance);
-			float alpha			= smoothstep(edge - smoothing, edge + smoothing, distance);
-			o_FragColor			= vec4(v_Color.rgb, alpha) * v_Color;
-			//o_FragColor = vec4(distance, distance, distance, 1.0);
-		} else {
-			float sampled = texture(u_Texture, v_TexCoord).r;
-			o_FragColor = vec4(v_Color.rgb, v_Color.a * sampled);
-		}
-	} else {
-		o_FragColor = texture(u_Texture, v_TexCoord) * v_Color;
-	}
+	o_FragColor = texture(u_Texture, v_TexCoord) * v_Color;
 }
 )";
 
@@ -129,7 +114,7 @@ namespace DGL
 		glVertexArrayAttribFormat(m_VertexArrayId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(Vertex2D, Position));
 		glVertexArrayAttribBinding(m_VertexArrayId, 0, 0);
 
-		// 2D Texture Coordinates (U, V)
+		// 2D ImageSampler Coordinates (U, V)
 		glEnableVertexArrayAttrib(m_VertexArrayId, 1);
 		glVertexArrayAttribFormat(m_VertexArrayId, 1, 2, GL_FLOAT, GL_FALSE, offsetof(Vertex2D, TexCoord));
 		glVertexArrayAttribBinding(m_VertexArrayId, 1, 0);
@@ -164,6 +149,12 @@ namespace DGL
 		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+		glCreateSamplers(1, &m_DefaultSamplerId);
+		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	}
 
 	Renderer2D::~Renderer2D()
@@ -185,8 +176,10 @@ namespace DGL
 	{
 		m_Depth = 0.0f;
 
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	void Renderer2D::EndFrame()
@@ -220,8 +213,7 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
 
@@ -255,10 +247,139 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
+
+	void Renderer2D::FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, const size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	{
+		const auto generateEllipseCorner = [](const Math::Float2& center, const Math::Angle startAngle, const Math::Angle stopAngle, const Math::Radius& radius, uint32_t segments) -> std::vector<Math::Float2>
+		{
+			std::vector<Math::Float2> positions;
+			const Math::Angle angleRange = stopAngle - startAngle;
+
+			for (size_t i = 0; i <= segments; ++i)
+			{
+				const float angle = startAngle.AsRadians() + (static_cast<float>(i) / static_cast<float>(segments)) * angleRange.AsRadians();
+				const float x = center.X + std::cos(angle) * radius.X;
+				const float y = center.Y + std::sin(angle) * radius.Y;
+				positions.emplace_back(x, y);
+			}
+
+			return positions;
+		};
+
+		const Math::Float2 topLeftCenter = { boundary.Left + borderRadius.TopLeft.X, boundary.Top + borderRadius.TopLeft.Y };
+		const Math::Float2 topRightCenter = { boundary.Left + boundary.Width - borderRadius.TopRight.X, boundary.Top + borderRadius.TopRight.Y };
+		const Math::Float2 bottomRightCenter = { boundary.Left + boundary.Width - borderRadius.BottomRight.X, boundary.Top + boundary.Height - borderRadius.BottomRight.Y };
+		const Math::Float2 bottomLeftCenter = { boundary.Left + borderRadius.BottomLeft.X, boundary.Top + boundary.Height - borderRadius.BottomLeft.Y };
+
+		const std::vector<Math::Float2> topLeftPoints = generateEllipseCorner(topLeftCenter, Math::Degrees(180.0f), Math::Degrees(270.0f), borderRadius.TopLeft, cornerSegments);
+		const std::vector<Math::Float2> topRightPoints = generateEllipseCorner(topRightCenter, Math::Degrees(270.0f), Math::Degrees(360.0f), borderRadius.TopRight, cornerSegments);
+		const std::vector<Math::Float2> bottomRightPoints = generateEllipseCorner(bottomRightCenter, Math::Degrees(0.0f), Math::Degrees(90.0f), borderRadius.BottomRight, cornerSegments);
+		const std::vector<Math::Float2> bottomLeftPoints = generateEllipseCorner(bottomLeftCenter, Math::Degrees(90.0f), Math::Degrees(180.0f), borderRadius.BottomLeft, cornerSegments);
+
+		std::vector<Vertex2D> vertices;
+		std::vector<uint32_t> indices;
+
+		// Insert the center vertex
+		{
+			const Math::Float2 transformedCenter = modelMatrix.TransformPoint(boundary.Center());
+			vertices.push_back(Vertex2D{ .Position = Math::Float3{ transformedCenter.X, transformedCenter.Y, m_Depth }, .Color = color });
+		}
+
+		// Insert top left corner points and indices
+		for (size_t i = 0; i < topLeftPoints.size(); ++i)
+		{
+			const Math::Float2 transformedPoint = modelMatrix.TransformPoint(topLeftPoints[i]);
+			vertices.push_back(Vertex2D{ .Position = Math::Float3{ transformedPoint.X, transformedPoint.Y, m_Depth }, .Color = color });
+
+			if (i < topLeftPoints.size() - 1)
+			{
+				indices.emplace_back(0);
+				indices.emplace_back(i + 1);
+				indices.emplace_back(i + 2);
+			}
+		}
+
+		// Insert top right corner points and indices
+		const size_t topRightStartIndex = vertices.size();
+		for (size_t i = 0; i < topRightPoints.size(); ++i)
+		{
+			const Math::Float2 transformedPoint = modelMatrix.TransformPoint(topRightPoints[i]);
+			vertices.push_back(Vertex2D{ .Position = Math::Float3{ transformedPoint.X, transformedPoint.Y, m_Depth }, .Color = color });
+
+			if (i < topRightPoints.size() - 1)
+			{
+				indices.emplace_back(0);
+				indices.emplace_back(topRightStartIndex + i);
+				indices.emplace_back(topRightStartIndex + i + 1);
+			}
+		}
+
+		// Connect top left to top right
+		indices.emplace_back(0);
+		indices.emplace_back(topLeftPoints.size());
+		indices.emplace_back(topRightStartIndex);
+
+		// Insert bottom right corner points and indices
+		const size_t bottomRightStartIndex = vertices.size();
+		for (size_t i = 0; i < bottomRightPoints.size(); ++i)
+		{
+			const Math::Float2 transformedPoint = modelMatrix.TransformPoint(bottomRightPoints[i]);
+			vertices.push_back(Vertex2D{ .Position = Math::Float3{ transformedPoint.X, transformedPoint.Y, m_Depth }, .Color = color });
+			if (i < bottomRightPoints.size() - 1)
+			{
+				indices.emplace_back(0);
+				indices.emplace_back(bottomRightStartIndex + i);
+				indices.emplace_back(bottomRightStartIndex + i + 1);
+			}
+		}
+
+		// Connect top right to bottom right
+		indices.emplace_back(0);
+		indices.emplace_back(topRightStartIndex + topRightPoints.size() - 1);
+		indices.emplace_back(bottomRightStartIndex);
+
+		// Insert bottom left corner points and indices
+		const size_t bottomLeftStartIndex = vertices.size();
+		for (size_t i = 0; i < bottomLeftPoints.size(); ++i)
+		{
+			const Math::Float2 transformedPoint = modelMatrix.TransformPoint(bottomLeftPoints[i]);
+			vertices.push_back(Vertex2D{ .Position = Math::Float3{ transformedPoint.X, transformedPoint.Y, m_Depth }, .Color = color });
+			if (i < bottomLeftPoints.size() - 1)
+			{
+				indices.emplace_back(0);
+				indices.emplace_back(bottomLeftStartIndex + i);
+				indices.emplace_back(bottomLeftStartIndex + i + 1);
+			}
+		}
+
+		// Connect bottom right to bottom left
+		indices.emplace_back(0);
+		indices.emplace_back(bottomRightStartIndex + bottomRightPoints.size() - 1);
+		indices.emplace_back(bottomLeftStartIndex);
+
+		// Connect bottom left to top left
+		indices.emplace_back(0);
+		indices.emplace_back(bottomLeftStartIndex + bottomLeftPoints.size() - 1);
+		indices.emplace_back(1);
+
+		AddDrawCommand(DrawCommand2D {
+			.Vertices = std::span(vertices),
+			.Indices = std::span(indices),
+			.ClippingRect = clippingRect,
+			.BlendMode = blendMode,
+			.TextureId = m_WhiteTextureId,
+			.TextureSamplerId = m_DefaultSamplerId,
+		});
+	}
+
+	void Renderer2D::DrawRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, float strokeWeight, const Math::Float4& color, size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	{
+		
+	}
+
 
 	void Renderer2D::FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, const size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
 	{
@@ -296,8 +417,7 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
 
@@ -340,8 +460,7 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
 
@@ -365,8 +484,7 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
 
@@ -402,8 +520,7 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
 
@@ -532,71 +649,11 @@ namespace DGL
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
 			.TextureId = m_WhiteTextureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureSamplerId = m_DefaultSamplerId,
 		});
 	}
 
-	Math::Float2 Renderer2D::DrawText(const std::string_view text, const Font& font, const float fontSize, const Math::Float2& position, const TextAlignment textAlignment, const Math::Float4& color, const ClipRect& clipRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
-	{
-		const float pixelScale = font.GetPixelScale(fontSize);
-
-		Math::Float2 drawPosition = position;
-
-		std::vector<Vertex2D> vertices;
-		std::vector<uint32_t> indices;
-		for (const char character : text)
-		{
-			const Glyph* glyph = font.GetGlyph(character);
-			if (glyph == nullptr)
-			{
-				continue;
-			}
-
-			const auto[uvLeft, uvTop, uvWidth, uvHeight] = glyph->UVRect;
-			const float uvRight = uvLeft + uvWidth;
-			const float uvBottom = uvTop + uvHeight;
-
-			const float glyphLeft = drawPosition.X;
-			const float glyphTop = drawPosition.Y - glyph->Bearing.Y * pixelScale;
-			const float glyphWidth = glyph->Size.X * pixelScale;
-			const float glyphHeight = glyph->Size.Y * pixelScale;
-			const float glyphRight = glyphLeft + glyphWidth;
-			const float glyphBottom = glyphTop + glyphHeight;
-
-			vertices.append_range(std::initializer_list{
-				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphLeft, glyphTop, m_Depth }), .TexCoord = { uvLeft, uvTop }, .Color = color },
-				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphRight, glyphTop, m_Depth }), .TexCoord = { uvRight, uvTop }, .Color = color },
-				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphRight, glyphBottom, m_Depth }), .TexCoord = { uvRight, uvBottom }, .Color = color },
-				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphLeft, glyphBottom, m_Depth }), .TexCoord = { uvLeft, uvBottom }, .Color = color },
-			});
-
-			indices.append_range(std::initializer_list{
-				static_cast<uint32_t>(vertices.size() - 4),
-				static_cast<uint32_t>(vertices.size() - 3),
-				static_cast<uint32_t>(vertices.size() - 2),
-				static_cast<uint32_t>(vertices.size() - 2),
-				static_cast<uint32_t>(vertices.size() - 1),
-				static_cast<uint32_t>(vertices.size() - 4),
-			});
-
-			drawPosition.X += glyph->Advance * pixelScale;
-		}
-
-		AddDrawCommand(DrawCommand2D {
-			.Vertices = std::span(vertices),
-			.Indices = std::span(indices),
-			.ClippingRect = clipRect,
-			.BlendMode = blendMode,
-			.TextureId = font.GetTextureId(),
-			.IsText = true,
-			.IsSdfText = false,
-		});
-
-		return {};
-	}
-
-	void Renderer2D::Texture(const Math::FloatBoundary& boundary, const uint32_t textureId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, const uint32_t samplerId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
 	{
 		const auto [left, top, width, height] = boundary;
 		const std::array corners = {
@@ -606,11 +663,20 @@ namespace DGL
 			modelMatrix.TransformPoint(Math::Float2{ left,         top + height }),
 		};
 
+		const auto imageSize = static_cast<Math::Float2>(image.GetSize());
+
+		// Convert source rectangle to UV coordinates
+		const auto [srcLeft, srcTop, srcWidth, srcHeight] = sourceRectangle;
+		const float u0 = srcLeft / imageSize.X;
+		const float v0 = srcTop / imageSize.Y;
+		const float u1 = (srcLeft + srcWidth) / imageSize.X;
+		const float v1 = (srcTop + srcHeight) / imageSize.Y;
+
 		const Vertex2D vertices[] = {
-			Vertex2D{ .Position = Math::Float3{ corners[0], m_Depth },	.TexCoord = Math::Float2{ 0.0f, 0.0f },	.Color = color },
-			Vertex2D{ .Position = Math::Float3{ corners[1], m_Depth },	.TexCoord = Math::Float2{ 1.0f, 0.0f },	.Color = color },
-			Vertex2D{ .Position = Math::Float3{ corners[2], m_Depth },	.TexCoord = Math::Float2{ 1.0f, 1.0f },	.Color = color },
-			Vertex2D{ .Position = Math::Float3{ corners[3], m_Depth },	.TexCoord = Math::Float2{ 0.0f, 1.0f },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[0], m_Depth },	.TexCoord = Math::Float2{ u0, v0 },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[1], m_Depth },	.TexCoord = Math::Float2{ u1, v0 },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[2], m_Depth },	.TexCoord = Math::Float2{ u1, v1 },	.Color = color },
+			Vertex2D{ .Position = Math::Float3{ corners[3], m_Depth },	.TexCoord = Math::Float2{ u0, v1 },	.Color = color },
 		};
 
 		const uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
@@ -620,12 +686,10 @@ namespace DGL
 			.Indices = std::span(indices),
 			.ClippingRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = textureId,
-			.IsText = false,
-			.IsSdfText = false,
+			.TextureId = image.GetTextureId(),
+			.TextureSamplerId = samplerId,
 		});
 	}
-
 
 	void Renderer2D::AddDrawCommand(const DrawCommand2D& command)
 	{
@@ -652,11 +716,10 @@ namespace DGL
 
 		m_DrawList.push_back(DrawListItem {
 			.TextureId = command.TextureId,
+			.TextureSamplerId = command.TextureSamplerId,
 			.IndexCount = command.Indices.size(),
 			.ClippingRect = flippedClippingRect,
 			.BlendMode = command.BlendMode,
-			.IsText = command.IsText,
-			.IsSdfText = command.IsSdfText,
 		});
 
 		m_Depth += 1.0f / 20'000.0f;
@@ -707,8 +770,7 @@ namespace DGL
 			);
 
 			glBindTextureUnit(0, item.TextureId);
-			glProgramUniform1i(m_ShaderProgramId, glGetProgramResourceLocation(m_ShaderProgramId, GL_UNIFORM, "u_IsSdfText"), item.IsSdfText ? 1 : 0);
-			glProgramUniform1i(m_ShaderProgramId, glGetProgramResourceLocation(m_ShaderProgramId, GL_UNIFORM, "u_IsText"), item.IsText ? 1 : 0);
+			glBindSampler(0, item.TextureSamplerId);
 
 			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(item.IndexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(drawOffset * sizeof(uint32_t)));
 			if (scissoringRequired) glDisable(GL_SCISSOR_TEST);

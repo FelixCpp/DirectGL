@@ -13,8 +13,8 @@ import :EllipseMode;
 import :EllipseSegmentsMode;
 import :MatrixStack;
 import :BlendMode;
-import :Font;
 import :TextAlignment;
+import :ImageSampler;
 
 export namespace DGL
 {
@@ -27,8 +27,11 @@ export namespace DGL
 		bool	IsStrokeEnabled = true;
 		float	StrokeWeight = 1.0f;
 
+		color_t				ImageTint		= { 1.0f, 1.0f, 1.0f, 1.0f };
+		const ImageSampler* ImageSampler	= nullptr;
+		RectMode			ImageMode		= RectModeLTWH();
+
 		float TextSize			= 12.0f;
-		const Font* font		= nullptr;
 		TextAlignment TextAlign	= TextAlignment::TopLeft;
 
 		StrokeJoin	JoinStyle = StrokeJoin::Miter;

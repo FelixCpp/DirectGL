@@ -186,16 +186,34 @@ namespace DGL
 		style.TextSize = size;
 	}
 
-	void MainGraphicsLayer::SetTextFont(const Font* font)
-	{
-		RenderStyle& style = PeekStyle();
-		style.font = font;
-	}
+	//void MainGraphicsLayer::SetTextFont(const Font* font)
+	//{
+	//	RenderStyle& style = PeekStyle();
+	//	style.font = font;
+	//}
 
 	void MainGraphicsLayer::SetTextAlign(const TextAlignment alignment)
 	{
 		RenderStyle& style = PeekStyle();
 		style.TextAlign = alignment;
+	}
+
+	void MainGraphicsLayer::SetImageTint(const color_t tint)
+	{
+		RenderStyle& style = PeekStyle();
+		style.ImageTint = tint;
+	}
+
+	void MainGraphicsLayer::SetImageMode(const RectMode& mode)
+	{
+		RenderStyle& style = PeekStyle();
+		style.ImageMode = mode;
+	}
+
+	void MainGraphicsLayer::SetImageSampler(const ImageSampler* sampler)
+	{
+		RenderStyle& style = PeekStyle();
+		style.ImageSampler = sampler;
 	}
 
 	void MainGraphicsLayer::BeginShape(const ShapeMode mode)
@@ -214,7 +232,7 @@ namespace DGL
 	{
 		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
 		{
-			renderer->FillRectangle(GetViewport(), color, std::nullopt, Math::Matrix4x4::Identity, BlendMode::Opaque);
+			renderer->FillRectangle(GetViewport(), color, std::nullopt, Math::Matrix4x4::Identity, BlendMode::Alpha);
 		}
 	}
 
@@ -240,6 +258,32 @@ namespace DGL
 		if (style.IsStrokeEnabled)
 		{
 			renderer->DrawRectangle(boundary, style.StrokeColor, style.StrokeWeight, clipRect, PeekMatrix(), style.BlendMode);
+		}
+	}
+
+	void MainGraphicsLayer::RoundedRect(float x1, float y1, float x2, float y2, const Math::BorderRadius& borderRadius)
+	{
+		const RenderStyle& style = PeekStyle();
+
+		if (not style.IsFillEnabled and not style.IsStrokeEnabled)
+		{
+			return;
+		}
+
+		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
+		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
+		const size_t segmentCount = 32; // Fixed segment count for rounded corners
+		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+		const Math::Matrix4x4& modelMatrix = PeekMatrix();
+
+		if (style.IsFillEnabled)
+		{
+			renderer->FillRoundedRectangle(boundary, borderRadius, style.FillColor, segmentCount, clipRect, modelMatrix, style.BlendMode);
+		}
+
+		if (style.IsStrokeEnabled)
+		{
+			renderer->DrawRoundedRectangle(boundary, borderRadius, style.StrokeWeight, style.StrokeColor, segmentCount, clipRect, modelMatrix, style.BlendMode);
 		}
 	}
 
@@ -330,21 +374,20 @@ namespace DGL
 		}
 	}
 
-	Math::Float2 MainGraphicsLayer::Text(const std::string_view text, float x, float y)
+	void MainGraphicsLayer::Text(const std::string_view text, float x, float y)
 	{
-		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
-		{
-			const RenderStyle& style = PeekStyle();
-			const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
-			const Math::Matrix4x4& modelMatrix = PeekMatrix();
-			const Font* font = style.font;
+	}
 
-			if (font != nullptr)
-			{
-				return renderer->DrawText(text, *font, style.TextSize, { x, y }, style.TextAlign, style.FillColor, clipRect, modelMatrix, style.BlendMode);
-			}
-		}
+	void MainGraphicsLayer::Image(const Image2D& image, const float x1, const float y1, const float x2, const float y2, const float sourceLeft, const float sourceTop, const float sourceWidth, const float sourceHeight)
+	{
+		const RenderStyle& style = PeekStyle();
+		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
+		const Math::FloatBoundary sourceBoundary = Math::FloatBoundary::FromLTWH(sourceLeft, sourceTop, sourceWidth, sourceHeight);
+		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+		const Math::Matrix4x4& modelMatrix = PeekMatrix();
+		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
+		const uint32_t samplerId = style.ImageSampler ? style.ImageSampler->GetSamplerId() : 0;
 
-		return Math::Float2::Zero;
+		renderer->Image(boundary, sourceBoundary, image, samplerId, style.ImageTint, clipRect, modelMatrix, style.BlendMode);
 	}
 }
