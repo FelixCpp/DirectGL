@@ -131,7 +131,7 @@ namespace DGL
 		return std::unique_ptr<Image2D>(new Image2D(textureId, Math::Uint2{ width, height }, m_Format));
 	}
 
-	Math::Uint2 Image2D::GetSize() const
+	const Math::Uint2& Image2D::GetSize() const
 	{
 		return m_Size;
 	}

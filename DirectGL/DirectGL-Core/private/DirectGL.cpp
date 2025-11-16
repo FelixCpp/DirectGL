@@ -265,7 +265,7 @@ namespace DGL
 	void SetClipRectDisabled() { PeekLayer().SetClipRectDisabled(); }
 
 	void SetTextSize(const float textSize) { PeekLayer().SetTextSize(textSize); }
-	//void SetTextFont(const Font* font) { PeekLayer().SetTextFont(font); }
+	void SetTextFont(Font* font) { PeekLayer().SetTextFont(font); }
 	void SetTextAlign(const TextAlignment alignment) { PeekLayer().SetTextAlign(alignment); }
 
 	void SetImageOpacity(const float opacity) { color_t& tint = PeekStyle().ImageTint; SetImageTint({ tint.X, tint.Y, tint.Z, opacity }); }

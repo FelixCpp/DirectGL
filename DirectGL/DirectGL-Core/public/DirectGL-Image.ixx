@@ -38,7 +38,7 @@ export namespace DGL
 		std::unique_ptr<Image2D> Clone() const;
 		std::unique_ptr<Image2D> CreateView(uint32_t left, uint32_t top, uint32_t width, uint32_t height) const;
 
-		Math::Uint2 GetSize() const;
+		const Math::Uint2& GetSize() const;
 		ImageFormat GetFormat() const;
 		uint32_t GetTextureId() const;
 

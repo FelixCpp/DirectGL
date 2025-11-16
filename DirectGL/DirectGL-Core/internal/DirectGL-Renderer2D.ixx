@@ -19,6 +19,7 @@ import :BlendMode;
 import :StrokeCap;
 import :TextAlignment;
 import :Image2D;
+import :Font;
 
 namespace DGL
 {
@@ -93,6 +94,7 @@ namespace DGL
 		void DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, float strokeWeight, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 		void FillLine(const Math::Float2& p1, const Math::Float2& p2, float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void Text(std::string_view text, Font& font, const Math::Float2& position, float fontSize, const Math::Float4& color, TextAlignment alignment, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 		void Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, uint32_t samplerId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
 
 	private:

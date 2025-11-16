@@ -132,6 +132,9 @@ export import :EllipseMode;
 export import :EllipseSegmentsMode;
 export import :GraphicsLayer;
 export import :BlendMode;
+
+export import :Font;
+export import :Glyph;
 export import :TextAlignment;
 
 export import :Image2D;
@@ -177,7 +180,7 @@ export namespace DGL
 	void SetClipRectDisabled();
 
 	void SetTextSize(float textSize);
-	//void SetTextFont(const Font* font);
+	void SetTextFont(Font* font);
 	void SetTextAlign(TextAlignment alignment);
 
 	void SetImageOpacity(float opacity);

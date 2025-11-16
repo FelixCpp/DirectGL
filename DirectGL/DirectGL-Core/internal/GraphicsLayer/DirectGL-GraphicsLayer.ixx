@@ -11,6 +11,9 @@ export module DirectGL:GraphicsLayer;
 
 import :RenderStyle;
 import :ShapeMode;
+
+import :Font;
+
 import :Image2D;
 import :ImageSampler;
 
@@ -56,7 +59,7 @@ namespace DGL
 		virtual void SetClipRectDisabled() = 0;
 
 		virtual void SetTextSize(float size) = 0;
-		//virtual void SetTextFont(const Font* font) = 0;
+		virtual void SetTextFont(Font* font) = 0;
 		virtual void SetTextAlign(TextAlignment alignment) = 0;
 
 		virtual void SetImageTint(color_t tint) = 0;

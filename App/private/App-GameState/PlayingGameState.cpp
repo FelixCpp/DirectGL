@@ -4,12 +4,19 @@ import DirectGL;
 
 import :PlayingGameState;
 
+std::unique_ptr<DGL::Font> font;
+std::unique_ptr<DGL::Image2D> image;
+std::unique_ptr<DGL::ImageSampler> sampler;
+
 PlayingGameState::PlayingGameState() :
 	m_PositionProvider{ DGL::GetViewport().Center() },
 	m_Tower{ m_PositionProvider },
 	m_Spawner{ m_PositionProvider, 0.25f, 400.0f, },
 	m_Weapon{ m_PositionProvider, 0.2f, 400.0f, }
 {
+	font = DGL::Font::CreateFromFile("C:\\Windows\\Fonts\\ARIAL.ttf", 42);
+	image = DGL::Image2D::CreateFromFile("Squares.png");
+	sampler = DGL::ImageSampler::Create(DGL::ImageSamplerFilterMode::Nearest);
 }
 
 void PlayingGameState::Event(const DGL::WindowEvent& event)
@@ -39,12 +46,18 @@ void PlayingGameState::Update(float deltaTime)
 void PlayingGameState::Show() const
 {
 	DGL::Background({ 0.1f, 0.1f, 0.1f, 1.0f });
-	DGL::RoundedRect(100.0f, 100.0f, 300.0f, 300.0f, DGL::Math::BorderRadius::Only(DGL::Math::BorderRadiusOnly {
-		.TopLeft = DGL::Math::Radius::Elliptical(50.0f, 20.0f),
-		.TopRight = DGL::Math::Radius::Elliptical(10.0f, 20.0f),
-		.BottomRight = DGL::Math::Radius::Elliptical(20.0f, 20.0f),
-		.BottomLeft = DGL::Math::Radius::Elliptical(10.0f, 50.0f),
-	}));
+	DGL::SetTextFont(font.get());
+	DGL::Text("abcdefghijklmnopqrstuvwxyzABCDEFHIJKLMNOPQRSTUVWXYZ", 100.0f, 100.0f);
+
+	uint8_t data[4 * 3 * 3] = {
+		255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255,
+		255, 0, 255, 255, 0, 255, 255, 255, 255, 0, 255, 255,
+		255, 0, 255, 255, 255, 0, 255, 255, 255, 0, 255, 255,
+	};
+	image->Update(8, 1, 3, 3, data);
+
+	DGL::SetImageSampler(sampler.get());
+	//DGL::Image(*image, 200.0f, 200.0f, 400.0f, 400.0f);
 
 	m_Tower.Show();
 	m_Weapon.Show();

@@ -186,11 +186,11 @@ namespace DGL
 		style.TextSize = size;
 	}
 
-	//void MainGraphicsLayer::SetTextFont(const Font* font)
-	//{
-	//	RenderStyle& style = PeekStyle();
-	//	style.font = font;
-	//}
+	void MainGraphicsLayer::SetTextFont(Font* font)
+	{
+		RenderStyle& style = PeekStyle();
+		style.Font = font;
+	}
 
 	void MainGraphicsLayer::SetTextAlign(const TextAlignment alignment)
 	{
@@ -376,6 +376,12 @@ namespace DGL
 
 	void MainGraphicsLayer::Text(const std::string_view text, float x, float y)
 	{
+		const RenderStyle& style = PeekStyle();
+		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+		const Math::Matrix4x4& modelMatrix = PeekMatrix();
+		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
+
+		renderer->Text(text, *style.Font, Math::Float2{ x, y }, style.TextSize, style.FillColor, style.TextAlign, clipRect, modelMatrix, style.BlendMode);
 	}
 
 	void MainGraphicsLayer::Image(const Image2D& image, const float x1, const float y1, const float x2, const float y2, const float sourceLeft, const float sourceTop, const float sourceWidth, const float sourceHeight)

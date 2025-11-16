@@ -13,7 +13,10 @@ import :EllipseMode;
 import :EllipseSegmentsMode;
 import :MatrixStack;
 import :BlendMode;
+
+import :Font;
 import :TextAlignment;
+
 import :ImageSampler;
 
 export namespace DGL
@@ -31,6 +34,7 @@ export namespace DGL
 		const ImageSampler* ImageSampler	= nullptr;
 		RectMode			ImageMode		= RectModeLTWH();
 
+		Font* Font				= nullptr;
 		float TextSize			= 12.0f;
 		TextAlignment TextAlign	= TextAlignment::TopLeft;
 

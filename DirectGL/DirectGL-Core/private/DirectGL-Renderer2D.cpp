@@ -653,6 +653,29 @@ namespace DGL
 		});
 	}
 
+	void Renderer2D::Text(const std::string_view text, Font& font, const Math::Float2& position, float fontSize, const Math::Float4& color, TextAlignment alignment, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	{
+		for (const char32_t character : text)
+		{
+			const Glyph* glyph = font.GetGlyph(character);
+			if (glyph == nullptr)
+			{
+				continue;
+			}
+		}
+
+		const Font::Page& page = font.GetPage(0);
+		const Image2D& image = *page.TextureAtlas;
+
+		Image(
+			Math::FloatBoundary::FromLTWH(100.0f, 100.0f, 512.0f, 512.0f),
+			Math::FloatBoundary::FromLTWH(0.0f, 0.0f, 512.0f, 512.0f),
+			image,
+			m_DefaultSamplerId,
+			color, clippingRect, modelMatrix, blendMode
+		);
+	}
+
 	void Renderer2D::Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, const uint32_t samplerId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
 	{
 		const auto [left, top, width, height] = boundary;
@@ -679,7 +702,7 @@ namespace DGL
 			Vertex2D{ .Position = Math::Float3{ corners[3], m_Depth },	.TexCoord = Math::Float2{ u0, v1 },	.Color = color },
 		};
 
-		const uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
+		constexpr uint32_t indices[] = { 0, 1, 2, 2, 3, 0 };
 
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),

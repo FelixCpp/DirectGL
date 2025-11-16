@@ -64,7 +64,7 @@ namespace DGL
 		void SetClipRectDisabled() override;
 
 		void SetTextSize(float size) override;
-		//void SetTextFont(const Font* font) override;
+		void SetTextFont(Font* font) override;
 		void SetTextAlign(TextAlignment alignment) override;
 
 		void SetImageTint(color_t tint) override;
