@@ -243,25 +243,48 @@ namespace DGL
 
 	private:
 
+		struct GenericRenderingProperties
+		{
+			uint32_t				VertexArrayId;
+			uint32_t				VertexBufferId;
+			uint32_t				ElementBufferId;
+			size_t					VertexBufferCapacity;
+			size_t					ElementBufferCapacity;
+			std::unique_ptr<Shader>	Shader;
+		};
+
+		struct SDFCircleRenderingProperties
+		{
+			uint32_t				VertexArrayId;
+			uint32_t				VertexBufferId;
+			uint32_t				ElementBufferId;
+			size_t					VertexBufferCapacity;
+			size_t					ElementBufferCapacity;
+			std::unique_ptr<Shader>	Shader;
+		};
+
+		struct SDFRoundedRectRenderingProperties
+		{
+			uint32_t				VertexArrayId;
+			uint32_t				VertexBufferId;
+			uint32_t				ElementBufferId;
+			size_t					VertexBufferCapacity;
+			size_t					ElementBufferCapacity;
+			std::unique_ptr<Shader>	Shader;
+		};
+
+	private:
+
+		static GenericRenderingProperties CreateGenericRenderingProperties();
+		static SDFCircleRenderingProperties CreateSDFCircleRenderingProperties();
+		static SDFRoundedRectRenderingProperties CreateSDFRoundedRectRenderingProperties();
+
+	private:
+
 		explicit HybridRenderer(
-			uint32_t genericVertexArrayId,
-			uint32_t genericVertexBufferId,
-			uint32_t genericElementBufferId,
-			size_t genericVertexBufferCapacity,
-			size_t genericElementBufferCapacity,
-			std::unique_ptr<Shader> genericShader,
-			uint32_t sdfCircleVertexArrayId,
-			uint32_t sdfCircleVertexBufferId,
-			uint32_t sdfCircleElementBufferId,
-			size_t sdfCircleVertexBufferCapacity,
-			size_t sdfCircleElementBufferCapacity,
-			std::unique_ptr<Shader> sdfCircleShader,
-			uint32_t sdfRoundedRectVertexArrayId,
-			uint32_t sdfRoundedRectVertexBufferId,
-			uint32_t sdfRoundedRectElementBufferId,
-			size_t sdfRoundedRectVertexBufferCapacity,
-			size_t sdfRoundedRectElementBufferCapacity,
-			std::unique_ptr<Shader> sdfRoundedRectShader
+			GenericRenderingProperties&& genericProperties,
+			SDFCircleRenderingProperties&& sdfCircleProperties,
+			SDFRoundedRectRenderingProperties&& sdfRoundedRectProperties
 		);
 
 		void Flush();
@@ -292,30 +315,14 @@ namespace DGL
 		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererSDFCircleVertex>>		m_SDFCircleBatches;
 		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererSDFRoundedRectVertex>>	m_SDFRoundedRectBatches;
 
-		uint32_t				m_GenericVertexArrayId = 0;
-		uint32_t				m_GenericVertexBufferId = 0;
-		uint32_t				m_GenericElementBufferId = 0;
-		size_t					m_GenericVertexBufferCapacity = 0;
-		size_t					m_GenericElementBufferCapacity = 0;
-		std::unique_ptr<Shader>	m_GenericShader;
-
-		uint32_t				m_SDFCircleVertexArrayId = 0;
-		uint32_t				m_SDFCircleVertexBufferId = 0;
-		uint32_t				m_SDFCircleElementBufferId = 0;
-		size_t					m_SDFCircleVertexBufferCapacity = 0;
-		size_t					m_SDFCircleElementBufferCapacity = 0;
-		std::unique_ptr<Shader>	m_SDFCircleShader;
-
-		uint32_t 					m_SDFRoundedRectVertexArrayId = 0;
-		uint32_t 					m_SDFRoundedRectVertexBufferId = 0;
-		uint32_t 					m_SDFRoundedRectElementBufferId = 0;
-		size_t 						m_SDFRoundedRectVertexBufferCapacity = 0;
-		size_t 						m_SDFRoundedRectElementBufferCapacity = 0;
-		std::unique_ptr<Shader> 	m_SDFRoundedRectShader;
+		GenericRenderingProperties			m_GenericProperties;
+		SDFCircleRenderingProperties		m_SDFCircleProperties;
+		SDFRoundedRectRenderingProperties	m_SDFRoundedRectProperties;
 
 		DepthProvider m_DepthProvider;
 
-		Math::Matrix4x4 m_ProjectionMatrix;
+		Math::Matrix4x4		m_ProjectionMatrix;
+		Math::FloatBoundary	m_Viewport;
 
 	};
 }

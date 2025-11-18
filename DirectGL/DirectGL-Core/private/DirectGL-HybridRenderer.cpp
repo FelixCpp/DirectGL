@@ -164,41 +164,16 @@ namespace
 		layout (location = 3) in float v_StrokeWeight;
 		layout (location = 4) in vec2 v_RectSize;
 		layout (location = 5) in float v_BorderRadius;
-		
-		float sdfRoundedBox( in vec2 p, in vec2 b, in float r ) {
-			vec2 q = abs(p)-b+r;
-			return min(max(q.x,q.y),0.0) + length(max(q,0.0)) - r;
+
+		uniform vec2 u_ViewportSize;
+
+		float roundedBoxSDF(in vec2 CenterPosition, in vec2 Size, in float Radius) {
+		    return length(max(abs(CenterPosition) - Size + Radius, 0.0)) - Radius;
 		}
-		
+
 		void main()
 		{
-			vec2 halfSize = v_RectSize * 0.5;
-			float normalizedBorderRadius = max(v_BorderRadius / min(halfSize.x, halfSize.y), 0.0);
-			
-			float dist = sdfRoundedBox(v_LocalPosition, vec2(1.0), normalizedBorderRadius);
-			float antiAlias = fwidth(dist);
-
-			// Compute the conversion factor from pixels to local space
-			vec2 pixelToLocal = 2.0 / v_RectSize;
-			float pxToLocal = 0.5 * (pixelToLocal.x + pixelToLocal.y);
-			float halfStrokeLocal = v_StrokeWeight * 0.5 * pxToLocal;
-
-			// Define inner and outer distances for fill and stroke
-			float inner = -halfStrokeLocal;
-			float outer = 0.0;
-
-			// Compute the fill color with anti-aliasing
-			float fillFactor	= smoothstep(inner - antiAlias, inner + antiAlias, dist);
-			float fillMask		= 1.0 - fillFactor;
-			float strokeFactor	= smoothstep(outer + antiAlias, outer - antiAlias, dist);
-			float strokeMask	= strokeFactor;
-
-			vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillMask);
-			vec4 strokeColor = vec4(v_StrokeColor.rgb, v_StrokeColor.a * strokeMask);
-			vec4 combinedColor = fillColor + strokeColor * (1.0 - fillColor.a);
-
-			// Combine fill and stroke colors
-			o_FragColor = vec4(combinedColor);
+			o_FragColor = v_FillColor;
 		}
 	)";
 }
@@ -436,140 +411,23 @@ namespace DGL
 
 	std::unique_ptr<HybridRenderer> HybridRenderer::Create()
 	{
-		constexpr size_t GenericVertexBufferCapacity	= 10'000;
-		constexpr size_t GenericElementBufferCapacity	= 30'000;
-
-		GLuint genericVertexBufferId = 0;
-		glCreateBuffers(1, &genericVertexBufferId);
-		glNamedBufferStorage(genericVertexBufferId, sizeof(HybridRendererGenericVertex) * GenericVertexBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		GLuint genericElementBufferId = 0;
-		glCreateBuffers(1, &genericElementBufferId);
-		glNamedBufferStorage(genericElementBufferId, sizeof(uint32_t) * GenericElementBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		GLuint genericVertexArrayId = 0;
-		glCreateVertexArrays(1, &genericVertexArrayId);
-		glVertexArrayVertexBuffer(genericVertexArrayId, 0, genericVertexBufferId, 0, sizeof(HybridRendererGenericVertex));
-		glVertexArrayElementBuffer(genericVertexArrayId, genericElementBufferId);
-
-		glEnableVertexArrayAttrib(genericVertexArrayId, 0); // Position
-		glVertexArrayAttribFormat(genericVertexArrayId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(HybridRendererGenericVertex, Position));
-		glVertexArrayAttribBinding(genericVertexArrayId, 0, 0);
-
-		glEnableVertexArrayAttrib(genericVertexArrayId, 1); // Color
-		glVertexArrayAttribFormat(genericVertexArrayId, 1, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererGenericVertex, Color));
-		glVertexArrayAttribBinding(genericVertexArrayId, 1, 0);
-
-		auto genericShader = Shader::CreateFromSource(GENERIC_VERTEX_SOURCE, GENERIC_FRAGMENT_SOURCE);
-
-		constexpr size_t SDFCircleVertexBufferCapacity = 10'000;
-		constexpr size_t SDFCircleElementBufferCapacity = 30'000;
-
-		GLuint sdfCircleVertexBufferId = 0;
-		glCreateBuffers(1, &sdfCircleVertexBufferId);
-		glNamedBufferStorage(sdfCircleVertexBufferId, sizeof(HybridRendererSDFCircleVertex) * SDFCircleVertexBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		GLuint sdfCircleElementBufferId = 0;
-		glCreateBuffers(1, &sdfCircleElementBufferId);
-		glNamedBufferStorage(sdfCircleElementBufferId, sizeof(uint32_t) * SDFCircleElementBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		GLuint sdfCircleVertexArrayId = 0;
-		glCreateVertexArrays(1, &sdfCircleVertexArrayId);
-		glVertexArrayVertexBuffer(sdfCircleVertexArrayId, 0, sdfCircleVertexBufferId, 0, sizeof(HybridRendererSDFCircleVertex));
-		glVertexArrayElementBuffer(sdfCircleVertexArrayId, sdfCircleElementBufferId);
-
-		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 0); // WorldPosition
-		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, WorldPosition));
-		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 0, 0);
-		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 1); // LocalPosition
-		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 1, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, LocalPosition));
-		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 1, 0);
-		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 2); // FillColor
-		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 2, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, FillColor));
-		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 2, 0);
-		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 3); // StrokeColor
-		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 3, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, StrokeColor));
-		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 3, 0);
-		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 4); // StrokeWeight
-		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 4, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, StrokeWeight));
-		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 4, 0);
-		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 5); // CircleSize
-		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 5, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, CircleSize));
-		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 5, 0);
-
-		std::unique_ptr<Shader> sdfCircleShader = Shader::CreateFromSource(SDF_CIRCLE_VERTEX_SOURCE, SDF_CIRCLE_FRAGMENT_SOURCE);
-
-		constexpr size_t SDFRoundedRectVertexBufferCapacity = 10'000;
-		constexpr size_t SDFRoundedRectElementBufferCapacity = 30'000;
-
-		GLuint sdfRoundedRectVertexBuffer = 0;
-		glCreateBuffers(1, &sdfRoundedRectVertexBuffer);
-		glNamedBufferStorage(sdfRoundedRectVertexBuffer, sizeof(HybridRendererSDFRoundedRectVertex) * SDFRoundedRectVertexBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		GLuint sdfRoundedRectElementBuffer = 0;
-		glCreateBuffers(1, &sdfRoundedRectElementBuffer);
-		glNamedBufferStorage(sdfRoundedRectElementBuffer, sizeof(uint32_t) * SDFRoundedRectElementBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
-		GLuint sdfRoundedRectVertexArray = 0;
-		glCreateVertexArrays(1, &sdfRoundedRectVertexArray);
-		glVertexArrayVertexBuffer(sdfRoundedRectVertexArray, 0, sdfRoundedRectVertexBuffer, 0, sizeof(HybridRendererSDFRoundedRectVertex));
-		glVertexArrayElementBuffer(sdfRoundedRectVertexArray, sdfRoundedRectElementBuffer);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 0); // WorldPosition
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 0, 3, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, WorldPosition));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 0, 0);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 1); // LocalPosition
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 1, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, LocalPosition));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 1, 0);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 2); // FillColor
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 2, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, FillColor));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 2, 0);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 3); // StrokeColor
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 3, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, StrokeColor));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 3, 0);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 4); // StrokeWeight
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 4, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, StrokeWeight));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 4, 0);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 5); // RectSize
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 5, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, RectSize));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 5, 0);
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 6); // CornerRadii
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 6, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, CornerRadii));
-		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 6, 0);
-
-		std::unique_ptr<Shader> sdfRoundedRectShader = Shader::CreateFromSource(SDF_ROUNDED_RECT_VERTEX_SOURCE, SDF_ROUNDED_RECT_FRAGMENT_SOURCE);
-
 		return std::unique_ptr<HybridRenderer>(
 			new HybridRenderer(
-				genericVertexArrayId,
-				genericVertexBufferId,
-				genericElementBufferId,
-				GenericVertexBufferCapacity,
-				GenericElementBufferCapacity,
-				std::move(genericShader),
-				sdfCircleVertexArrayId,
-				sdfCircleVertexBufferId,
-				sdfCircleElementBufferId,
-				SDFCircleVertexBufferCapacity,
-				SDFCircleElementBufferCapacity,
-				std::move(sdfCircleShader),
-				sdfRoundedRectVertexArray,
-				sdfRoundedRectVertexBuffer,
-				sdfRoundedRectElementBuffer,
-				SDFRoundedRectVertexBufferCapacity,
-				SDFRoundedRectElementBufferCapacity,
-				std::move(sdfRoundedRectShader)
+				CreateGenericRenderingProperties(),
+				CreateSDFCircleRenderingProperties(),
+				CreateSDFRoundedRectRenderingProperties()
 			)
 		);
 	}
 
 	HybridRenderer::~HybridRenderer()
 	{
-		glDeleteVertexArrays(1, &m_GenericVertexArrayId);
-		glDeleteBuffers(1, &m_GenericVertexBufferId);
-		glDeleteBuffers(1, &m_GenericElementBufferId);
+		// TODO(Felix): Release resources
 	}
 
 	void HybridRenderer::SetViewport(const Math::FloatBoundary& viewport)
 	{
+		m_Viewport = viewport;
 		m_ProjectionMatrix = Math::Matrix4x4::Orthographic(viewport, -1.0f, 1.0f);
 	}
 
@@ -718,43 +576,158 @@ namespace DGL
 		SubmitBatch(submission);
 	}
 
+	HybridRenderer::GenericRenderingProperties HybridRenderer::CreateGenericRenderingProperties()
+	{
+		constexpr size_t GenericVertexBufferCapacity = 10'000;
+		constexpr size_t GenericElementBufferCapacity = 30'000;
+
+		GLuint genericVertexBufferId = 0;
+		glCreateBuffers(1, &genericVertexBufferId);
+		glNamedBufferStorage(genericVertexBufferId, sizeof(HybridRendererGenericVertex) * GenericVertexBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		GLuint genericElementBufferId = 0;
+		glCreateBuffers(1, &genericElementBufferId);
+		glNamedBufferStorage(genericElementBufferId, sizeof(uint32_t) * GenericElementBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		GLuint genericVertexArrayId = 0;
+		glCreateVertexArrays(1, &genericVertexArrayId);
+		glVertexArrayVertexBuffer(genericVertexArrayId, 0, genericVertexBufferId, 0, sizeof(HybridRendererGenericVertex));
+		glVertexArrayElementBuffer(genericVertexArrayId, genericElementBufferId);
+
+		glEnableVertexArrayAttrib(genericVertexArrayId, 0); // Position
+		glVertexArrayAttribFormat(genericVertexArrayId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(HybridRendererGenericVertex, Position));
+		glVertexArrayAttribBinding(genericVertexArrayId, 0, 0);
+
+		glEnableVertexArrayAttrib(genericVertexArrayId, 1); // Color
+		glVertexArrayAttribFormat(genericVertexArrayId, 1, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererGenericVertex, Color));
+		glVertexArrayAttribBinding(genericVertexArrayId, 1, 0);
+
+		auto genericShader = Shader::CreateFromSource(GENERIC_VERTEX_SOURCE, GENERIC_FRAGMENT_SOURCE);
+
+		return {
+			.VertexArrayId = genericVertexArrayId,
+			.VertexBufferId = genericVertexBufferId,
+			.ElementBufferId = genericElementBufferId,
+			.VertexBufferCapacity = GenericVertexBufferCapacity,
+			.ElementBufferCapacity = GenericElementBufferCapacity,
+			.Shader = std::move(genericShader),
+		};
+	}
+
+	HybridRenderer::SDFCircleRenderingProperties HybridRenderer::CreateSDFCircleRenderingProperties()
+	{
+		constexpr size_t SDFCircleVertexBufferCapacity = 10'000;
+		constexpr size_t SDFCircleElementBufferCapacity = 30'000;
+
+		GLuint sdfCircleVertexBufferId = 0;
+		glCreateBuffers(1, &sdfCircleVertexBufferId);
+		glNamedBufferStorage(sdfCircleVertexBufferId, sizeof(HybridRendererSDFCircleVertex) * SDFCircleVertexBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		GLuint sdfCircleElementBufferId = 0;
+		glCreateBuffers(1, &sdfCircleElementBufferId);
+		glNamedBufferStorage(sdfCircleElementBufferId, sizeof(uint32_t) * SDFCircleElementBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		GLuint sdfCircleVertexArrayId = 0;
+		glCreateVertexArrays(1, &sdfCircleVertexArrayId);
+		glVertexArrayVertexBuffer(sdfCircleVertexArrayId, 0, sdfCircleVertexBufferId, 0, sizeof(HybridRendererSDFCircleVertex));
+		glVertexArrayElementBuffer(sdfCircleVertexArrayId, sdfCircleElementBufferId);
+
+		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 0); // WorldPosition
+		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 0, 3, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, WorldPosition));
+		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 0, 0);
+		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 1); // LocalPosition
+		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 1, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, LocalPosition));
+		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 1, 0);
+		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 2); // FillColor
+		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 2, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, FillColor));
+		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 2, 0);
+		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 3); // StrokeColor
+		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 3, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, StrokeColor));
+		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 3, 0);
+		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 4); // StrokeWeight
+		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 4, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, StrokeWeight));
+		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 4, 0);
+		glEnableVertexArrayAttrib(sdfCircleVertexArrayId, 5); // CircleSize
+		glVertexArrayAttribFormat(sdfCircleVertexArrayId, 5, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFCircleVertex, CircleSize));
+		glVertexArrayAttribBinding(sdfCircleVertexArrayId, 5, 0);
+
+		std::unique_ptr<Shader> sdfCircleShader = Shader::CreateFromSource(SDF_CIRCLE_VERTEX_SOURCE, SDF_CIRCLE_FRAGMENT_SOURCE);
+
+		return {
+			.VertexArrayId = sdfCircleVertexArrayId,
+			.VertexBufferId = sdfCircleVertexBufferId,
+			.ElementBufferId = sdfCircleElementBufferId,
+			.VertexBufferCapacity = SDFCircleVertexBufferCapacity,
+			.ElementBufferCapacity = SDFCircleElementBufferCapacity,
+			.Shader = std::move(sdfCircleShader),
+		};
+	}
+
+	HybridRenderer::SDFRoundedRectRenderingProperties HybridRenderer::CreateSDFRoundedRectRenderingProperties()
+	{
+		constexpr size_t SDFRoundedRectVertexBufferCapacity = 10'000;
+		constexpr size_t SDFRoundedRectElementBufferCapacity = 30'000;
+
+		GLuint sdfRoundedRectVertexBuffer = 0;
+		glCreateBuffers(1, &sdfRoundedRectVertexBuffer);
+		glNamedBufferStorage(sdfRoundedRectVertexBuffer, sizeof(HybridRendererSDFRoundedRectVertex) * SDFRoundedRectVertexBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		GLuint sdfRoundedRectElementBuffer = 0;
+		glCreateBuffers(1, &sdfRoundedRectElementBuffer);
+		glNamedBufferStorage(sdfRoundedRectElementBuffer, sizeof(uint32_t) * SDFRoundedRectElementBufferCapacity, nullptr, GL_DYNAMIC_STORAGE_BIT);
+
+		GLuint sdfRoundedRectVertexArray = 0;
+		glCreateVertexArrays(1, &sdfRoundedRectVertexArray);
+		glVertexArrayVertexBuffer(sdfRoundedRectVertexArray, 0, sdfRoundedRectVertexBuffer, 0, sizeof(HybridRendererSDFRoundedRectVertex));
+		glVertexArrayElementBuffer(sdfRoundedRectVertexArray, sdfRoundedRectElementBuffer);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 0); // WorldPosition
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 0, 3, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, WorldPosition));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 0, 0);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 1); // LocalPosition
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 1, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, LocalPosition));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 1, 0);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 2); // FillColor
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 2, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, FillColor));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 2, 0);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 3); // StrokeColor
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 3, 4, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, StrokeColor));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 3, 0);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 4); // StrokeWeight
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 4, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, StrokeWeight));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 4, 0);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 5); // RectSize
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 5, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, RectSize));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 5, 0);
+
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 6); // CornerRadii
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 6, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, CornerRadii));
+		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 6, 0);
+
+		std::unique_ptr<Shader> sdfRoundedRectShader = Shader::CreateFromSource(SDF_ROUNDED_RECT_VERTEX_SOURCE, SDF_ROUNDED_RECT_FRAGMENT_SOURCE);
+
+		return {
+			.VertexArrayId = sdfRoundedRectVertexArray,
+			.VertexBufferId = sdfRoundedRectVertexBuffer,
+			.ElementBufferId = sdfRoundedRectElementBuffer,
+			.VertexBufferCapacity = SDFRoundedRectVertexBufferCapacity,
+			.ElementBufferCapacity = SDFRoundedRectElementBufferCapacity,
+			.Shader = std::move(sdfRoundedRectShader),
+		};
+	}
+
 	HybridRenderer::HybridRenderer(
-		const uint32_t genericVertexArrayId,
-		const uint32_t genericVertexBufferId,
-		const uint32_t genericElementBufferId,
-		const size_t genericVertexBufferCapacity,
-		const size_t genericElementBufferCapacity,
-		std::unique_ptr<Shader> genericShader,
-		const uint32_t sdfCircleVertexArrayId,
-		const uint32_t sdfCircleVertexBufferId,
-		const uint32_t sdfCircleElementBufferId,
-		const size_t sdfCircleVertexBufferCapacity,
-		const size_t sdfCircleElementBufferCapacity,
-		std::unique_ptr<Shader> sdfCircleShader,
-		const uint32_t sdfRoundedRectVertexArrayId,
-		const uint32_t sdfRoundedRectVertexBufferId,
-		const uint32_t sdfRoundedRectElementBufferId,
-		const size_t sdfRoundedRectVertexBufferCapacity,
-		const size_t sdfRoundedRectElementBufferCapacity,
-		std::unique_ptr<Shader> sdfRoundedRectShader
-	) : m_GenericVertexArrayId(genericVertexArrayId),
-		m_GenericVertexBufferId(genericVertexBufferId),
-		m_GenericElementBufferId(genericElementBufferId),
-		m_GenericVertexBufferCapacity(genericVertexBufferCapacity),
-		m_GenericElementBufferCapacity(genericElementBufferCapacity),
-		m_GenericShader(std::move(genericShader)),
-		m_SDFCircleVertexArrayId(sdfCircleVertexArrayId),
-		m_SDFCircleVertexBufferId(sdfCircleVertexBufferId),
-		m_SDFCircleElementBufferId(sdfCircleElementBufferId),
-		m_SDFCircleVertexBufferCapacity(sdfCircleVertexBufferCapacity),
-		m_SDFCircleElementBufferCapacity(sdfCircleElementBufferCapacity),
-		m_SDFCircleShader(std::move(sdfCircleShader)),
-		m_SDFRoundedRectVertexArrayId(sdfRoundedRectVertexArrayId),
-		m_SDFRoundedRectVertexBufferId(sdfRoundedRectVertexBufferId),
-		m_SDFRoundedRectElementBufferId(sdfRoundedRectElementBufferId),
-		m_SDFRoundedRectVertexBufferCapacity(sdfRoundedRectVertexBufferCapacity),
-		m_SDFRoundedRectElementBufferCapacity(sdfRoundedRectElementBufferCapacity),
-		m_SDFRoundedRectShader(std::move(sdfRoundedRectShader))
+		GenericRenderingProperties&& genericProperties,
+		SDFCircleRenderingProperties&& sdfCircleProperties,
+		SDFRoundedRectRenderingProperties&& sdfRoundedRectProperties
+	) : m_GenericProperties(std::move(genericProperties)),
+		m_SDFCircleProperties(std::move(sdfCircleProperties)),
+		m_SDFRoundedRectProperties(std::move(sdfRoundedRectProperties))
 	{
 	}
 
@@ -777,9 +750,9 @@ namespace DGL
 		// vertex buffers / element buffers. In order to submit all data correctly, we need to
 		// split batches that exceed the buffer capacities into smaller sub-batches (chunks).
 
-		glBindVertexArray(m_GenericVertexArrayId);
-		glUseProgram(m_GenericShader->GetShaderId());
-		m_GenericShader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
+		glBindVertexArray(m_GenericProperties.VertexArrayId);
+		glUseProgram(m_GenericProperties.Shader->GetShaderId());
+		m_GenericProperties.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
 
 		static const auto activateBlendMode = GetBlendModeActivator();
 		static const auto activateClipRect = GetClipRectActivator();
@@ -788,8 +761,8 @@ namespace DGL
 		int iterations = 0;
 		Chunked<HybridRendererGenericVertex>(
 			m_GenericBatches,
-			m_GenericVertexBufferCapacity,
-			m_GenericElementBufferCapacity,
+			m_GenericProperties.VertexBufferCapacity,
+			m_GenericProperties.ElementBufferCapacity,
 			[this, &iterations](ReadOnlyChunk<HybridRendererGenericVertex>&& chunk)
 			{
 				Warning(std::format("HybridRenderer: Flushing generic chunk with {} vertices and {} indices.", chunk.Vertices.size(), chunk.Indices.size()));
@@ -799,8 +772,8 @@ namespace DGL
 				activateClipRect(*chunk.ClipRect);
 
 				// Upload the data to the GPU
-				glNamedBufferSubData(m_GenericVertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererGenericVertex), chunk.Vertices.data());
-				glNamedBufferSubData(m_GenericElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
+				glNamedBufferSubData(m_GenericProperties.VertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererGenericVertex), chunk.Vertices.data());
+				glNamedBufferSubData(m_GenericProperties.ElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
@@ -830,14 +803,14 @@ namespace DGL
 		// Unfortunately, we can not assume that the batches are small enough to fit into the
 		// vertex buffers / element buffers. In order to submit all data correctly, we need to
 		// split batches that exceed the buffer capacities into smaller sub-batches (chunks).
-		glBindVertexArray(m_SDFCircleVertexArrayId);
-		glUseProgram(m_SDFCircleShader->GetShaderId());
-		m_SDFCircleShader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
+		glBindVertexArray(m_SDFCircleProperties.VertexArrayId);
+		glUseProgram(m_SDFCircleProperties.Shader->GetShaderId());
+		m_SDFCircleProperties.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
 
 		Chunked(
 			m_SDFCircleBatches,
-			m_SDFCircleVertexBufferCapacity,
-			m_SDFCircleElementBufferCapacity,
+			m_SDFCircleProperties.VertexBufferCapacity,
+			m_SDFCircleProperties.ElementBufferCapacity,
 			[this](ReadOnlyChunk<HybridRendererSDFCircleVertex>&& chunk)
 			{
 				// Maybe we can do this once at the start?
@@ -845,8 +818,8 @@ namespace DGL
 				clipRectActivator(*chunk.ClipRect);
 
 				// Upload the data to the GPU
-				glNamedBufferSubData(m_SDFCircleVertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererSDFCircleVertex), chunk.Vertices.data());
-				glNamedBufferSubData(m_SDFCircleElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
+				glNamedBufferSubData(m_SDFCircleProperties.VertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererSDFCircleVertex), chunk.Vertices.data());
+				glNamedBufferSubData(m_SDFCircleProperties.ElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
@@ -872,14 +845,15 @@ namespace DGL
 		// vertex buffers / element buffers. In order to submit all data correctly, we need to
 		// split batches that exceed the buffer capacities into smaller sub-batches (chunks).
 
-		glBindVertexArray(m_SDFRoundedRectVertexArrayId);
-		glUseProgram(m_SDFRoundedRectShader->GetShaderId());
-		m_SDFRoundedRectShader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
+		glBindVertexArray(m_SDFRoundedRectProperties.VertexArrayId);
+		glUseProgram(m_SDFRoundedRectProperties.Shader->GetShaderId());
+		m_SDFRoundedRectProperties.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
+		m_SDFRoundedRectProperties.Shader->UploadFloat2("u_ViewportSize", m_Viewport.Width, m_Viewport.Height);
 
 		Chunked(
 			m_SDFRoundedRectBatches,
-			m_SDFRoundedRectVertexBufferCapacity,
-			m_SDFRoundedRectElementBufferCapacity,
+			m_SDFRoundedRectProperties.VertexBufferCapacity,
+			m_SDFRoundedRectProperties.ElementBufferCapacity,
 			[this](ReadOnlyChunk<HybridRendererSDFRoundedRectVertex>&& chunk)
 			{
 				// Maybe we can do this once at the start?
@@ -887,8 +861,8 @@ namespace DGL
 				clipRectActivator(*chunk.ClipRect);
 
 				// Upload the data to the GPU
-				glNamedBufferSubData(m_SDFRoundedRectVertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererSDFRoundedRectVertex), chunk.Vertices.data());
-				glNamedBufferSubData(m_SDFRoundedRectElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
+				glNamedBufferSubData(m_SDFRoundedRectProperties.VertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererSDFRoundedRectVertex), chunk.Vertices.data());
+				glNamedBufferSubData(m_SDFRoundedRectProperties.ElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
