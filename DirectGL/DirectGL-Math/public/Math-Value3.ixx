@@ -32,6 +32,27 @@ export namespace DGL::Math
 		constexpr explicit Value3(Value2<T> xy, T z);
 		constexpr explicit Value3(T x, Value2<T> yz);
 
+		constexpr Value3 operator - () const;
+		constexpr Value3 operator + (const Value3& other) const;
+		constexpr Value3 operator - (const Value3& other) const;
+		constexpr Value3 operator / (const Value3& other) const;
+		constexpr Value3 operator * (const Value3& other) const;
+
+		Value3& operator += (const Value3& other);
+		Value3& operator -= (const Value3& other);
+		Value3& operator /= (const Value3& other);
+		Value3& operator *= (const Value3& other);
+
+		constexpr Value3 operator + (T value) const;
+		constexpr Value3 operator - (T value) const;
+		constexpr Value3 operator / (T value) const;
+		constexpr Value3 operator * (T value) const;
+
+		Value3& operator += (T value);
+		Value3& operator -= (T value);
+		Value3& operator /= (T value);
+		Value3& operator *= (T value);
+
 		T X, Y, Z;
 	};
 
@@ -70,5 +91,131 @@ namespace DGL::Math
 	constexpr Value3<T>::Value3(T x, Value2<T> yz):
 		X(x), Y(yz.X), Z(yz.Y)
 	{
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator - () const
+	{
+		return Value3<T>{ -X, -Y, -Z };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator + (const Value3<T>& other) const
+	{
+		return Value3<T>{ X + other.X, Y + other.Y, Z + other.Z };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator - (const Value3<T>& other) const
+	{
+		return Value3<T>{ X - other.X, Y - other.Y, Z - other.Z };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator / (const Value3<T>& other) const
+	{
+		return Value3<T>{ X / other.X, Y / other.Y, Z / other.Z };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator * (const Value3<T>& other) const
+	{
+		return Value3<T>{ X * other.X, Y * other.Y, Z * other.Z };
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator += (const Value3<T>& other)
+	{
+		X += other.X;
+		Y += other.Y;
+		Z += other.Z;
+		return *this;
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator -= (const Value3<T>& other)
+	{
+		X -= other.X;
+		Y -= other.Y;
+		Z -= other.Z;
+		return *this;
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator /= (const Value3<T>& other)
+	{
+		X /= other.X;
+		Y /= other.Y;
+		Z /= other.Z;
+		return *this;
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator *= (const Value3<T>& other)
+	{
+		X *= other.X;
+		Y *= other.Y;
+		Z *= other.Z;
+		return *this;
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator + (T value) const
+	{
+		return Value3<T>{ X + value, Y + value, Z + value };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator - (T value) const
+	{
+		return Value3<T>{ X - value, Y - value, Z - value };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator / (T value) const
+	{
+		return Value3<T>{ X / value, Y / value, Z / value };
+	}
+
+	template <typename T>
+	constexpr Value3<T> Value3<T>::operator * (T value) const
+	{
+		return Value3<T>{ X * value, Y * value, Z * value };
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator += (T value)
+	{
+		X += value;
+		Y += value;
+		Z += value;
+		return *this;
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator -= (T value)
+	{
+		X -= value;
+		Y -= value;
+		Z -= value;
+		return *this;
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator /= (T value)
+	{
+		X /= value;
+		Y /= value;
+		Z /= value;
+		return *this;
+	}
+
+	template <typename T>
+	Value3<T>& Value3<T>::operator *= (T value)
+	{
+		X *= value;
+		Y *= value;
+		Z *= value;
+		return *this;
 	}
 }

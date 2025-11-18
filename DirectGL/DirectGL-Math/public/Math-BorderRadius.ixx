@@ -5,16 +5,14 @@
 
 export module DirectGL.Math:BorderRadius;
 
-import :Radius;
-
 export namespace DGL::Math
 {
 	struct BorderRadiusOnly
 	{
-		Radius TopLeft;
-		Radius TopRight;
-		Radius BottomRight;
-		Radius BottomLeft;
+		float TopLeft;
+		float TopRight;
+		float BottomRight;
+		float BottomLeft;
 
 		constexpr bool operator == (const BorderRadiusOnly&) const = default;
 		constexpr bool operator != (const BorderRadiusOnly&) const = default;
@@ -24,15 +22,14 @@ export namespace DGL::Math
 	{
 	public:
 
-		Radius TopLeft;
-		Radius TopRight;
-		Radius BottomRight;
-		Radius BottomLeft;
+		float TopLeft;
+		float TopRight;
+		float BottomRight;
+		float BottomLeft;
 
 		constexpr BorderRadius();
 
-		[[nodiscard]] static constexpr BorderRadius All(Radius radius);
-		[[nodiscard]] static constexpr BorderRadius Symmetric(float horizontal, float vertical);
+		[[nodiscard]] static constexpr BorderRadius All(float radius);
 		[[nodiscard]] static constexpr BorderRadius Only(const BorderRadiusOnly& only);
 
 		constexpr bool operator == (const BorderRadius& other) const = default;
@@ -42,7 +39,7 @@ export namespace DGL::Math
 
 	private:
 
-		constexpr explicit BorderRadius(Radius topLeft, Radius topRight, Radius bottomRight, Radius bottomLeft);
+		constexpr explicit BorderRadius(float topLeft, float topRight, float bottomRight, float bottomLeft);
 
 	};
 }
@@ -50,14 +47,14 @@ export namespace DGL::Math
 namespace DGL::Math
 {
 	constexpr BorderRadius::BorderRadius() :
-		TopLeft(Radius::Zero),
-		TopRight(Radius::Zero),
-		BottomRight(Radius::Zero),
-		BottomLeft(Radius::Zero)
+		TopLeft(0.0f),
+		TopRight(0.0f),
+		BottomRight(0.0f),
+		BottomLeft(0.0f)
 	{
 	}
 
-	constexpr BorderRadius BorderRadius::All(const Radius radius)
+	constexpr BorderRadius BorderRadius::All(const float radius)
 	{
 		return Only({
 			.TopLeft = radius,
@@ -67,27 +64,15 @@ namespace DGL::Math
 		});
 	}
 
-	constexpr BorderRadius BorderRadius::Symmetric(const float horizontal, const float vertical)
-	{
-		const Radius cornerRadius = Radius::Elliptical(horizontal, vertical);
-
-		return Only({
-			.TopLeft = cornerRadius,
-			.TopRight = cornerRadius,
-			.BottomRight = cornerRadius,
-			.BottomLeft = cornerRadius,
-		});
-	}
-
 	constexpr BorderRadius BorderRadius::Only(const BorderRadiusOnly& only)
 	{
 		return BorderRadius{ only.TopLeft, only.TopRight, only.BottomRight, only.BottomLeft };
 	}
 
-	constexpr BorderRadius::BorderRadius(const Radius topLeft, const Radius topRight, const Radius bottomRight, const Radius bottomLeft) :
+	constexpr BorderRadius::BorderRadius(const float topLeft, const float topRight, const float bottomRight, const float bottomLeft) :
 		TopLeft(topLeft), TopRight(topRight), BottomRight(bottomRight), BottomLeft(bottomLeft)
 	{
 	}
 
-	inline constexpr BorderRadius BorderRadius::Zero = All(Radius::Zero);
+	inline constexpr BorderRadius BorderRadius::Zero = All(0.0f);
 }

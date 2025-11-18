@@ -69,6 +69,7 @@ namespace DGL
 		Math::Float4	FillColor;		//!< The fill color of the shape.
 		Math::Float4	StrokeColor;	//!< The stroke color of the shape.
 		float			StrokeWeight;	//!< The stroke weight of the shape.
+		Math::Float2	CircleSize;		//!< The size of the circle (radiusX, radiusY).
 	};
 
 	/// @brief This structure represents a vertex used for SDF rounded-rectangle rendering in the HybridRenderer.
@@ -87,7 +88,8 @@ namespace DGL
 		Math::Float4	FillColor;		//!< The fill color of the shape.
 		Math::Float4	StrokeColor;	//!< The stroke color of the shape.
 		float			StrokeWeight;	//!< The stroke weight of the shape.
-		Math::Float4	BorderRadii;	//!< The border radii for each corner (top-left, top-right, bottom-right, bottom-left).
+		Math::Float2	RectSize;		//!< The size of the rectangle (width, height).
+		float			CornerRadii;	//!< The border radii for each corner (top-left, top-right, bottom-right, bottom-left).
 	};
 
 	/// @brief This structure represents a batch of generic shape data to be rendered.
@@ -191,6 +193,39 @@ namespace DGL
 		/// @param properties The rendering properties to use for this operation.
 		void FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const RenderingProperties& properties);
 
+		void RenderRoundedRectangle(
+			const Math::FloatBoundary& boundary,
+			const Math::BorderRadius& cornerRadii,
+			const Math::Float4& fillColor,
+			const Math::Float4& strokeColor,
+			float strokeWeight,
+			const RenderingProperties& properties
+		);
+
+		/// @brief Render an ellipse with the specified parameters.
+		///
+		/// This function renders an ellipse defined by its center and radius,
+		/// with the specified fill and stroke colors, stroke weight,
+		/// and rendering properties.
+		///
+		/// The ellipse is rendered using Signed Distance Field (SDF) techniques.
+		/// This allows for smooth edges and scalable rendering without loss of quality.
+		/// 
+		/// @param center The center point of the ellipse.
+		/// @param radius The radius of the ellipse.
+		/// @param fillColor The fill color of the ellipse.
+		/// @param strokeColor The stroke color of the ellipse.
+		/// @param strokeWeight The weight of the stroke around the ellipse.
+		/// @param properties The rendering properties to use for this operation.
+		void RenderEllipse(
+			const Math::Float2& center,
+			const Math::Radius& radius,
+			const Math::Float4& fillColor,
+			const Math::Float4& strokeColor,
+			float strokeWeight,
+			const RenderingProperties& properties
+		);
+
 		/// @brief Fill a triangle with the specified color and rendering properties.
 		///
 		/// This function fills a triangle defined by the three given points
@@ -214,7 +249,19 @@ namespace DGL
 			uint32_t genericElementBufferId,
 			size_t genericVertexBufferCapacity,
 			size_t genericElementBufferCapacity,
-			std::unique_ptr<Shader> genericShader
+			std::unique_ptr<Shader> genericShader,
+			uint32_t sdfCircleVertexArrayId,
+			uint32_t sdfCircleVertexBufferId,
+			uint32_t sdfCircleElementBufferId,
+			size_t sdfCircleVertexBufferCapacity,
+			size_t sdfCircleElementBufferCapacity,
+			std::unique_ptr<Shader> sdfCircleShader,
+			uint32_t sdfRoundedRectVertexArrayId,
+			uint32_t sdfRoundedRectVertexBufferId,
+			uint32_t sdfRoundedRectElementBufferId,
+			size_t sdfRoundedRectVertexBufferCapacity,
+			size_t sdfRoundedRectElementBufferCapacity,
+			std::unique_ptr<Shader> sdfRoundedRectShader
 		);
 
 		void Flush();
@@ -245,13 +292,26 @@ namespace DGL
 		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererSDFCircleVertex>>		m_SDFCircleBatches;
 		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererSDFRoundedRectVertex>>	m_SDFRoundedRectBatches;
 
-		uint32_t	m_GenericVertexArrayId = 0;
-		uint32_t	m_GenericVertexBufferId = 0;
-		uint32_t	m_GenericElementBufferId = 0;
-		size_t		m_GenericVertexBufferCapacity = 0;
-		size_t		m_GenericElementBufferCapacity = 0;
+		uint32_t				m_GenericVertexArrayId = 0;
+		uint32_t				m_GenericVertexBufferId = 0;
+		uint32_t				m_GenericElementBufferId = 0;
+		size_t					m_GenericVertexBufferCapacity = 0;
+		size_t					m_GenericElementBufferCapacity = 0;
+		std::unique_ptr<Shader>	m_GenericShader;
 
-		std::unique_ptr<Shader> m_GenericShader;
+		uint32_t				m_SDFCircleVertexArrayId = 0;
+		uint32_t				m_SDFCircleVertexBufferId = 0;
+		uint32_t				m_SDFCircleElementBufferId = 0;
+		size_t					m_SDFCircleVertexBufferCapacity = 0;
+		size_t					m_SDFCircleElementBufferCapacity = 0;
+		std::unique_ptr<Shader>	m_SDFCircleShader;
+
+		uint32_t 					m_SDFRoundedRectVertexArrayId = 0;
+		uint32_t 					m_SDFRoundedRectVertexBufferId = 0;
+		uint32_t 					m_SDFRoundedRectElementBufferId = 0;
+		size_t 						m_SDFRoundedRectVertexBufferCapacity = 0;
+		size_t 						m_SDFRoundedRectElementBufferCapacity = 0;
+		std::unique_ptr<Shader> 	m_SDFRoundedRectShader;
 
 		DepthProvider m_DepthProvider;
 

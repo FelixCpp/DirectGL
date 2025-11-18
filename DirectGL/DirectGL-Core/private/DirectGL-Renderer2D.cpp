@@ -240,7 +240,7 @@ namespace DGL
 	void Renderer2D::FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, const size_t cornerSegments, const RenderingProperties& properties)
 	{
 		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
-		const auto generateEllipseCorner = [](const Math::Float2& center, const Math::Angle startAngle, const Math::Angle stopAngle, const Math::Radius& radius, uint32_t segments) -> std::vector<Math::Float2>
+		const auto generateEllipseCorner = [](const Math::Float2& center, const Math::Angle startAngle, const Math::Angle stopAngle, const float& radius, uint32_t segments) -> std::vector<Math::Float2>
 		{
 			std::vector<Math::Float2> positions;
 			const Math::Angle angleRange = stopAngle - startAngle;
@@ -248,18 +248,18 @@ namespace DGL
 			for (size_t i = 0; i <= segments; ++i)
 			{
 				const float angle = startAngle.AsRadians() + (static_cast<float>(i) / static_cast<float>(segments)) * angleRange.AsRadians();
-				const float x = center.X + std::cos(angle) * radius.X;
-				const float y = center.Y + std::sin(angle) * radius.Y;
+				const float x = center.X + std::cos(angle) * radius;
+				const float y = center.Y + std::sin(angle) * radius;
 				positions.emplace_back(x, y);
 			}
 
 			return positions;
 		};
 
-		const Math::Float2 topLeftCenter = { boundary.Left + borderRadius.TopLeft.X, boundary.Top + borderRadius.TopLeft.Y };
-		const Math::Float2 topRightCenter = { boundary.Left + boundary.Width - borderRadius.TopRight.X, boundary.Top + borderRadius.TopRight.Y };
-		const Math::Float2 bottomRightCenter = { boundary.Left + boundary.Width - borderRadius.BottomRight.X, boundary.Top + boundary.Height - borderRadius.BottomRight.Y };
-		const Math::Float2 bottomLeftCenter = { boundary.Left + borderRadius.BottomLeft.X, boundary.Top + boundary.Height - borderRadius.BottomLeft.Y };
+		const Math::Float2 topLeftCenter = { boundary.Left + borderRadius.TopLeft, boundary.Top + borderRadius.TopLeft };
+		const Math::Float2 topRightCenter = { boundary.Left + boundary.Width - borderRadius.TopRight, boundary.Top + borderRadius.TopRight };
+		const Math::Float2 bottomRightCenter = { boundary.Left + boundary.Width - borderRadius.BottomRight, boundary.Top + boundary.Height - borderRadius.BottomRight };
+		const Math::Float2 bottomLeftCenter = { boundary.Left + borderRadius.BottomLeft, boundary.Top + boundary.Height - borderRadius.BottomLeft };
 
 		const std::vector<Math::Float2> topLeftPoints = generateEllipseCorner(topLeftCenter, Math::Degrees(180.0f), Math::Degrees(270.0f), borderRadius.TopLeft, cornerSegments);
 		const std::vector<Math::Float2> topRightPoints = generateEllipseCorner(topRightCenter, Math::Degrees(270.0f), Math::Degrees(360.0f), borderRadius.TopRight, cornerSegments);

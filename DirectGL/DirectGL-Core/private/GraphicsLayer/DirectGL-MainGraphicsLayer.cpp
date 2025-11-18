@@ -295,6 +295,15 @@ namespace DGL
 		const size_t segmentCount = 32; // Fixed segment count for rounded corners
 		const RenderingProperties properties = StyleToRenderingProperties(style);
 
+		renderer->RenderRoundedRectangle(
+			boundary,
+			borderRadius,
+			style.FillColor,
+			style.StrokeColor,
+			style.StrokeWeight,
+			properties
+		);
+
 		if (style.IsFillEnabled)
 		{
 			//renderer->FillRoundedRectangle(boundary, borderRadius, style.FillColor, segmentCount, properties);
@@ -323,6 +332,8 @@ namespace DGL
 		const Math::Float2 center = boundary.Center();
 		const size_t segmentCount = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
 		const RenderingProperties properties = StyleToRenderingProperties(style);
+
+		renderer->RenderEllipse(center, radius, style.FillColor, style.StrokeColor, style.StrokeWeight, properties);
 
 		if (style.IsFillEnabled)
 		{
