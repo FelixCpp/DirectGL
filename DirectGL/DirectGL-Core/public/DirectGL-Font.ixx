@@ -78,6 +78,9 @@ export namespace DGL
 		/// @return A reference to the requested page.
 		const Page& GetPage(size_t index) const;
 
+		uint32_t GetTextSize() const;
+		uint32_t GetLineHeight() const;
+
 	private:
 
 		/// @brief Wrapper deleter for FreeType objects.
@@ -96,12 +99,13 @@ export namespace DGL
 
 	private:
 
-		explicit Font(FreeTypeLibraryPtr library, FreeTypeFacePtr fontFace, uint32_t textSize);
+		explicit Font(FreeTypeLibraryPtr library, FreeTypeFacePtr fontFace, uint32_t textSize, uint32_t lineHeight);
 
 		FreeTypeLibraryPtr	m_FontLibrary;	//!< The FreeType font library instance
 		FreeTypeFacePtr		m_FontFace;		//!< The FreeType font face instance
 		Math::Uint2			m_GlyphCursor;	//!< The current position of the glyph cursor in the current atlas
 		uint32_t			m_TextSize;		//!< The size of the text in pixels
+		uint32_t			m_LineHeight;	//!< The height of a line of text in pixels
 
 		std::vector<Page>					m_Pages;	//!< The pages of the font atlas
 		std::unordered_map<char32_t, Glyph>	m_Glyphs;	//!< The loaded glyphs

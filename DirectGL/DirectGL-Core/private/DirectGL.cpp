@@ -275,6 +275,8 @@ namespace DGL
 	void SetImageMode(const RectMode& mode) { PeekLayer().SetImageMode(mode); }
 	void SetImageSampler(const ImageSampler* sampler) { PeekLayer().SetImageSampler(sampler); }
 
+	void SetShader(Shader* shader) { PeekLayer().SetShader(shader); }
+
 	void BeginShape(const ShapeMode mode) { PeekLayer().BeginShape(mode); }
 	void EndShape(const ShapeClosingMode mode) { PeekLayer().EndShape(mode); }
 	void Vertex(const float x, const float y) { PeekLayer().Vertex(x, y); }

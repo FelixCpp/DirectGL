@@ -13,6 +13,8 @@ import :EllipseMode;
 import :EllipseSegmentsMode;
 import :MatrixStack;
 import :BlendMode;
+import :Shader;
+import :ClipRect;
 
 import :Font;
 import :TextAlignment;
@@ -38,11 +40,12 @@ export namespace DGL
 		float TextSize			= 12.0f;
 		TextAlignment TextAlign	= TextAlignment::TopLeft;
 
+		Shader*	Shader = nullptr;
+
 		StrokeJoin	JoinStyle = StrokeJoin::Miter;
 		StrokeCap	StrokeCap = StrokeCap::Round;
 
-		Math::IntBoundary	ClipRect;
-		bool				IsClipRectEnabled = false;
+		ClipRect	ClipRect = ClipRect::Unclipped();
 
 		RectMode			ClipRectMode		= RectModeLTWH();
 		RectMode			RectMode			= RectModeLTWH();

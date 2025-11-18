@@ -66,6 +66,8 @@ namespace DGL
 		virtual void SetImageMode(const RectMode& mode) = 0;
 		virtual void SetImageSampler(const ImageSampler* sampler) = 0;
 
+		virtual void SetShader(Shader* shader) = 0;
+
 		virtual void BeginShape(ShapeMode mode) = 0;
 		virtual void EndShape(ShapeClosingMode mode) = 0;
 		virtual void Vertex(float x, float y) = 0;

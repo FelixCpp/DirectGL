@@ -189,6 +189,8 @@ export namespace DGL
 	void SetImageMode(const RectMode& mode);
 	void SetImageSampler(const ImageSampler* sampler);
 
+	void SetShader(Shader* shader);
+
 	void BeginShape(ShapeMode mode);
 	void EndShape(ShapeClosingMode mode);
 	void Vertex(float x, float y);

@@ -3,6 +3,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <stb/stb_image_write.h>
+
 #include <format>
 
 module DirectGL;
@@ -13,6 +15,7 @@ namespace DGL
 {
 
 	inline static constexpr Math::Uint2 GLYPH_ATLAS_SIZE = { 512, 512 };
+	inline static constexpr Math::Uint2 GLYPH_PADDING = { 2, 2 };
 
 	std::unique_ptr<Font> Font::CreateFromFile(const std::filesystem::path& filepath, const uint32_t textSize)
 	{
@@ -35,8 +38,10 @@ namespace DGL
 		// Set the desired pixel size for the font.
 		FT_Set_Pixel_Sizes(fontFace.get(), 0, textSize);
 
+		const uint32_t lineHeight = static_cast<uint32_t>(fontFace->size->metrics.height >> 6);
+
 		// Create the font object.
-		return std::unique_ptr<Font>(new Font(std::move(library), std::move(fontFace), textSize));
+		return std::unique_ptr<Font>(new Font(std::move(library), std::move(fontFace), textSize, lineHeight));
 	}
 
 	const Glyph* Font::GetGlyph(const char32_t character)
@@ -87,7 +92,7 @@ namespace DGL
 		}
 
 		Page* currentPage = m_Pages.empty() ? nullptr : &m_Pages.back();
-		const bool needsNewRow = currentPage != nullptr and (m_GlyphCursor.X + bitmapWidth) > currentPage->TextureAtlas->GetSize().Y;
+		const bool needsNewRow = currentPage != nullptr and (m_GlyphCursor.X + bitmapWidth) > currentPage->TextureAtlas->GetSize().X;
 		const bool needsNewPage = currentPage == nullptr or (needsNewRow and (m_GlyphCursor.Y + currentPage->CurrentRowHeight + bitmapHeight) > currentPage->TextureAtlas->GetSize().Y);
 
 		if (needsNewRow)
@@ -97,7 +102,7 @@ namespace DGL
 
 			// Reset the glyph cursor X position and advance the Y position.
 			m_GlyphCursor.X = 0;
-			m_GlyphCursor.Y += currentPage->CurrentRowHeight;
+			m_GlyphCursor.Y += currentPage->CurrentRowHeight + GLYPH_PADDING.Y;
 
 			Info(std::format("Moved to new row at Y={} in atlas page {}", m_GlyphCursor.Y, std::distance(m_Pages.data(), currentPage)));
 		}
@@ -106,7 +111,7 @@ namespace DGL
 		{
 			// Insert a new page into the atlas.
 			currentPage = &m_Pages.emplace_back(Page {
-				.TextureAtlas = Image2D::CreateFromMemory(GLYPH_ATLAS_SIZE.X, GLYPH_ATLAS_SIZE.Y, nullptr, ImageFormat::Gray8),
+				.TextureAtlas = Image2D::CreateFromMemory(GLYPH_ATLAS_SIZE.X, GLYPH_ATLAS_SIZE.Y, nullptr),
 				.RowHeights = {},
 				.CurrentRowHeight = 0,
 			});
@@ -139,10 +144,26 @@ namespace DGL
 
 		// Now we're ready to copy the glyph information into our atlas.
 		// This will be done by copying the bitmap data into the texture atlas at the current glyph cursor position.
-		currentPage->TextureAtlas->Update(glyphBoundary.Left, glyphBoundary.Top, glyphBoundary.Width, glyphBoundary.Height, bitmapData);
+
+		// Convert the monochrome bitmap data to RGBA8 format.
+		std::unique_ptr<uint8_t[]> rgbaBitmapData(new uint8_t[bitmapWidth * bitmapHeight * 4]);
+		for (FT_UInt y = 0; y < bitmapHeight; ++y)
+		{
+			for (FT_UInt x = 0; x < bitmapWidth; ++x)
+			{
+				const uint8_t grayValue = bitmapData[y * sourceBitmap.pitch + x];
+				const size_t pixelIndex = (y * bitmapWidth + x) * 4;
+				rgbaBitmapData[pixelIndex + 0] = grayValue;     // R
+				rgbaBitmapData[pixelIndex + 1] = 255;			// G
+				rgbaBitmapData[pixelIndex + 2] = 255;			// B
+				rgbaBitmapData[pixelIndex + 3] = 255;			// A
+			}
+		}
+
+		currentPage->TextureAtlas->Update(glyphBoundary.Left, glyphBoundary.Top, glyphBoundary.Width, glyphBoundary.Height, rgbaBitmapData.get());
 
 		// Advance the glyph cursor position.
-		m_GlyphCursor.X += bitmapWidth;
+		m_GlyphCursor.X += bitmapWidth + GLYPH_PADDING.X;
 
 		// Create the glyph object and store it in our glyph map.
 		Glyph glyph = {
@@ -176,6 +197,16 @@ namespace DGL
 		return m_Pages.at(index);
 	}
 
+	uint32_t Font::GetTextSize() const
+	{
+		return m_TextSize;
+	}
+
+	uint32_t Font::GetLineHeight() const
+	{
+		return m_LineHeight;
+	}
+
 	void Font::FreeTypeDeleter::operator()(const FT_Library library) const
 	{
 		if (library != nullptr)
@@ -206,10 +237,11 @@ namespace DGL
 		return FreeTypeFacePtr(fontFace);
 	}
 
-	Font::Font(FreeTypeLibraryPtr library, FreeTypeFacePtr fontFace, const uint32_t textSize):
+	Font::Font(FreeTypeLibraryPtr library, FreeTypeFacePtr fontFace, const uint32_t textSize, const uint32_t lineHeight):
 		m_FontLibrary(std::move(library)),
 		m_FontFace(std::move(fontFace)),
-		m_TextSize(textSize)
+		m_TextSize(textSize),
+		m_LineHeight(lineHeight)
 	{
 	}
 }

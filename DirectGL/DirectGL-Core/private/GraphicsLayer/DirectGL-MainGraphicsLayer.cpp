@@ -10,6 +10,16 @@ import :MainGraphicsLayer;
 
 namespace DGL
 {
+	RenderingProperties StyleToRenderingProperties(const RenderStyle& style)
+	{
+		return {
+			.ClippingRect	= style.ClipRect,
+			.BlendMode		= style.BlendMode,
+			.ModelMatrix	= style.MatrixStack.PeekMatrix(),
+			.Shader			= style.Shader
+		};
+	}
+
 	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<Renderer2D>& renderer, const Math::FloatBoundary& viewport):
 		m_Renderer(renderer),
 		m_RenderTarget(viewport)
@@ -170,14 +180,13 @@ namespace DGL
 	void MainGraphicsLayer::SetClipRect(const float x1, const float y1, const float x2, const float y2)
 	{
 		RenderStyle& style = PeekStyle();
-		style.ClipRect = Math::IntBoundary::FromLTWH(static_cast<int>(x1), static_cast<int>(y1), static_cast<int>(x2), static_cast<int>(y2));
-		style.IsClipRectEnabled = true;
+		style.ClipRect = ClipRect::Clipped(Math::IntBoundary::FromLTWH(static_cast<int>(x1), static_cast<int>(y1), static_cast<int>(x2), static_cast<int>(y2)));
 	}
 
 	void MainGraphicsLayer::SetClipRectDisabled()
 	{
 		RenderStyle& style = PeekStyle();
-		style.IsClipRectEnabled = false;
+		style.ClipRect = ClipRect::Unclipped();
 	}
 
 	void MainGraphicsLayer::SetTextSize(const float size)
@@ -216,6 +225,12 @@ namespace DGL
 		style.ImageSampler = sampler;
 	}
 
+	void MainGraphicsLayer::SetShader(Shader* shader)
+	{
+		RenderStyle& style = PeekStyle();
+		style.Shader = shader;
+	}
+
 	void MainGraphicsLayer::BeginShape(const ShapeMode mode)
 	{
 	}
@@ -232,7 +247,13 @@ namespace DGL
 	{
 		if (const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock())
 		{
-			renderer->FillRectangle(GetViewport(), color, std::nullopt, Math::Matrix4x4::Identity, BlendMode::Alpha);
+			constexpr RenderingProperties properties = {
+				.ClippingRect = ClipRect::Unclipped(),
+				.BlendMode = BlendMode::Alpha,
+				.ModelMatrix = Math::Matrix4x4::Identity,
+			};
+
+			renderer->FillRectangle(GetViewport(), color, properties);
 		}
 	}
 
@@ -248,20 +269,19 @@ namespace DGL
 
 		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
 		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
-		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
 
 		if (style.IsFillEnabled)
 		{
-			renderer->FillRectangle(boundary, style.FillColor, clipRect, PeekMatrix(), style.BlendMode);
+			renderer->FillRectangle(boundary, style.FillColor, StyleToRenderingProperties(style));
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			renderer->DrawRectangle(boundary, style.StrokeColor, style.StrokeWeight, clipRect, PeekMatrix(), style.BlendMode);
+			renderer->DrawRectangle(boundary, style.StrokeColor, style.StrokeWeight, StyleToRenderingProperties(style));
 		}
 	}
 
-	void MainGraphicsLayer::RoundedRect(float x1, float y1, float x2, float y2, const Math::BorderRadius& borderRadius)
+	void MainGraphicsLayer::RoundedRect(const float x1, const float y1, const float x2, const float y2, const Math::BorderRadius& borderRadius)
 	{
 		const RenderStyle& style = PeekStyle();
 
@@ -273,17 +293,16 @@ namespace DGL
 		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
 		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
 		const size_t segmentCount = 32; // Fixed segment count for rounded corners
-		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
-		const Math::Matrix4x4& modelMatrix = PeekMatrix();
+		const RenderingProperties properties = StyleToRenderingProperties(style);
 
 		if (style.IsFillEnabled)
 		{
-			renderer->FillRoundedRectangle(boundary, borderRadius, style.FillColor, segmentCount, clipRect, modelMatrix, style.BlendMode);
+			renderer->FillRoundedRectangle(boundary, borderRadius, style.FillColor, segmentCount, properties);
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			renderer->DrawRoundedRectangle(boundary, borderRadius, style.StrokeWeight, style.StrokeColor, segmentCount, clipRect, modelMatrix, style.BlendMode);
+			renderer->DrawRoundedRectangle(boundary, borderRadius, style.StrokeWeight, style.StrokeColor, segmentCount, properties);
 		}
 	}
 
@@ -303,16 +322,16 @@ namespace DGL
 		const Math::Radius radius = Math::Radius::Elliptical(boundary.Width / 2.0f, boundary.Height / 2.0f);
 		const Math::Float2 center = boundary.Center();
 		const size_t segmentCount = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
-		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
+		const RenderingProperties properties = StyleToRenderingProperties(style);
 
 		if (style.IsFillEnabled)
 		{
-			renderer->FillEllipse(center, radius, style.FillColor, segmentCount, clipRect, PeekMatrix(), style.BlendMode);
+			renderer->FillEllipse(center, radius, style.FillColor, segmentCount, properties);
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			renderer->DrawEllipse(center, radius, style.StrokeWeight, style.StrokeColor, segmentCount, clipRect, PeekMatrix(), style.BlendMode);
+			renderer->DrawEllipse(center, radius, style.StrokeWeight, style.StrokeColor, segmentCount, properties);
 		}
 	}
 
@@ -323,9 +342,8 @@ namespace DGL
 			const RenderStyle& style = PeekStyle();
 			const Math::Radius radius = Math::Radius::Circular(style.StrokeWeight / 2.0f);
 			const size_t segments = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
-			const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
 
-			renderer->FillEllipse(Math::Float2{ x, y }, radius, style.StrokeColor, segments, clipRect, PeekMatrix(), style.BlendMode);
+			renderer->FillEllipse(Math::Float2{ x, y }, radius, style.StrokeColor, segments, StyleToRenderingProperties(style));
 		}
 	}
 
@@ -338,10 +356,8 @@ namespace DGL
 
 			const RenderStyle& style = PeekStyle();
 			const size_t segments = style.EllipseSegmentsMode(Math::Radius::Circular(style.StrokeWeight), Math::Degrees(180.0f));
-			const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
-			const Math::Matrix4x4& modelMatrix = PeekMatrix();
 
-			renderer->FillLine(start, end, style.StrokeWeight, style.StrokeColor, style.StrokeCap, segments, clipRect, modelMatrix, style.BlendMode);
+			renderer->FillLine(start, end, style.StrokeWeight, style.StrokeColor, style.StrokeCap, segments, StyleToRenderingProperties(style));
 		}
 	}
 
@@ -356,8 +372,7 @@ namespace DGL
 		}
 
 		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
-		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
-		const Math::Matrix4x4& modelMatrix = PeekMatrix();
+		const RenderingProperties properties = StyleToRenderingProperties(style);
 
 		const Math::Float2 p1{ x1, y1 };
 		const Math::Float2 p2{ x2, y2 };
@@ -365,23 +380,21 @@ namespace DGL
 
 		if (style.IsFillEnabled)
 		{
-			renderer->FillTriangle(p1, p2, p3, style.FillColor, clipRect, modelMatrix, style.BlendMode);
+			renderer->FillTriangle(p1, p2, p3, style.FillColor, properties);
 		}
 
 		if (style.IsStrokeEnabled)
 		{
-			renderer->DrawTriangle(p1, p2, p3, style.StrokeWeight, style.StrokeColor, clipRect, modelMatrix, style.BlendMode);
+			renderer->DrawTriangle(p1, p2, p3, style.StrokeWeight, style.StrokeColor, properties);
 		}
 	}
 
-	void MainGraphicsLayer::Text(const std::string_view text, float x, float y)
+	void MainGraphicsLayer::Text(const std::string_view text, const float x, const float y)
 	{
 		const RenderStyle& style = PeekStyle();
-		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
-		const Math::Matrix4x4& modelMatrix = PeekMatrix();
 		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
 
-		renderer->Text(text, *style.Font, Math::Float2{ x, y }, style.TextSize, style.FillColor, style.TextAlign, clipRect, modelMatrix, style.BlendMode);
+		renderer->Text(text, *style.Font, Math::Float2{ x, y }, style.TextSize, style.FillColor, style.TextAlign, StyleToRenderingProperties(style));
 	}
 
 	void MainGraphicsLayer::Image(const Image2D& image, const float x1, const float y1, const float x2, const float y2, const float sourceLeft, const float sourceTop, const float sourceWidth, const float sourceHeight)
@@ -389,11 +402,8 @@ namespace DGL
 		const RenderStyle& style = PeekStyle();
 		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
 		const Math::FloatBoundary sourceBoundary = Math::FloatBoundary::FromLTWH(sourceLeft, sourceTop, sourceWidth, sourceHeight);
-		const ClipRect clipRect = MakeClipRect(style.ClipRect, style.IsClipRectEnabled);
-		const Math::Matrix4x4& modelMatrix = PeekMatrix();
 		const std::shared_ptr<Renderer2D> renderer = m_Renderer.lock();
-		const uint32_t samplerId = style.ImageSampler ? style.ImageSampler->GetSamplerId() : 0;
 
-		renderer->Image(boundary, sourceBoundary, image, samplerId, style.ImageTint, clipRect, modelMatrix, style.BlendMode);
+		renderer->Image(boundary, sourceBoundary, image, style.ImageSampler, style.ImageTint, StyleToRenderingProperties(style));
 	}
 }

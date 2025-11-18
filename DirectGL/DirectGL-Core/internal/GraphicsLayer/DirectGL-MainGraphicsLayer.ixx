@@ -71,6 +71,8 @@ namespace DGL
 		void SetImageMode(const RectMode& mode) override;
 		void SetImageSampler(const ImageSampler* sampler) override;
 
+		void SetShader(Shader* shader) override;
+
 		void BeginShape(ShapeMode mode) override;
 		void EndShape(ShapeClosingMode mode) override;
 		void Vertex(float x, float y) override;

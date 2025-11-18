@@ -9,6 +9,7 @@
 #include <string_view>
 #include <format>
 #include <algorithm>
+#include <unordered_map>
 
 module DirectGL;
 
@@ -25,11 +26,11 @@ layout (location = 2) in vec4 a_Color;
 layout (location = 0) out vec4 v_Color;
 layout (location = 1) out vec2 v_TexCoord;
 
-uniform mat4 u_ProjectionViewMatrix;
+uniform mat4 u_ProjectionMatrix;
 
 void main()
 {
-	gl_Position = u_ProjectionViewMatrix * vec4(a_Position, 1.0);
+	gl_Position = u_ProjectionMatrix * vec4(a_Position, 1.0);
 	v_Color = a_Color;
 	v_TexCoord = a_TexCoord;
 }
@@ -44,12 +45,19 @@ layout (location = 1) in vec2 v_TexCoord;
 
 layout (binding = 0) uniform sampler2D u_Texture;
 
+uniform int u_IsText;
+
 void main()
 {
-	o_FragColor = texture(u_Texture, v_TexCoord) * v_Color;
+	if (u_IsText == 1)
+	{
+		float alpha = texture(u_Texture, v_TexCoord).r;
+		o_FragColor = vec4(v_Color.rgb, v_Color.a * alpha);
+	} else {
+		o_FragColor = texture(u_Texture, v_TexCoord) * v_Color;
+	}
 }
 )";
-
 
 namespace DGL
 {
@@ -93,9 +101,8 @@ namespace DGL
 		m_VertexArrayId(0),
 		m_VertexBufferId(0),
 		m_ElementBufferId(0),
-		m_ShaderProgramId(0),
-		m_VertexBufferCapacity(1000),
-		m_ElementBufferCapacity(1000),
+		m_VertexBufferCapacity(65536),
+		m_ElementBufferCapacity(131072),
 		m_ProjectionLocation(0),
 		m_Depth(0.0f)
 	{
@@ -124,37 +131,11 @@ namespace DGL
 		glVertexArrayAttribFormat(m_VertexArrayId, 2, 4, GL_FLOAT, GL_FALSE, offsetof(Vertex2D, Color));
 		glVertexArrayAttribBinding(m_VertexArrayId, 2, 0);
 
-		const GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-		glShaderSource(vertexShaderId, 1, &VERTEX_SOURCE, nullptr);
-		glCompileShader(vertexShaderId);
-
-		const GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-		glShaderSource(fragmentShaderId, 1, &FRAMENT_SOURCE, nullptr);
-		glCompileShader(fragmentShaderId);
-		m_ShaderProgramId = glCreateProgram();
-		glAttachShader(m_ShaderProgramId, vertexShaderId);
-		glAttachShader(m_ShaderProgramId, fragmentShaderId);
-		glLinkProgram(m_ShaderProgramId);
-		glDetachShader(m_ShaderProgramId, vertexShaderId);
-		glDetachShader(m_ShaderProgramId, fragmentShaderId);
-		glDeleteShader(vertexShaderId);
-		glDeleteShader(fragmentShaderId);
-		m_ProjectionLocation = glGetProgramResourceLocation(m_ShaderProgramId, GL_UNIFORM, "u_ProjectionViewMatrix");
+		m_Shader = Shader::CreateFromSource(VERTEX_SOURCE, FRAMENT_SOURCE);
 
 		constexpr uint8_t whitePixel[4] = { 255, 255, 255, 255 };
-		glCreateTextures(GL_TEXTURE_2D, 1, &m_WhiteTextureId);
-		glTextureStorage2D(m_WhiteTextureId, 1, GL_RGBA8, 1, 1);
-		glTextureSubImage2D(m_WhiteTextureId, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, whitePixel);
-		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(m_WhiteTextureId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glCreateSamplers(1, &m_DefaultSamplerId);
-		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glSamplerParameteri(m_DefaultSamplerId, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		m_WhiteTexture = Image2D::CreateFromMemory(1, 1, whitePixel);
+		m_DefaultSampler = ImageSampler::Create();
 	}
 
 	Renderer2D::~Renderer2D()
@@ -162,8 +143,6 @@ namespace DGL
 		glDeleteBuffers(1, &m_VertexBufferId);
 		glDeleteBuffers(1, &m_ElementBufferId);
 		glDeleteVertexArrays(1, &m_VertexArrayId);
-		glDeleteProgram(m_ShaderProgramId);
-		glDeleteTextures(1, &m_WhiteTextureId);
 	}
 
 	void Renderer2D::SetViewport(const Math::FloatBoundary& viewport)
@@ -176,10 +155,11 @@ namespace DGL
 	{
 		m_Depth = 0.0f;
 
-		glClear(GL_DEPTH_BUFFER_BIT);
+		//glClear(GL_DEPTH_BUFFER_BIT);
+
 		//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		//glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	void Renderer2D::EndFrame()
@@ -187,8 +167,9 @@ namespace DGL
 		Flush();
 	}
 
-	void Renderer2D::FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const auto [left, top, width, height] = boundary;
 
 		const std::array corners = {
@@ -210,15 +191,18 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::DrawRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const float strokeWeight, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::DrawRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const float strokeWeight, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const auto [left, top, width, height] = boundary;
 
 		const std::array corners = {
@@ -244,15 +228,18 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertexData),
 			.Indices = std::span(outline.Indices.data(), outline.Indices.size()),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, const size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, const size_t cornerSegments, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const auto generateEllipseCorner = [](const Math::Float2& center, const Math::Angle startAngle, const Math::Angle stopAngle, const Math::Radius& radius, uint32_t segments) -> std::vector<Math::Float2>
 		{
 			std::vector<Math::Float2> positions;
@@ -368,21 +355,24 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::DrawRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, float strokeWeight, const Math::Float4& color, size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::DrawRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, float strokeWeight, const Math::Float4& color, size_t cornerSegments, const RenderingProperties& properties)
 	{
 		
 	}
 
 
-	void Renderer2D::FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, const size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, const size_t segments, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const Math::Float2 transformedCenter = modelMatrix.TransformPoint(center);
 		const Math::Float2 transformedRadius = modelMatrix.TransformVector(Math::Float2{ radius.X, radius.Y });
 
@@ -414,15 +404,18 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::DrawEllipse(const Math::Float2& center, const Math::Radius& radius, const float strokeWeight, const Math::Float4& color, size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::DrawEllipse(const Math::Float2& center, const Math::Radius& radius, const float strokeWeight, const Math::Float4& color, size_t segments, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const Math::Float2 transformedCenter = modelMatrix.TransformPoint(center);
 		const Math::Float2 transformedRadius = modelMatrix.TransformVector(Math::Float2{ radius.X, radius.Y });
 
@@ -457,15 +450,18 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(outline.Indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const Math::Float2 tp1 = modelMatrix.TransformPoint(p1);
 		const Math::Float2 tp2 = modelMatrix.TransformPoint(p2);
 		const Math::Float2 tp3 = modelMatrix.TransformPoint(p3);
@@ -481,15 +477,18 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const float strokeWeight, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const float strokeWeight, const Math::Float4& color, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const std::array points = {
 			modelMatrix.TransformPoint(p1),
 			modelMatrix.TransformPoint(p2),
@@ -517,10 +516,12 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(outline.Indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
@@ -567,8 +568,9 @@ namespace DGL
 		}
 	}
 
-	void Renderer2D::FillLine(const Math::Float2& p1, const Math::Float2& p2, const float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::FillLine(const Math::Float2& p1, const Math::Float2& p2, const float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const std::array points = { modelMatrix.TransformPoint(p1), modelMatrix.TransformPoint(p2) };
 		const std::array colors = { color, color };
 
@@ -646,38 +648,112 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertexData),
 			.Indices = std::span(indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = m_WhiteTextureId,
-			.TextureSamplerId = m_DefaultSamplerId,
+			.Texture = m_WhiteTexture.get(),
+			.TextureSampler = m_DefaultSampler.get(),
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
-	void Renderer2D::Text(const std::string_view text, Font& font, const Math::Float2& position, float fontSize, const Math::Float4& color, TextAlignment alignment, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	struct GlyphRenderInfo
 	{
-		for (const char32_t character : text)
+		std::vector<Vertex2D> vertices;
+		std::vector<uint32_t> indices;
+		const Image2D* fontAtlas;
+	};
+
+	void Renderer2D::Text(const std::string_view text, Font& font, const Math::Float2& position, const float textSize, const Math::Float4& color, TextAlignment alignment, const RenderingProperties& properties)
+	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const float scale = textSize / static_cast<float>(font.GetTextSize());
+		const float lineHeight = font.GetLineHeight() * scale;
+
+		std::unordered_map<size_t, GlyphRenderInfo> renderInfos;
+
+		Math::Float2 cursorPosition = position;
+		for (size_t i = 0; i < text.length(); ++i)
 		{
+			const char32_t character = text[i];
+
+			if (character == '\n')
+			{
+				cursorPosition.X = position.X;
+				cursorPosition.Y += lineHeight;
+				continue;
+			}
+
+			if (character == '\t')
+			{
+				if (const Glyph* glyph = font.GetGlyph(' '))
+				{
+					cursorPosition.X += glyph->Advance * scale * 4.0f;
+					continue;
+				}
+			}
+
 			const Glyph* glyph = font.GetGlyph(character);
 			if (glyph == nullptr)
 			{
 				continue;
 			}
+
+			if (character == ' ')
+			{
+				cursorPosition.X += glyph->Advance * scale;
+				continue;
+			}
+
+			GlyphRenderInfo& renderInfo = renderInfos[glyph->AtlasIndex];
+			renderInfo.fontAtlas = font.GetPage(glyph->AtlasIndex).TextureAtlas.get();
+
+			const auto [glyphUVLeft, glyphUVTop, glyphUVWidth, glyphUVHeight] = glyph->AtlasRectUV;
+			const float glyphUVRight = glyphUVLeft + glyphUVWidth;
+			const float glyphUVBottom = glyphUVTop + glyphUVHeight;
+
+			const float glyphLeft = cursorPosition.X + glyph->Bearing.X * scale;
+			const float glyphTop = cursorPosition.Y - (glyph->Bearing.Y) * scale;
+			const float glyphRight = glyphLeft + glyph->AtlasRect.Width * scale;
+			const float glyphBottom = glyphTop + glyph->AtlasRect.Height * scale;
+
+			renderInfo.vertices.append_range(std::initializer_list{
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphLeft, glyphTop, m_Depth }), .TexCoord = { glyphUVLeft, glyphUVTop }, .Color = color },
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphRight, glyphTop, m_Depth }), .TexCoord = { glyphUVRight, glyphUVTop }, .Color = color },
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphRight, glyphBottom, m_Depth }), .TexCoord = { glyphUVRight, glyphUVBottom }, .Color = color },
+				Vertex2D{ .Position = modelMatrix.TransformPoint({ glyphLeft, glyphBottom, m_Depth }), .TexCoord = { glyphUVLeft, glyphUVBottom }, .Color = color },
+			});
+
+			renderInfo.indices.append_range(std::initializer_list{
+				static_cast<uint32_t>(renderInfo.vertices.size() - 4),
+				static_cast<uint32_t>(renderInfo.vertices.size() - 3),
+				static_cast<uint32_t>(renderInfo.vertices.size() - 2),
+				static_cast<uint32_t>(renderInfo.vertices.size() - 2),
+				static_cast<uint32_t>(renderInfo.vertices.size() - 1),
+				static_cast<uint32_t>(renderInfo.vertices.size() - 4),
+			});
+
+			cursorPosition.X += glyph->Advance * scale;
 		}
 
-		const Font::Page& page = font.GetPage(0);
-		const Image2D& image = *page.TextureAtlas;
-
-		Image(
-			Math::FloatBoundary::FromLTWH(100.0f, 100.0f, 512.0f, 512.0f),
-			Math::FloatBoundary::FromLTWH(0.0f, 0.0f, 512.0f, 512.0f),
-			image,
-			m_DefaultSamplerId,
-			color, clippingRect, modelMatrix, blendMode
-		);
+		for (const auto& [atlasIndex, renderInfo] : renderInfos)
+		{
+			AddDrawCommand(DrawCommand2D {
+				.Vertices = std::span(renderInfo.vertices),
+				.Indices = std::span(renderInfo.indices),
+				.ClipRect = clippingRect,
+				.BlendMode = blendMode,
+				.Texture = renderInfo.fontAtlas,
+				.TextureSampler = m_DefaultSampler.get(),
+				.Shader = shader != nullptr ? shader : m_Shader.get(),
+				.IsTextCommand = true,
+			});
+		}
 	}
 
-	void Renderer2D::Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, const uint32_t samplerId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode)
+	void Renderer2D::Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, const ImageSampler* sampler, const Math::Float4& color, const RenderingProperties& properties)
 	{
+		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
 		const auto [left, top, width, height] = boundary;
 		const std::array corners = {
 			modelMatrix.TransformPoint(Math::Float2{ left,         top          }),
@@ -707,10 +783,12 @@ namespace DGL
 		AddDrawCommand(DrawCommand2D {
 			.Vertices = std::span(vertices),
 			.Indices = std::span(indices),
-			.ClippingRect = clippingRect,
+			.ClipRect = clippingRect,
 			.BlendMode = blendMode,
-			.TextureId = image.GetTextureId(),
-			.TextureSamplerId = samplerId,
+			.Texture = &image,
+			.TextureSampler = sampler,
+			.Shader = shader != nullptr ? shader : m_Shader.get(),
+			.IsTextCommand = false,
 		});
 	}
 
@@ -723,6 +801,7 @@ namespace DGL
 		}
 
 		const size_t verticesOffset = m_Vertices.size();
+		const size_t indicesOffset = m_Indices.size();
 
 		// Append the vertices
 		m_Vertices.insert(m_Vertices.end(), command.Vertices.begin(), command.Vertices.end());
@@ -731,18 +810,22 @@ namespace DGL
 		for (const uint32_t index : command.Indices) m_Indices.push_back(index + verticesOffset);
 
 		// Flip Y for clipping rect
-		std::optional<Math::IntBoundary> flippedClippingRect = command.ClippingRect;
-		if (flippedClippingRect.has_value())
+		ClipRect flippedClipRect = command.ClipRect;
+		if (flippedClipRect.IsClipped())
 		{
-			flippedClippingRect->Top = static_cast<int>(m_Viewport.Height) - (flippedClippingRect->Top + flippedClippingRect->Height);
+			Math::IntBoundary& flippedBoundary = flippedClipRect.UnwrapBoundary();
+			flippedBoundary.Top = static_cast<int>(m_Viewport.Height) - (flippedBoundary.Top + flippedBoundary.Height);
 		}
 
 		m_DrawList.push_back(DrawListItem {
-			.TextureId = command.TextureId,
-			.TextureSamplerId = command.TextureSamplerId,
+			.Texture = command.Texture,
+			.TextureSampler = command.TextureSampler,
+			.Shader = command.Shader,
+			.IndexStart = indicesOffset,
 			.IndexCount = command.Indices.size(),
-			.ClippingRect = flippedClippingRect,
+			.ClippingRect = flippedClipRect,
 			.BlendMode = command.BlendMode,
+			.IsTextCommand = command.IsTextCommand,
 		});
 
 		m_Depth += 1.0f / 20'000.0f;
@@ -755,50 +838,79 @@ namespace DGL
 			return;
 		}
 
-		// Enable blending (additive)
-
-		// Upload all vertices & indices to the GPU
-		glNamedBufferSubData(m_VertexArrayId, 0, m_Vertices.size() * sizeof(Vertex2D), m_Vertices.data());
-		glNamedBufferSubData(m_ElementBufferId, 0, m_Indices.size() * sizeof(uint32_t), m_Indices.data());
-
 		// Bind the vertex array we're using for 2D rendering
 		glBindVertexArray(m_VertexArrayId);
-		glUseProgram(m_ShaderProgramId);
-		glProgramUniformMatrix4fv(m_ShaderProgramId, m_ProjectionLocation, 1, GL_FALSE, m_ProjectionMatrix.GetData());
 
 		glEnable(GL_BLEND);
-		
-		size_t drawOffset = 0;
-		for (size_t i = 0; i < m_DrawList.size(); ++i)
-		{
-			DrawListItem& item = m_DrawList[i];
-			const bool scissoringRequired = item.ClippingRect.has_value();
 
-			if (scissoringRequired)
+		const size_t totalVertices = m_Vertices.size();	//!< Total number of vertices to upload
+		const size_t totalIndices = m_Indices.size();	//!< Total number of indices to upload
+
+		size_t vertexOffset	= 0;	//!< Offset in the total vertex buffer
+		size_t indexOffset	= 0;	//!< Offset in the total index buffer
+
+		size_t iterations = 0;
+		while (indexOffset < totalIndices)
+		{
+			// Compute how many vertices & indices to upload in this batch
+			const size_t verticesInThisBatch = std::min(totalVertices - vertexOffset, m_VertexBufferCapacity);
+			const size_t indicesInThisBatch = std::min(totalIndices - indexOffset, m_ElementBufferCapacity);
+
+			// Upload all vertices & indices to the GPU
+			glNamedBufferSubData(m_VertexArrayId, 0, verticesInThisBatch * sizeof(Vertex2D), m_Vertices.data() + vertexOffset);
+			glNamedBufferSubData(m_ElementBufferId, 0, indicesInThisBatch * sizeof(uint32_t), m_Indices.data() + indexOffset);
+
+			const size_t firstIndexInBatch	= indexOffset;
+			const size_t lastIndexInBatch	= indexOffset + indicesInThisBatch;
+
+			for (size_t i = 0; i < m_DrawList.size(); ++i)
 			{
-				glEnable(GL_SCISSOR_TEST);
-				glScissor(item.ClippingRect->Left, item.ClippingRect->Top, item.ClippingRect->Width, item.ClippingRect->Height);
+				const DrawListItem& item = m_DrawList[i];
+
+				const size_t firstItemIndex	= item.IndexStart;
+				const size_t lastItemIndex	= item.IndexStart + item.IndexCount;
+				const bool itemFitsInCurrentBatch = (firstItemIndex >= firstIndexInBatch and lastItemIndex <= lastIndexInBatch);
+
+				// Check if this item is within the current batch
+				if (not itemFitsInCurrentBatch)
+				{
+					continue;
+				}
+
+				const size_t firstItemIndexInBatch = firstItemIndex - firstIndexInBatch;
+				const auto indexOffsetPtr = std::bit_cast<const GLvoid*>(firstItemIndexInBatch * sizeof(uint32_t));
+
+				const bool scissoringRequired = item.ClippingRect.IsClipped();
+				if (scissoringRequired)
+				{
+					const auto& rect = item.ClippingRect.UnwrapBoundary();
+
+					glEnable(GL_SCISSOR_TEST);
+					glScissor(rect.Left, rect.Top, rect.Width, rect.Height);
+				}
+
+				glBlendFuncSeparate(BlendFactorToGlId(item.BlendMode.SourceColorFactor), BlendFactorToGlId(item.BlendMode.DestinationColorFactor), BlendFactorToGlId(item.BlendMode.SourceAlphaFactor), BlendFactorToGlId(item.BlendMode.DestinationAlphaFactor));
+				glBlendEquationSeparate(BlendEquationToGlId(item.BlendMode.ColorEquation), BlendEquationToGlId(item.BlendMode.AlphaEquation));
+
+				glBindSampler(0, item.TextureSampler->GetSamplerId());
+				glBindTextureUnit(0, item.Texture->GetTextureId());
+
+				glUseProgram(item.Shader->GetShaderId());
+				item.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
+				item.Shader->UploadInt1("u_Texture", 0);
+				item.Shader->UploadInt1("u_IsText", item.IsTextCommand ? 1 : 0);
+
+				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(item.IndexCount), GL_UNSIGNED_INT, indexOffsetPtr);
+				
+				if (scissoringRequired) glDisable(GL_SCISSOR_TEST);
 			}
 
-			glBlendFuncSeparate(
-				BlendFactorToGlId(item.BlendMode.SourceColorFactor),
-				BlendFactorToGlId(item.BlendMode.DestinationColorFactor),
-				BlendFactorToGlId(item.BlendMode.SourceAlphaFactor),
-				BlendFactorToGlId(item.BlendMode.DestinationAlphaFactor)
-			);
-
-			glBlendEquationSeparate(
-				BlendEquationToGlId(item.BlendMode.ColorEquation),
-				BlendEquationToGlId(item.BlendMode.AlphaEquation)
-			);
-
-			glBindTextureUnit(0, item.TextureId);
-			glBindSampler(0, item.TextureSamplerId);
-
-			glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(item.IndexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(drawOffset * sizeof(uint32_t)));
-			if (scissoringRequired) glDisable(GL_SCISSOR_TEST);
-			drawOffset += item.IndexCount;
+			indexOffset += indicesInThisBatch;
+			vertexOffset += verticesInThisBatch;
+			++iterations;
 		}
+
+		Debug(std::format("Renderer2D::Flush() - Flushed {} draw calls in {} iterations", m_DrawList.size(), iterations));
 
 		m_Vertices.clear();
 		m_Indices.clear();

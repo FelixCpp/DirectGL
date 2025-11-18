@@ -7,6 +7,7 @@ module;
 
 #include <vector>
 #include <optional>
+#include <memory>
 #include <span>
 #include <glad/gl.h>
 #include <string_view>
@@ -19,23 +20,13 @@ import :BlendMode;
 import :StrokeCap;
 import :TextAlignment;
 import :Image2D;
+import :ImageSampler;
 import :Font;
+import :Shader;
+import :ClipRect;
 
 namespace DGL
 {
-
-	typedef std::optional<Math::IntBoundary> ClipRect;
-
-	constexpr ClipRect MakeClipRect(const Math::IntBoundary& boundary, const bool clipEnabled)
-	{
-		if (not clipEnabled)
-		{
-			return std::nullopt;
-		}
-
-		return boundary;
-	}
-
 	struct Vertex2D
 	{
 		Math::Float3 Position; //< X, Y, Z
@@ -47,19 +38,24 @@ namespace DGL
 	{
 		std::span<const Vertex2D>	Vertices;
 		std::span<const uint32_t>	Indices;
-		ClipRect					ClippingRect;
+		ClipRect					ClipRect;
 		BlendMode					BlendMode;
-		uint32_t					TextureId;
-		uint32_t					TextureSamplerId;
+		const Image2D*				Texture;
+		const ImageSampler*			TextureSampler;
+		Shader*						Shader;
+		bool 						IsTextCommand;
 	};
 
 	struct DrawListItem
 	{
-		uint32_t		TextureId;
-		uint32_t		TextureSamplerId;
-		size_t			IndexCount;
-		ClipRect		ClippingRect;
-		BlendMode		BlendMode;
+		const Image2D*		Texture;
+		const ImageSampler*	TextureSampler;
+		Shader*				Shader;
+		size_t				IndexStart;
+		size_t				IndexCount;
+		ClipRect			ClippingRect;
+		BlendMode			BlendMode;
+		bool				IsTextCommand;
 	};
 
 	struct OutlineDefinition
@@ -67,6 +63,14 @@ namespace DGL
 		std::vector<Math::Float3>	Positions;
 		std::vector<Math::Float4>	Colors;
 		std::vector<uint32_t>		Indices;
+	};
+
+	struct RenderingProperties
+	{
+		ClipRect				ClippingRect;
+		BlendMode				BlendMode;
+		Math::Matrix4x4			ModelMatrix;
+		Shader*					Shader;
 	};
 
 	class Renderer2D
@@ -81,21 +85,21 @@ namespace DGL
 		void BeginFrame();
 		void EndFrame();
 
-		void FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-		void DrawRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, float strokeWeight, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const RenderingProperties& properties);
+		void DrawRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, float strokeWeight, const RenderingProperties& properties);
 
-		void FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-		void DrawRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, float strokeWeight, const Math::Float4& color, size_t cornerSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, size_t cornerSegments, const RenderingProperties& properties);
+		void DrawRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, float strokeWeight, const Math::Float4& color, size_t cornerSegments, const RenderingProperties& properties);
 
-		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, float strokeWeight, const Math::Float4& color, size_t segments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, size_t segments, const RenderingProperties& properties);
+		void DrawEllipse(const Math::Float2& center, const Math::Radius& radius, float strokeWeight, const Math::Float4& color, size_t segments, const RenderingProperties& properties);
 
-		void FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-		void DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, float strokeWeight, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const RenderingProperties& properties);
+		void DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, float strokeWeight, const Math::Float4& color, const RenderingProperties& properties);
 
-		void FillLine(const Math::Float2& p1, const Math::Float2& p2, float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-		void Text(std::string_view text, Font& font, const Math::Float2& position, float fontSize, const Math::Float4& color, TextAlignment alignment, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
-		void Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, uint32_t samplerId, const Math::Float4& color, const ClipRect& clippingRect, const Math::Matrix4x4& modelMatrix, const BlendMode& blendMode);
+		void FillLine(const Math::Float2& p1, const Math::Float2& p2, float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const RenderingProperties& properties);
+		void Text(std::string_view text, Font& font, const Math::Float2& position, float textSize, const Math::Float4& color, TextAlignment alignment, const RenderingProperties& properties);
+		void Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, const ImageSampler* sampler, const Math::Float4& color, const RenderingProperties& properties);
 
 	private:
 
@@ -112,10 +116,10 @@ namespace DGL
 		uint32_t m_VertexArrayId;
 		uint32_t m_VertexBufferId;
 		uint32_t m_ElementBufferId;
-		uint32_t m_ShaderProgramId;
 
-		uint32_t m_WhiteTextureId;
-		uint32_t m_DefaultSamplerId;
+		std::unique_ptr<Shader> m_Shader;
+		std::unique_ptr<Image2D> m_WhiteTexture;
+		std::unique_ptr<ImageSampler> m_DefaultSampler;
 
 		size_t m_VertexBufferCapacity;
 		size_t m_ElementBufferCapacity;
