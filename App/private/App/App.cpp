@@ -17,6 +17,8 @@ public:
 	bool Setup() override
 	{
 		DGL::SetWindowSize(1600, 1080);
+		DGL::SetVerticalSyncEnabled(false);
+		DGL::SetTargetFrameRateDisabled();
 
 		g_AppData = {};
 		g_AppData.GameStates.Push(std::make_unique<PlayingGameState>());

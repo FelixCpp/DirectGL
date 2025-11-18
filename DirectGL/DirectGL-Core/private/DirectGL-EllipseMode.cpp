@@ -16,6 +16,7 @@ namespace DGL
 	const EllipseMode& EllipseModeLTRB()
 	{
 		static EllipseMode mode = [](const float x1, const float y1, const float x2, const float y2) {
+			
 			return Math::FloatBoundary::FromLTRB(x1, y1, x2, y2);
 		};
 

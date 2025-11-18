@@ -89,7 +89,7 @@ namespace DGL
 		Math::Float4	StrokeColor;	//!< The stroke color of the shape.
 		float			StrokeWeight;	//!< The stroke weight of the shape.
 		Math::Float2	RectSize;		//!< The size of the rectangle (width, height).
-		float			CornerRadii;	//!< The border radii for each corner (top-left, top-right, bottom-right, bottom-left).
+		float			CornerRadius;	//!< The border radii for each corner (top-left, top-right, bottom-right, bottom-left).
 	};
 
 	/// @brief This structure represents a batch of generic shape data to be rendered.

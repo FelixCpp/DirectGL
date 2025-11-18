@@ -81,44 +81,87 @@ namespace
 		layout (location = 2) in vec4 v_StrokeColor;
 		layout (location = 3) in float v_StrokeWeight;
 		layout (location = 4) in vec2 v_CircleSize;
-		
-		float sdfEllipse(vec2 p, vec2 radius)
-		{
-		    vec2 q = p / radius;
-		    return length(q) - 1.0;
+
+		float sdfEllipse(vec2 position, float halfWidth, float halfHeight, int subdivisionLevel) {
+		    position = abs(position);
+		    vec2 size = vec2(halfWidth, halfHeight);
+		    float startAngle = 0.0;
+		    float endAngle = 3.141592 * 0.5;
+		    vec2 point1 = vec2(halfWidth, 0.0);
+		    vec2 point2 = vec2(0.0, halfHeight);
+		    vec2 normal1 = vec2(1.0, 0.0);
+		    vec2 normal2 = vec2(0.0, 1.0);
+		    for (int i = 0; i < subdivisionLevel; i++) { // perform binary search to find closest segment
+		        float angle = (startAngle + endAngle) * 0.5;
+		        vec2 point = size * vec2(cos(angle), sin(angle)); 
+		        vec2 normal = point / (size * size);
+		        if (dot(position - point, vec2(-normal.y, normal.x)) < 0.0) {
+		            endAngle = angle;
+		            point2 = point;
+		            normal2 = normal;
+		        } else {
+		            startAngle = angle;
+		            point1 = point;
+		            normal1 = normal;
+		        }
+		    }
+		    float t = dot(point2 - point1, normal2) / dot(vec2(-normal1.y, normal1.x), normal2);
+		    vec2 point3 = point1 + vec2(-normal1.y, normal1.x) * t;
+		    float a = length(point2 - point3);
+		    float b = length(point3 - point1);
+		    float c = length(point1 - point2);
+		    vec2 incenter = (point1 * a + point2 * b + point3 * c) / (a + b + c);
+		    vec2 midpoint1 = (point1 + incenter) * 0.5;
+		    vec2 bisector1 = point1 - incenter;
+		    bisector1 = vec2(-bisector1.y, bisector1.x);
+		    float t1 = dot(point1 - midpoint1, vec2(-normal1.y, normal1.x)) / dot(bisector1, vec2(-normal1.y, normal1.x));
+		    vec2 center1 = midpoint1 + bisector1 * t1;
+		    vec2 normal3 = incenter - center1;
+		    if (dot(position - center1, vec2(-normal3.y, normal3.x)) < 0.0) {
+		        float radius1 = length(point1 - center1);
+		        return length(position - center1) - radius1;  
+		    }
+		    vec2 midpoint2 = (point2 + incenter) * 0.5;
+		    vec2 bisector2 = point2 - incenter;
+		    bisector2 = vec2(-bisector2.y, bisector2.x);
+		    float t2 = dot(point2 - midpoint2, vec2(-normal2.y, normal2.x)) / dot(bisector2, vec2(-normal2.y, normal2.x));
+		    vec2 center2 = midpoint2 + bisector2 * t2;
+		    float radius2 = length(point2 - center2);  
+		    return length(position - center2) - radius2;
 		}
+
+		//float sdbEllipsoidV2( in vec3 p, in vec3 r )
+		//{
+		//    float k1 = length(p/r);
+		//    float k2 = length(p/(r*r));
+		//    return k1*(k1-1.0)/k2;
+		//}
 
 		void main()
 		{
-			vec2 radius = vec2(1.0);
-			float dist = sdfEllipse(v_LocalPosition, radius);
-			float antiAlias = fwidth(dist);
+			const int subdivisions = 1;
+			const vec2 positions = v_LocalPosition * v_CircleSize;
+			const float distance = sdfEllipse(positions, v_CircleSize.x, v_CircleSize.y, subdivisions);
+			//const float distance = sdbEllipsoidV2(vec3(positions, 0.0), vec3(v_CircleSize, 1.0));
+			const float fadeWidth = fwidth(distance);
+			const float fillFadeStart = -fadeWidth;
+			const float fillFadeEnd = 0.0;
+			const float fillAlpha = 1.0 - smoothstep(fillFadeStart, fillFadeEnd, distance);
+			const vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillAlpha);
 
-			// Compute the conversion factor from pixels to local space
-			//float halfStrokeWeightPx = v_StrokeWeight * 0.5;
-			//float halfStrokeLocal = halfStrokeWeightPx * antiAlias;
+			const float innerStrokeFadeStart = -v_StrokeWeight;
+			const float innerStrokeFadeEnd = -(v_StrokeWeight - fadeWidth);
+			const float strokeAlphaInner = smoothstep(innerStrokeFadeStart, innerStrokeFadeEnd, distance);
+			
+			const float outerStrokeFadeStart = -fadeWidth;
+			const float outerStrokeFadeEnd = 0.0;
+			const float strokeAlphaOuter = 1.0 - smoothstep(outerStrokeFadeStart, outerStrokeFadeEnd, distance);
+			const float strokeAlpha = strokeAlphaInner * strokeAlphaOuter;
+			const vec4 strokeColor = vec4(v_StrokeColor.rgb, v_StrokeColor.a * strokeAlpha);
+			const vec4 combinedColor = mix(fillColor, strokeColor, strokeAlpha);
 
-			vec2 pixelToLocal = 2.0 / v_CircleSize;
-			float pxToLocal = 0.5 * (pixelToLocal.x + pixelToLocal.y);
-			float halfStrokeLocal = v_StrokeWeight * 0.5 * pxToLocal;
-
-			// Define inner and outer distances for fill and stroke
-			float inner = -halfStrokeLocal;
-			float outer = 0.0;
-
-			// Compute the fill color with anti-aliasing
-			float fillFactor	= smoothstep(inner - antiAlias, inner + antiAlias, dist);
-			float fillMask		= 1.0 - fillFactor;
-			float strokeFactor	= smoothstep(outer + antiAlias, outer - antiAlias, dist);
-			float strokeMask	= strokeFactor;
-
-			vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillMask);
-			vec4 strokeColor = vec4(v_StrokeColor.rgb, v_StrokeColor.a * strokeMask);
-			vec4 combinedColor = fillColor + strokeColor * (1.0 - fillColor.a);
-
-			// Combine fill and stroke colors
-			o_FragColor = vec4(combinedColor.rgba);
-		}
+			o_FragColor = vec4(combinedColor);
+ 		}
 	)";
 
 	inline static constexpr auto SDF_ROUNDED_RECT_VERTEX_SOURCE = R"(
@@ -167,13 +210,34 @@ namespace
 
 		uniform vec2 u_ViewportSize;
 
-		float roundedBoxSDF(in vec2 CenterPosition, in vec2 Size, in float Radius) {
-		    return length(max(abs(CenterPosition) - Size + Radius, 0.0)) - Radius;
+		float RectSDF(vec2 p, vec2 b, float r)
+		{
+		    vec2 d = abs(p) - b + vec2(r);
+		    return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;
 		}
 
 		void main()
 		{
-			o_FragColor = v_FillColor;
+			float cappedRadius = min(v_BorderRadius, min(v_RectSize.x, v_RectSize.y) * 0.5);
+			const float distance = RectSDF(v_LocalPosition * v_RectSize, v_RectSize, cappedRadius);
+			const float fadeWidth = fwidth(distance);
+			const float fillFadeStart = -fadeWidth;
+			const float fillFadeEnd = 0.0;
+			const float fillAlpha = 1.0 - smoothstep(fillFadeStart, fillFadeEnd, distance);
+			const vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillAlpha);
+
+			const float innerStrokeFadeStart = -v_StrokeWeight;
+			const float innerStrokeFadeEnd = -(v_StrokeWeight - fadeWidth);
+			const float strokeAlphaInner = smoothstep(innerStrokeFadeStart, innerStrokeFadeEnd, distance);
+			
+			const float outerStrokeFadeStart = -fadeWidth;
+			const float outerStrokeFadeEnd = 0.0;
+			const float strokeAlphaOuter = 1.0 - smoothstep(outerStrokeFadeStart, outerStrokeFadeEnd, distance);
+			const float strokeAlpha = strokeAlphaInner * strokeAlphaOuter;
+			const vec4 strokeColor = vec4(v_StrokeColor.rgb, v_StrokeColor.a * strokeAlpha);
+			const vec4 combinedColor = mix(fillColor, strokeColor, strokeAlpha);
+
+			o_FragColor = vec4(combinedColor);
 		}
 	)";
 }
@@ -376,16 +440,18 @@ namespace DGL
 		}
 	};
 
-	auto GetBlendModeActivator()
+	auto& GetBlendModeActivator()
 	{
-		std::optional<BlendMode> currentBlendMode;
-
-		return [&currentBlendMode](const BlendMode& blendMode) {
+		static auto activator = [currentBlendMode = std::optional<BlendMode>{}](const BlendMode& blendMode) mutable  {
 			if (currentBlendMode != blendMode) {
+				Info("Activated new BlendMode");
 				glBlendFuncSeparate(blendFactorToGlId(blendMode.SourceColorFactor), blendFactorToGlId(blendMode.DestinationColorFactor), blendFactorToGlId(blendMode.SourceAlphaFactor), blendFactorToGlId(blendMode.DestinationAlphaFactor));
 				glBlendEquationSeparate(blendEquationToGlId(blendMode.ColorEquation), blendEquationToGlId(blendMode.AlphaEquation));
+				currentBlendMode = blendMode;
 			}
 		};
+
+		return activator;
 	}
 
 	auto GetClipRectActivator()
@@ -458,7 +524,13 @@ namespace DGL
 		const float depth = m_DepthProvider.GetAndIncrement();
 
 		// Define the four corners of the rectangle
-		const auto [left, top, width, height] = boundary;
+		// Transform the rectangle corners using the model matrix
+		auto [left, top, width, height] = boundary;
+		left = std::min(left, left + width);
+		top = std::min(top, top + height);
+		width = std::abs(width);
+		height = std::abs(height);
+
 		const Math::Float3 topLeft = properties.ModelMatrix.TransformPoint(Math::Float3{ left, top, depth });
 		const Math::Float3 topRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top, depth });
 		const Math::Float3 bottomRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top + height, depth });
@@ -491,7 +563,13 @@ namespace DGL
 		const float depth = m_DepthProvider.GetAndIncrement();
 
 		// Transform the rectangle corners using the model matrix
-		const auto [left, top, width, height] = boundary;
+		auto [left, top, width, height] = boundary;
+		left = std::min(left, left + width);
+		top = std::min(top, top + height);
+		width = std::abs(width);
+		height = std::abs(height);
+
+		Info(std::format("Rendering rounded rectangle at ({}, {}) with size ({}, {})", left, top, width, height));
 		const Math::Float3 topLeft = properties.ModelMatrix.TransformPoint(Math::Float3{ left, top, depth });
 		const Math::Float3 topRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top, depth });
 		const Math::Float3 bottomRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top + height, depth });
@@ -499,10 +577,10 @@ namespace DGL
 
 		// Create vertices for the rounded rectangle
 		submission.Vertices = {
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = topLeft,		.LocalPosition = { -1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadii = cornerRadii.TopLeft, },
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = topRight,		.LocalPosition = {  1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadii = cornerRadii.TopRight },
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = bottomRight,	.LocalPosition = {  1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadii = cornerRadii.BottomRight },
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = bottomLeft,	.LocalPosition = { -1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadii = cornerRadii.BottomLeft },
+			HybridRendererSDFRoundedRectVertex{ .WorldPosition = topLeft,		.LocalPosition = { -1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.TopLeft, },
+			HybridRendererSDFRoundedRectVertex{ .WorldPosition = topRight,		.LocalPosition = {  1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.TopRight },
+			HybridRendererSDFRoundedRectVertex{ .WorldPosition = bottomRight,	.LocalPosition = {  1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.BottomRight },
+			HybridRendererSDFRoundedRectVertex{ .WorldPosition = bottomLeft,	.LocalPosition = { -1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.BottomLeft },
 		};
 
 		// Define the indices for two triangles that make up the rounded rectangle
@@ -523,9 +601,13 @@ namespace DGL
 		// Get the depth for this shape
 		const float depth = m_DepthProvider.GetAndIncrement();
 
+		Math::Float2 transformedRadius = properties.ModelMatrix.TransformVector(Math::Float2{ radius.X, radius.Y });
+		transformedRadius.X = std::abs(transformedRadius.X);
+		transformedRadius.Y = std::abs(transformedRadius.Y);
+
 		// Transform the center point using the model matrix
 		const Math::Float3 transformedCenter	= properties.ModelMatrix.TransformPoint(Math::Float3{ center.X, center.Y, depth });
-		const Math::Float2 transformedRadius	= properties.ModelMatrix.TransformVector(Math::Float2{ radius.X, radius.Y });
+
 		const Math::Float2 localTopLeft			= { -transformedRadius.X, -transformedRadius.Y };
 		const Math::Float2 localTopRight		= {  transformedRadius.X, -transformedRadius.Y };
 		const Math::Float2 localBottomRight		= {  transformedRadius.X,  transformedRadius.Y };
@@ -533,10 +615,10 @@ namespace DGL
 
 		// Create vertices for the circle quad
 		submission.Vertices = {
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localTopLeft, 0.0f },		.LocalPosition = { -1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { radius.X * 2.0f, radius.Y * 2.0f }, },
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localTopRight, 0.0f },	.LocalPosition = {  1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { radius.X * 2.0f, radius.Y * 2.0f }, },
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localBottomRight, 0.0f },	.LocalPosition = {  1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { radius.X * 2.0f, radius.Y * 2.0f }, },
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localBottomLeft, 0.0f },	.LocalPosition = { -1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { radius.X * 2.0f, radius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localTopLeft, 0.0f },		.LocalPosition = { -1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localTopRight, 0.0f },	.LocalPosition = {  1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localBottomRight, 0.0f },	.LocalPosition = {  1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localBottomLeft, 0.0f },	.LocalPosition = { -1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
 		};
 
 		// Define the indices for two triangles that make up the quad
@@ -705,8 +787,8 @@ namespace DGL
 		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 5, 2, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, RectSize));
 		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 5, 0);
 
-		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 6); // CornerRadii
-		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 6, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, CornerRadii));
+		glEnableVertexArrayAttrib(sdfRoundedRectVertexArray, 6); // CornerRadius
+		glVertexArrayAttribFormat(sdfRoundedRectVertexArray, 6, 1, GL_FLOAT, GL_FALSE, offsetof(HybridRendererSDFRoundedRectVertex, CornerRadius));
 		glVertexArrayAttribBinding(sdfRoundedRectVertexArray, 6, 0);
 
 		std::unique_ptr<Shader> sdfRoundedRectShader = Shader::CreateFromSource(SDF_ROUNDED_RECT_VERTEX_SOURCE, SDF_ROUNDED_RECT_FRAGMENT_SOURCE);
@@ -754,10 +836,9 @@ namespace DGL
 		glUseProgram(m_GenericProperties.Shader->GetShaderId());
 		m_GenericProperties.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
 
-		static const auto activateBlendMode = GetBlendModeActivator();
+		static auto& activateBlendMode = GetBlendModeActivator();
 		static const auto activateClipRect = GetClipRectActivator();
 
-		auto start = std::chrono::high_resolution_clock::now();
 		int iterations = 0;
 		Chunked<HybridRendererGenericVertex>(
 			m_GenericBatches,
@@ -765,8 +846,6 @@ namespace DGL
 			m_GenericProperties.ElementBufferCapacity,
 			[this, &iterations](ReadOnlyChunk<HybridRendererGenericVertex>&& chunk)
 			{
-				Warning(std::format("HybridRenderer: Flushing generic chunk with {} vertices and {} indices.", chunk.Vertices.size(), chunk.Indices.size()));
-
 				// Maybe we can do this once at the start?
 				activateBlendMode(*chunk.BlendMode);
 				activateClipRect(*chunk.ClipRect);
@@ -780,11 +859,7 @@ namespace DGL
 				++iterations;
 			}
 		);
-		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double, std::milli> duration = end - start;
-		Info(std::format("HybridRenderer: Flushed generic chunks in {:.2f} ms.", duration.count()));
-		Info(std::format("HybridRenderer: Flushed {} generic chunks in {} iterations.", m_GenericBatches.size(), iterations));
-
+		
 		// Clear all generic batches after flushing
 		m_GenericBatches.clear();
 	}
@@ -797,7 +872,7 @@ namespace DGL
 			return;
 		}
 
-		static const auto blendModeActivator = GetBlendModeActivator();
+		static auto& blendModeActivator = GetBlendModeActivator();
 		static const auto clipRectActivator = GetClipRectActivator();
 
 		// Unfortunately, we can not assume that the batches are small enough to fit into the
@@ -838,7 +913,7 @@ namespace DGL
 			return;
 		}
 
-		static const auto blendModeActivator = GetBlendModeActivator();
+		static auto& blendModeActivator = GetBlendModeActivator();
 		static const auto clipRectActivator = GetClipRectActivator();
 
 		// Unfortunately, we can not assume that the batches are small enough to fit into the
