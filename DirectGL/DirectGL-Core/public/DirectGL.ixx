@@ -229,7 +229,7 @@ import :InputListener;
 import :AsyncLogger;
 import :RenderStyleStack;
 import :MainGraphicsLayer;
-import :Renderer2D;
+import :HybridRenderer;
 import :FrameRateLimiter;
 
 enum struct ExitType
@@ -249,7 +249,7 @@ struct DirectGLLibrary
 	DGL::InputListener								InputListener;		//!< The input listener to use
 	DGL::FrameRateLimiter							FrameRateLimiter;	//!< The frame rate limiter to use
 	std::unique_ptr<DGL::MainGraphicsLayer>			MainGraphicsLayer;
-	std::shared_ptr<DGL::Renderer2D>				Renderer;			//!< The 2D renderer to use
+	std::shared_ptr<DGL::HybridRenderer>			Renderer;			//!< The 2D renderer to use
 
 	ExitType		ExitType = ExitType::Quit;			//!< The exit code to return on application shutdown
 	int				ExitCode = 0;						//!< The return code to return on application shutdown

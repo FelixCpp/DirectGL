@@ -22,6 +22,9 @@ export namespace DGL
 		static constexpr ClipRect Optional(const Math::IntBoundary& boundary, bool enabled);
 		static constexpr ClipRect Optional(const std::optional<Math::IntBoundary>& boundary);
 
+		constexpr bool operator == (const ClipRect& other) const = default;
+		constexpr bool operator != (const ClipRect& other) const = default;
+
 		[[nodiscard]] constexpr bool IsClipped() const;
 		[[nodiscard]] constexpr Math::IntBoundary& UnwrapBoundary() &;
 		[[nodiscard]] constexpr const Math::IntBoundary& UnwrapBoundary() const&;

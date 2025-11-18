@@ -33,17 +33,59 @@ void PlayingGameState::Update(float deltaTime)
 		deltaTime *= 10.0f;
 	}
 
-	m_Tower.Update(deltaTime);
-	m_Spawner.Update(deltaTime);
-	m_Weapon.Update(deltaTime);
-	m_Weapon.Shoot(m_Spawner.Enemies);
+//	m_Tower.Update(deltaTime);
+//	m_Spawner.Update(deltaTime);
+//	m_Weapon.Update(deltaTime);
+//	m_Weapon.Shoot(m_Spawner.Enemies);
 }
+
+struct Quad
+{
+	DGL::Math::FloatBoundary Boundary;
+	DGL::Math::Float4 Color;
+};
 
 void PlayingGameState::Show() const
 {
 	DGL::Background({ 0.1f, 0.1f, 0.1f, 1.0f });
 
-	m_Tower.Show();
-	m_Weapon.Show();
-	m_Spawner.Show();
+	static std::vector<Quad> quads = []()
+	{
+		std::vector<Quad> quads(10'000);
+		for (size_t i = 0; i < quads.size(); ++i)
+		{
+			const auto width = DGL::GetViewport().Width;
+			const auto height = DGL::GetViewport().Height;
+
+			const float x = DGL::Math::Random(0.0f, width);
+			const float y = DGL::Math::Random(0.0f, height);
+			const float size = DGL::Math::Random(5.0f, 20.0f);
+
+			const DGL::Math::Float4 color = {
+				DGL::Math::Random(0.0f, 1.0f),
+				DGL::Math::Random(0.0f, 1.0f),
+				DGL::Math::Random(0.0f, 1.0f),
+				DGL::Math::Random(0.0f, 1.0f),
+			};
+
+			quads[i] = Quad{ DGL::Math::FloatBoundary::FromLTWH(x, y, size, size), color };
+		}
+
+		return quads;
+	}();
+
+	// Generate 10'000 random quads on screen
+	// using the DGL::Math::Random function
+	DGL::SetBlendMode(DGL::BlendMode::Additive);
+	for (size_t i = 0; i < quads.size(); ++i)
+	{
+		const Quad& q = quads[i];
+
+		DGL::SetFillColor(q.Color);
+		DGL::Rect(q.Boundary.Left, q.Boundary.Top, q.Boundary.Width, q.Boundary.Height);
+	}
+
+//	m_Tower.Show();
+//	m_Weapon.Show();
+//	m_Spawner.Show();
 }

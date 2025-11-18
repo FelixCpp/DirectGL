@@ -42,7 +42,7 @@ namespace DGL
 		{
 			const auto [windowWidth, windowHeight] = static_cast<Math::Float2>(GetWindowSize());
 
-			Library.Renderer = std::make_shared<Renderer2D>();
+			Library.Renderer = HybridRenderer::Create();
 			Library.MainGraphicsLayer = std::make_unique<MainGraphicsLayer>(Library.Renderer, Math::FloatBoundary::FromLTWH(0.0f, 0.0f, windowWidth, windowHeight));
 
 			Library.Sketch = factory();

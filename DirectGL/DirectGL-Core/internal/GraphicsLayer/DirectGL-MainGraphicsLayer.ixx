@@ -12,7 +12,7 @@ export module DirectGL:MainGraphicsLayer;
 
 import :GraphicsLayer;
 import :RenderStyleStack;
-import :Renderer2D;
+import :HybridRenderer;
 import :MainRenderTarget;
 
 namespace DGL
@@ -22,7 +22,7 @@ namespace DGL
 	public:
 
 		explicit MainGraphicsLayer(
-			const std::weak_ptr<Renderer2D>& renderer,
+			const std::weak_ptr<HybridRenderer>& renderer,
 			const Math::FloatBoundary& viewport
 		);
 
@@ -90,7 +90,7 @@ namespace DGL
 	private:
 
 		RenderStyleStack m_RenderStyleStack;
-		std::weak_ptr<Renderer2D> m_Renderer;
+		std::weak_ptr<HybridRenderer> m_Renderer;
 		MainRenderTarget m_RenderTarget;
 
 	};

@@ -90,6 +90,8 @@ namespace DGL
 			m_CurrentFrameRate = static_cast<uint32_t>(fps + 0.5);
 			m_FramesSinceLastFPSUpdate = 0;
 			m_LastFPSTimePoint = now;
+
+			Debug(std::format("Current FPS: {}", m_CurrentFrameRate));
 		}
 	}
 

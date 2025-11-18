@@ -24,6 +24,7 @@ import :ImageSampler;
 import :Font;
 import :Shader;
 import :ClipRect;
+import :RenderingProperties;
 
 namespace DGL
 {
@@ -63,14 +64,6 @@ namespace DGL
 		std::vector<Math::Float3>	Positions;
 		std::vector<Math::Float4>	Colors;
 		std::vector<uint32_t>		Indices;
-	};
-
-	struct RenderingProperties
-	{
-		ClipRect				ClippingRect;
-		BlendMode				BlendMode;
-		Math::Matrix4x4			ModelMatrix;
-		Shader*					Shader;
 	};
 
 	class Renderer2D
