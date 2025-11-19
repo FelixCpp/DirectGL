@@ -29,17 +29,17 @@ void Tower::Show() const
 	{
 		Translate(px, py);
 		Scale(scale, scale);
-		SetEllipseSegmentsMode(EllipseSegmentsModeFixed(6));
+		//SetEllipseSegmentsMode(EllipseSegmentsModeFixed(6));
 		SetEllipseMode(EllipseModeCenterRadius());
 		SetFillColorDisabled();
-
+	
 		// Draw blue hexagon as "background layer"
 		SetStrokeWeight(8.0f);
 		SetStrokeColor({ COLOR_BLUE, 1.0f });
 		Circle(0.0f, 0.0f, 50.0f);
-
+	
 		// Draw white hexagon as "foreground layer"
-		SetStrokeWeight(2.0f);
+		SetStrokeWeight(4.0f);
 		SetStrokeColor({ COLOR_WHITE, 1.0f });
 		Circle(0.0f, 0.0f, 50.0f);
 	}

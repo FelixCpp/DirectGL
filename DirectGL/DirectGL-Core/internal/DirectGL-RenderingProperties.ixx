@@ -17,5 +17,7 @@ namespace DGL
 		BlendMode				BlendMode;
 		Math::Matrix4x4			ModelMatrix;
 		Shader*					Shader;
+		bool					IsFillEnabled;
+		bool					IsStrokeEnabled;
 	};
 }

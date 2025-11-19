@@ -43,6 +43,8 @@ void TankEnemy::Show() const
 	const float alpha = HealthFlashProgress;
 	DGL::PushStyle();
 	{
+		const DGL::Math::BorderRadius radius = DGL::Math::BorderRadius::All(5.0f);
+
 		DGL::Translate(Position.X, Position.Y);
 		DGL::Scale(scale, scale);
 		DGL::SetFillColorDisabled();
@@ -52,12 +54,12 @@ void TankEnemy::Show() const
 		DGL::SetStrokeWeight(10.0f);
 		DGL::SetFillColor({ COLOR_GOLDEN, alpha });
 		DGL::SetStrokeColor({ COLOR_GOLDEN, 1.0f });
-		DGL::Rect(0.0f, 0.0f, Size.X, Size.Y);
+		DGL::RoundedRect(0.0f, 0.0f, Size.X, Size.Y, radius);
 
 		// Draw white rectangle as "foreground layer"
-		DGL::SetStrokeWeight(3.0f);
+		DGL::SetStrokeWeight(5.0f);
 		DGL::SetStrokeColor({ COLOR_WHITE, 1.0f });
-		DGL::Rect(0.0f, 0.0f, Size.X, Size.Y);
+		DGL::RoundedRect(0.0f, 0.0f, Size.X, Size.Y, radius);
 	}
 	DGL::PopStyle();
 }

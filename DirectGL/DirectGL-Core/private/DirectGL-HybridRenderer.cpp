@@ -137,20 +137,30 @@ namespace
 		//    return k1*(k1-1.0)/k2;
 		//}
 
+		uniform int u_IsFillEnabled;
+		uniform int u_IsStrokeEnabled;
+
 		void main()
 		{
 			const int subdivisions = 1;
-			const vec2 positions = v_LocalPosition * v_CircleSize;
-			const float distance = sdfEllipse(positions, v_CircleSize.x, v_CircleSize.y, subdivisions);
-			//const float distance = sdbEllipsoidV2(vec3(positions, 0.0), vec3(v_CircleSize, 1.0));
+			const vec2 position = v_LocalPosition * v_CircleSize;
+			const float distance = sdfEllipse(position, v_CircleSize.x, v_CircleSize.y, subdivisions);
+			//const float distance = sdbEllipsoidV2(vec3(position, 0.0), vec3(v_CircleSize, 1.0));
 			const float fadeWidth = fwidth(distance);
 			const float fillFadeStart = -fadeWidth;
 			const float fillFadeEnd = 0.0;
 			const float fillAlpha = 1.0 - smoothstep(fillFadeStart, fillFadeEnd, distance);
 			const vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillAlpha);
 
-			const float innerStrokeFadeStart = -v_StrokeWeight;
-			const float innerStrokeFadeEnd = -(v_StrokeWeight - fadeWidth);
+			if ((u_IsFillEnabled != 0) && (u_IsStrokeEnabled == 0))
+			{
+				o_FragColor = fillColor;
+				return;
+			}
+
+			const float strokeWeight = v_StrokeWeight * 2.0f;
+			const float innerStrokeFadeStart = -strokeWeight;
+			const float innerStrokeFadeEnd = -(strokeWeight - fadeWidth);
 			const float strokeAlphaInner = smoothstep(innerStrokeFadeStart, innerStrokeFadeEnd, distance);
 			
 			const float outerStrokeFadeStart = -fadeWidth;
@@ -158,9 +168,14 @@ namespace
 			const float strokeAlphaOuter = 1.0 - smoothstep(outerStrokeFadeStart, outerStrokeFadeEnd, distance);
 			const float strokeAlpha = strokeAlphaInner * strokeAlphaOuter;
 			const vec4 strokeColor = vec4(v_StrokeColor.rgb, v_StrokeColor.a * strokeAlpha);
-			const vec4 combinedColor = mix(fillColor, strokeColor, strokeAlpha);
 
-			o_FragColor = vec4(combinedColor);
+			if ((u_IsFillEnabled == 0) && (u_IsStrokeEnabled != 0))
+			{
+				o_FragColor = strokeColor;
+				return;
+			}
+
+			o_FragColor = mix(fillColor, strokeColor, strokeAlpha);
  		}
 	)";
 
@@ -208,26 +223,35 @@ namespace
 		layout (location = 4) in vec2 v_RectSize;
 		layout (location = 5) in float v_BorderRadius;
 
-		uniform vec2 u_ViewportSize;
-
 		float RectSDF(vec2 p, vec2 b, float r)
 		{
 		    vec2 d = abs(p) - b + vec2(r);
 		    return min(max(d.x, d.y), 0.0) + length(max(d, 0.0)) - r;
 		}
+	
+		uniform int u_IsFillEnabled;
+		uniform int u_IsStrokeEnabled;
 
 		void main()
 		{
 			float cappedRadius = min(v_BorderRadius, min(v_RectSize.x, v_RectSize.y) * 0.5);
 			const float distance = RectSDF(v_LocalPosition * v_RectSize, v_RectSize, cappedRadius);
 			const float fadeWidth = fwidth(distance);
+
 			const float fillFadeStart = -fadeWidth;
 			const float fillFadeEnd = 0.0;
 			const float fillAlpha = 1.0 - smoothstep(fillFadeStart, fillFadeEnd, distance);
-			const vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillAlpha);
+			vec4 fillColor = vec4(v_FillColor.rgb, v_FillColor.a * fillAlpha);
+		
+			if ((u_IsFillEnabled != 0) && (u_IsStrokeEnabled == 0))
+			{
+				o_FragColor = fillColor;
+				return;
+			}
 
-			const float innerStrokeFadeStart = -v_StrokeWeight;
-			const float innerStrokeFadeEnd = -(v_StrokeWeight - fadeWidth);
+			const float strokeWeight = v_StrokeWeight * 2.0;
+			const float innerStrokeFadeStart = -strokeWeight;
+			const float innerStrokeFadeEnd = -(strokeWeight - fadeWidth);
 			const float strokeAlphaInner = smoothstep(innerStrokeFadeStart, innerStrokeFadeEnd, distance);
 			
 			const float outerStrokeFadeStart = -fadeWidth;
@@ -235,9 +259,14 @@ namespace
 			const float strokeAlphaOuter = 1.0 - smoothstep(outerStrokeFadeStart, outerStrokeFadeEnd, distance);
 			const float strokeAlpha = strokeAlphaInner * strokeAlphaOuter;
 			const vec4 strokeColor = vec4(v_StrokeColor.rgb, v_StrokeColor.a * strokeAlpha);
-			const vec4 combinedColor = mix(fillColor, strokeColor, strokeAlpha);
+			
+			if ((u_IsFillEnabled == 0) && (u_IsStrokeEnabled != 0))
+			{
+				o_FragColor = strokeColor;
+				return;
+			}
 
-			o_FragColor = vec4(combinedColor);
+			o_FragColor = mix(fillColor, strokeColor, strokeAlpha);
 		}
 	)";
 }
@@ -292,67 +321,41 @@ namespace DGL
 		return hash;
 	}
 
-	/// @brief Compute a unique key for a batch based on its rendering properties.
-	///
-	/// This function computes a unique key for a batch of shapes
-	/// based on its rendering properties, specifically the blend mode
-	/// and clipping rectangle. This key is used to group shapes
-	/// with similar properties together for efficient rendering.
-	///
-	/// @param blendMode The blend mode of the batch.
-	/// @param clipRect The clipping rectangle of the batch.
-	/// @return A unique key representing the batch.
-	[[nodiscard]] static HybridRendererBatchKey ComputeBatchKey(const BlendMode& blendMode, const ClipRect& clipRect)
+	template <typename Vertex>
+	[[nodiscard]] static HybridRendererBatchKey ComputeBatchKey(const HybridRendererBatch<Vertex>& batch)
 	{
-		return ComputeBlendModeHash(blendMode) ^ (ComputeClipRectHash(clipRect) << 1);
+		size_t hash = 0;
+		hash ^= ComputeBlendModeHash(batch.BlendMode) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= ComputeClipRectHash(batch.ClipRect) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		return hash;
 	}
 
-	/// @brief Merge a submission batch into an existing batch.
-	///
-	/// This function merges the contents of a submission batch
-	/// into an existing batch. It appends the vertices and
-	/// indices from the submission to the existing batch,
-	/// adjusting the indices accordingly to account for
-	/// the new vertex positions.
-	///
-	/// @param batch The existing batch to merge into.
-	/// @param submission The submission batch to merge from.
-	/// @tparam Vertex The type of vertex used in the batches.
-	template <typename Vertex>
-	void MergeBatch(HybridRendererBatch<Vertex>& batch, const HybridRendererBatch<Vertex>& submission)
+	template <typename SDFVertex>
+	[[nodiscard]] static HybridRendererBatchKey ComputeBatchKey(const HybridSDFRendererBatch<SDFVertex>& batch)
 	{
-		// Store the offset where the new vertices will be added
-		const size_t indexOffset = batch.Vertices.size();
-
-		// Append all vertices to the batch
-		batch.Vertices.append_range(submission.Vertices);
-
-		// Append all indices to the
-		batch.Indices.reserve(batch.Indices.size() + submission.Indices.size());
-		for (const uint32_t index : submission.Indices)
-		{
-			batch.Indices.push_back(static_cast<uint32_t>(indexOffset) + index);
-		}
+		size_t hash = 0;
+		hash ^= ComputeBlendModeHash(batch.BlendMode) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= ComputeClipRectHash(batch.ClipRect) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(batch.IsFillEnabled) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(batch.IsStrokeEnabled) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		return hash;
 	}
-
-	/// @brief Merge a submission batch into the batch map or create a new batch.
-	///
-	/// This function checks if a batch with the same rendering properties
-	/// as the submission already exists in the batch map. If it does,
-	/// it merges the submission into the existing batch. If not,
-	/// it creates a new batch in the map with the submission.
-	///
-	/// @param batchMap The map of existing batches.
-	/// @param submission The submission batch to merge or create.
-	/// @tparam Vertex The type of vertex used in the batches.
-	template <typename Vertex>
-	void MergeOrCreateBatch(std::map<HybridRendererBatchKey, HybridRendererBatch<Vertex>>& batchMap, const HybridRendererBatch<Vertex>& submission)
+	
+	template <typename Batch>
+	void MergeOrCreateBatch(std::unordered_map<HybridRendererBatchKey, Batch>& batchMap, const Batch& submission)
 	{
-		const HybridRendererBatchKey batchKey = ComputeBatchKey(submission.BlendMode, submission.ClipRect);
+		const HybridRendererBatchKey batchKey = ComputeBatchKey(submission);
 		const auto it = batchMap.find(batchKey);
 		if (it != batchMap.end())
 		{
-			MergeBatch(it->second, submission);
+			Batch& batch = it->second;
+
+			for (const uint32_t index : submission.Indices)
+			{
+				batch.Indices.emplace_back(static_cast<uint32_t>(batch.Vertices.size()) + index);
+			}
+
+			batch.Vertices.append_range(submission.Vertices);
 		}
 		else
 		{
@@ -360,43 +363,42 @@ namespace DGL
 		}
 	}
 
-	template <typename Vertex>
+	template <typename Batch>
 	struct ReadOnlyChunk
 	{
-		const BlendMode*				BlendMode;
-		const ClipRect*					ClipRect;
-		std::span<const Vertex>			Vertices;
-		std::span<const uint32_t>		Indices;
-		size_t							IndexOffset;
+		using VertexType = std::add_const_t<typename Batch::VertexType>;
+
+		const Batch*				Original;
+		std::span<VertexType>		Vertices;
+		std::span<const uint32_t>	Indices;
 	};
 
-	template <typename Vertex, std::invocable<ReadOnlyChunk<Vertex>> Callback>
+	template <typename Batch, std::invocable<ReadOnlyChunk<Batch>> Callback>
 	void Chunked(
-		const std::map<HybridRendererBatchKey, HybridRendererBatch<Vertex>>& batches,
+		const std::unordered_map<HybridRendererBatchKey, Batch>& batches,
 		const size_t vertexCapacity,
 		const size_t indexCapacity,
 		Callback&& callback
 	) {
 		for (const auto& [batchKey, batch] : batches)
 		{
-			size_t totalVertices = batch.Vertices.size();
-			size_t totalIndices = batch.Indices.size();
+			const size_t totalVertices = batch.Vertices.size();
+			const size_t totalIndices = batch.Indices.size();
+		
 			size_t vertexOffset = 0;
 			size_t indexOffset = 0;
-
+		
 			while (indexOffset < totalIndices)
 			{
 				const size_t verticesInThisChunk = std::min(totalVertices - vertexOffset, vertexCapacity);
 				const size_t indicesInThisChunk = std::min(totalIndices - indexOffset, indexCapacity);
-
-				ReadOnlyChunk<Vertex> chunk {
-					.BlendMode		= &batch.BlendMode,
-					.ClipRect		= &batch.ClipRect,
+		
+				ReadOnlyChunk<Batch> chunk {
+					.Original		= &batch,
 					.Vertices		= std::span(&batch.Vertices[vertexOffset], verticesInThisChunk),
 					.Indices		= std::span(&batch.Indices[indexOffset], indicesInThisChunk),
-					.IndexOffset	= vertexOffset,
 				};
-
+		
 				callback(std::move(chunk));
 				vertexOffset += verticesInThisChunk;
 				indexOffset += indicesInThisChunk;
@@ -499,9 +501,7 @@ namespace DGL
 
 	void HybridRenderer::BeginDraw()
 	{
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_BLEND);
 
 		m_DepthProvider.Reset();
@@ -554,9 +554,11 @@ namespace DGL
 	void HybridRenderer::RenderRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& cornerRadii, const Math::Float4& fillColor, const Math::Float4& strokeColor, float strokeWeight, const RenderingProperties& properties)
 	{
 		// Create an SDF rounded rectangle batch submission
-		HybridRendererBatch<HybridRendererSDFRoundedRectVertex> submission = {
+		HybridSDFRendererBatch<HybridRendererSDFRoundedRectVertex> submission = {
 			.BlendMode = properties.BlendMode,
 			.ClipRect = properties.ClippingRect,
+			.IsFillEnabled = properties.IsFillEnabled,
+			.IsStrokeEnabled = properties.IsStrokeEnabled,
 		};
 
 		// Get the depth for this shape
@@ -569,7 +571,6 @@ namespace DGL
 		width = std::abs(width);
 		height = std::abs(height);
 
-		Info(std::format("Rendering rounded rectangle at ({}, {}) with size ({}, {})", left, top, width, height));
 		const Math::Float3 topLeft = properties.ModelMatrix.TransformPoint(Math::Float3{ left, top, depth });
 		const Math::Float3 topRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top, depth });
 		const Math::Float3 bottomRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top + height, depth });
@@ -593,9 +594,11 @@ namespace DGL
 	void HybridRenderer::RenderEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& fillColor, const Math::Float4& strokeColor, const float strokeWeight, const RenderingProperties& properties)
 	{
 		// Create an SDF circle batch submission
-		HybridRendererBatch<HybridRendererSDFCircleVertex> submission = {
+		HybridSDFRendererBatch<HybridRendererSDFCircleVertex> submission = {
 			.BlendMode = properties.BlendMode,
 			.ClipRect = properties.ClippingRect,
+			.IsFillEnabled = properties.IsFillEnabled,
+			.IsStrokeEnabled = properties.IsStrokeEnabled,
 		};
 
 		// Get the depth for this shape
@@ -809,7 +812,8 @@ namespace DGL
 		SDFRoundedRectRenderingProperties&& sdfRoundedRectProperties
 	) : m_GenericProperties(std::move(genericProperties)),
 		m_SDFCircleProperties(std::move(sdfCircleProperties)),
-		m_SDFRoundedRectProperties(std::move(sdfRoundedRectProperties))
+		m_SDFRoundedRectProperties(std::move(sdfRoundedRectProperties)),
+		m_DepthProvider(0.0f, 1.0f / 20'000.0f)
 	{
 	}
 
@@ -840,19 +844,19 @@ namespace DGL
 		static const auto activateClipRect = GetClipRectActivator();
 
 		int iterations = 0;
-		Chunked<HybridRendererGenericVertex>(
+		Chunked(
 			m_GenericBatches,
 			m_GenericProperties.VertexBufferCapacity,
 			m_GenericProperties.ElementBufferCapacity,
-			[this, &iterations](ReadOnlyChunk<HybridRendererGenericVertex>&& chunk)
+			[this, &iterations](ReadOnlyChunk<HybridRendererBatch<HybridRendererGenericVertex>>&& chunk)
 			{
 				// Maybe we can do this once at the start?
-				activateBlendMode(*chunk.BlendMode);
-				activateClipRect(*chunk.ClipRect);
+				activateBlendMode(chunk.Original->BlendMode);
+				activateClipRect(chunk.Original->ClipRect);
 
 				// Upload the data to the GPU
-				glNamedBufferSubData(m_GenericProperties.VertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererGenericVertex), chunk.Vertices.data());
-				glNamedBufferSubData(m_GenericProperties.ElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
+				glNamedBufferSubData(m_GenericProperties.VertexBufferId, 0, chunk.Vertices.size_bytes(), chunk.Vertices.data());
+				glNamedBufferSubData(m_GenericProperties.ElementBufferId, 0, chunk.Indices.size_bytes(), chunk.Indices.data());
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
@@ -886,15 +890,20 @@ namespace DGL
 			m_SDFCircleBatches,
 			m_SDFCircleProperties.VertexBufferCapacity,
 			m_SDFCircleProperties.ElementBufferCapacity,
-			[this](ReadOnlyChunk<HybridRendererSDFCircleVertex>&& chunk)
+			[this](ReadOnlyChunk<HybridSDFRendererBatch<HybridRendererSDFCircleVertex>>&& chunk)
 			{
 				// Maybe we can do this once at the start?
-				blendModeActivator(*chunk.BlendMode);
-				clipRectActivator(*chunk.ClipRect);
+				blendModeActivator(chunk.Original->BlendMode);
+				clipRectActivator(chunk.Original->ClipRect);
+
+				m_SDFCircleProperties.Shader->UploadInt1("u_IsFillEnabled", static_cast<int>(chunk.Original->IsFillEnabled));
+				m_SDFCircleProperties.Shader->UploadInt1("u_IsStrokeEnabled", static_cast<int>(chunk.Original->IsStrokeEnabled));
+				//m_SDFCircleProperties.Shader->UploadInt1("u_IsFillEnabled", true);
+				//m_SDFCircleProperties.Shader->UploadInt1("u_IsStrokeEnabled", true);
 
 				// Upload the data to the GPU
-				glNamedBufferSubData(m_SDFCircleProperties.VertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererSDFCircleVertex), chunk.Vertices.data());
-				glNamedBufferSubData(m_SDFCircleProperties.ElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
+				glNamedBufferSubData(m_SDFCircleProperties.VertexBufferId, 0, chunk.Vertices.size_bytes(), chunk.Vertices.data());
+				glNamedBufferSubData(m_SDFCircleProperties.ElementBufferId, 0, chunk.Indices.size_bytes(), chunk.Indices.data());
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
@@ -923,21 +932,25 @@ namespace DGL
 		glBindVertexArray(m_SDFRoundedRectProperties.VertexArrayId);
 		glUseProgram(m_SDFRoundedRectProperties.Shader->GetShaderId());
 		m_SDFRoundedRectProperties.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
-		m_SDFRoundedRectProperties.Shader->UploadFloat2("u_ViewportSize", m_Viewport.Width, m_Viewport.Height);
 
 		Chunked(
 			m_SDFRoundedRectBatches,
 			m_SDFRoundedRectProperties.VertexBufferCapacity,
 			m_SDFRoundedRectProperties.ElementBufferCapacity,
-			[this](ReadOnlyChunk<HybridRendererSDFRoundedRectVertex>&& chunk)
+			[this](ReadOnlyChunk<HybridSDFRendererBatch<HybridRendererSDFRoundedRectVertex>>&& chunk)
 			{
 				// Maybe we can do this once at the start?
-				blendModeActivator(*chunk.BlendMode);
-				clipRectActivator(*chunk.ClipRect);
+				blendModeActivator(chunk.Original->BlendMode);
+				clipRectActivator(chunk.Original->ClipRect);
+
+				m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsFillEnabled", static_cast<int>(chunk.Original->IsFillEnabled));
+				m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsStrokeEnabled", static_cast<int>(chunk.Original->IsStrokeEnabled));
+				//m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsFillEnabled", true);
+				//m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsStrokeEnabled", true);
 
 				// Upload the data to the GPU
-				glNamedBufferSubData(m_SDFRoundedRectProperties.VertexBufferId, 0, chunk.Vertices.size() * sizeof(HybridRendererSDFRoundedRectVertex), chunk.Vertices.data());
-				glNamedBufferSubData(m_SDFRoundedRectProperties.ElementBufferId, 0, chunk.Indices.size() * sizeof(uint32_t), chunk.Indices.data());
+				glNamedBufferSubData(m_SDFRoundedRectProperties.VertexBufferId, 0, chunk.Vertices.size_bytes(), chunk.Vertices.data());
+				glNamedBufferSubData(m_SDFRoundedRectProperties.ElementBufferId, 0, chunk.Indices.size_bytes(), chunk.Indices.data());
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
@@ -953,12 +966,12 @@ namespace DGL
 		MergeOrCreateBatch(m_GenericBatches, submission);
 	}
 
-	void HybridRenderer::SubmitBatch(const HybridRendererBatch<HybridRendererSDFCircleVertex>& submission)
+	void HybridRenderer::SubmitBatch(const HybridSDFRendererBatch<HybridRendererSDFCircleVertex>& submission)
 	{
 		MergeOrCreateBatch(m_SDFCircleBatches, submission);
 	}
 
-	void HybridRenderer::SubmitBatch(const HybridRendererBatch<HybridRendererSDFRoundedRectVertex>& submission)
+	void HybridRenderer::SubmitBatch(const HybridSDFRendererBatch<HybridRendererSDFRoundedRectVertex>& submission)
 	{
 		MergeOrCreateBatch(m_SDFRoundedRectBatches, submission);
 	}

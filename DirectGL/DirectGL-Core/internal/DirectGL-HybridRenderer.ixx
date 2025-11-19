@@ -8,7 +8,7 @@ module;
 #include <memory>
 #include <cstdint>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 export module DirectGL:HybridRenderer;
 
@@ -112,10 +112,25 @@ namespace DGL
 	template <typename Vertex>
 	struct HybridRendererBatch
 	{
+		using VertexType = Vertex;
+
 		BlendMode				BlendMode;	//!< The blend mode to use for this batch.
 		ClipRect				ClipRect;	//!< The clipping rectangle to use for this batch.
 		std::vector<Vertex>		Vertices;	//!< The SDF shape data to render.
 		std::vector<uint32_t>	Indices;	//!< The indices defining the order of vertices for rendering.
+	};
+
+	template <typename Vertex>
+	struct HybridSDFRendererBatch
+	{
+		using VertexType = Vertex;
+
+		BlendMode				BlendMode;			//!< The blend mode to use for this batch.
+		ClipRect				ClipRect;			//!< The clipping rectangle to use for this batch.
+		std::vector<Vertex>		Vertices;			//!< The SDF shape data to render.
+		std::vector<uint32_t>	Indices;			//!< The indices defining the order of vertices for rendering.
+		bool					IsFillEnabled;		//!< Whether to fill a border or not
+		bool					IsStrokeEnabled;	//!< Whether to apply a border or not
 	};
 
 	/// @brief Type alias for the key used to identify batches in the HybridRenderer.
@@ -243,6 +258,20 @@ namespace DGL
 
 	private:
 
+		/// @brief Properties related to generic geometry-based rendering.
+		///
+		/// This structure holds all necessary properties
+		/// for rendering shapes using traditional geometry-based methods.
+		/// This includes vertex array objects, buffers, and shaders.
+		/// These properties are used when rendering shapes
+		/// that do not require SDF techniques.
+		///
+		/// Shapes using these properties include:
+		/// 	- Rectangles (non-rounded)
+		/// 	- Triangles
+		/// 	- Lines (including stroke caps)
+		/// 	- Custom shapes (Polygons, Beziers, etc.)
+		/// 	- Outlines of any shape
 		struct GenericRenderingProperties
 		{
 			uint32_t				VertexArrayId;
@@ -253,6 +282,18 @@ namespace DGL
 			std::unique_ptr<Shader>	Shader;
 		};
 
+		/// @brief Properties related to SDF circle rendering.
+		///
+		/// This structure holds all necessary properties
+		/// for rendering shapes using Signed Distance Field (SDF) techniques
+		/// specifically for circles and ellipses.
+		/// This includes vertex array objects, buffers, and shaders.
+		/// These properties are used when rendering round shapes
+		/// that benefit from SDF rendering.
+		///
+		/// Shapes using these properties include:
+		/// 	- Circles	(+ stroke)
+		///		- Ellipsis	(+ stroke)
 		struct SDFCircleRenderingProperties
 		{
 			uint32_t				VertexArrayId;
@@ -263,6 +304,17 @@ namespace DGL
 			std::unique_ptr<Shader>	Shader;
 		};
 
+		/// @brief Properties related to SDF rounded-rectangle rendering.
+		///
+		/// This structure holds all necessary properties
+		/// for rendering shapes using Signed Distance Field (SDF) techniques
+		/// specifically for rounded rectangles.
+		/// This includes vertex array objects, buffers, and shaders.
+		/// These properties are used when rendering rounded-rectangle shapes
+		/// that benefit from SDF rendering.
+		///
+		/// Shapes using these properties include:
+		/// 	- Rounded Rectangles (+ stroke)
 		struct SDFRoundedRectRenderingProperties
 		{
 			uint32_t				VertexArrayId;
@@ -275,8 +327,31 @@ namespace DGL
 
 	private:
 
+		/// @brief Construct generic rendering properties.
+		///
+		/// This function constructs and initializes the
+		/// generic rendering properties required for
+		/// geometry-based rendering.
+		/// 
+		/// @return The constructed GenericRenderingProperties.
 		static GenericRenderingProperties CreateGenericRenderingProperties();
+
+		/// @brief Construct SDF circle rendering properties.
+		///
+		/// This function constructs and initializes the
+		/// SDF circle rendering properties required for
+		/// rendering circles and ellipses using SDF techniques.
+		/// 
+		/// @return The constructed SDFCircleRenderingProperties.
 		static SDFCircleRenderingProperties CreateSDFCircleRenderingProperties();
+
+		/// @brief Construct SDF rounded-rectangle rendering properties.
+		///
+		/// This function constructs and initializes the
+		/// SDF rounded-rectangle rendering properties required for
+		/// rendering rounded rectangles using SDF techniques.
+		///
+		/// @return The constructed SDFRoundedRectRenderingProperties.
 		static SDFRoundedRectRenderingProperties CreateSDFRoundedRectRenderingProperties();
 
 	private:
@@ -304,16 +379,16 @@ namespace DGL
 		/// graphics pipeline and improving rendering performance.
 		
 		void SubmitBatch(const HybridRendererBatch<HybridRendererGenericVertex>& submission);
-		void SubmitBatch(const HybridRendererBatch<HybridRendererSDFCircleVertex>& submission);
-		void SubmitBatch(const HybridRendererBatch<HybridRendererSDFRoundedRectVertex>& submission);
+		void SubmitBatch(const HybridSDFRendererBatch<HybridRendererSDFCircleVertex>& submission);
+		void SubmitBatch(const HybridSDFRendererBatch<HybridRendererSDFRoundedRectVertex>& submission);
 
 	private:
 
 		// In this case we use std::map as we need the batches to be in a specific order
 		// for efficient rendering (minimizing state changes).
-		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererGenericVertex>>			m_GenericBatches;
-		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererSDFCircleVertex>>		m_SDFCircleBatches;
-		std::map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererSDFRoundedRectVertex>>	m_SDFRoundedRectBatches;
+		std::unordered_map<HybridRendererBatchKey, HybridRendererBatch<HybridRendererGenericVertex>>			m_GenericBatches;
+		std::unordered_map<HybridRendererBatchKey, HybridSDFRendererBatch<HybridRendererSDFCircleVertex>>		m_SDFCircleBatches;
+		std::unordered_map<HybridRendererBatchKey, HybridSDFRendererBatch<HybridRendererSDFRoundedRectVertex>>	m_SDFRoundedRectBatches;
 
 		GenericRenderingProperties			m_GenericProperties;
 		SDFCircleRenderingProperties		m_SDFCircleProperties;

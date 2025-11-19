@@ -169,7 +169,7 @@ namespace DGL
 
 	void Renderer2D::FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const auto [left, top, width, height] = boundary;
 
 		const std::array corners = {
@@ -202,7 +202,7 @@ namespace DGL
 
 	void Renderer2D::DrawRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const float strokeWeight, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const auto [left, top, width, height] = boundary;
 
 		const std::array corners = {
@@ -239,7 +239,7 @@ namespace DGL
 
 	void Renderer2D::FillRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& borderRadius, const Math::Float4& color, const size_t cornerSegments, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const auto generateEllipseCorner = [](const Math::Float2& center, const Math::Angle startAngle, const Math::Angle stopAngle, const float& radius, uint32_t segments) -> std::vector<Math::Float2>
 		{
 			std::vector<Math::Float2> positions;
@@ -372,7 +372,7 @@ namespace DGL
 
 	void Renderer2D::FillEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& color, const size_t segments, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const Math::Float2 transformedCenter = modelMatrix.TransformPoint(center);
 		const Math::Float2 transformedRadius = modelMatrix.TransformVector(Math::Float2{ radius.X, radius.Y });
 
@@ -415,7 +415,7 @@ namespace DGL
 
 	void Renderer2D::DrawEllipse(const Math::Float2& center, const Math::Radius& radius, const float strokeWeight, const Math::Float4& color, size_t segments, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const Math::Float2 transformedCenter = modelMatrix.TransformPoint(center);
 		const Math::Float2 transformedRadius = modelMatrix.TransformVector(Math::Float2{ radius.X, radius.Y });
 
@@ -461,7 +461,7 @@ namespace DGL
 
 	void Renderer2D::FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const Math::Float2 tp1 = modelMatrix.TransformPoint(p1);
 		const Math::Float2 tp2 = modelMatrix.TransformPoint(p2);
 		const Math::Float2 tp3 = modelMatrix.TransformPoint(p3);
@@ -488,7 +488,7 @@ namespace DGL
 
 	void Renderer2D::DrawTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const float strokeWeight, const Math::Float4& color, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const std::array points = {
 			modelMatrix.TransformPoint(p1),
 			modelMatrix.TransformPoint(p2),
@@ -570,7 +570,7 @@ namespace DGL
 
 	void Renderer2D::FillLine(const Math::Float2& p1, const Math::Float2& p2, const float strokeWeight, const Math::Float4& color, StrokeCap strokeCap, size_t roundedStrokeCapSegments, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const std::array points = { modelMatrix.TransformPoint(p1), modelMatrix.TransformPoint(p2) };
 		const std::array colors = { color, color };
 
@@ -666,7 +666,7 @@ namespace DGL
 
 	void Renderer2D::Text(const std::string_view text, Font& font, const Math::Float2& position, const float textSize, const Math::Float4& color, TextAlignment alignment, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const float scale = textSize / static_cast<float>(font.GetTextSize());
 		const float lineHeight = font.GetLineHeight() * scale;
 
@@ -753,7 +753,7 @@ namespace DGL
 
 	void Renderer2D::Image(const Math::FloatBoundary& boundary, const Math::FloatBoundary& sourceRectangle, const Image2D& image, const ImageSampler* sampler, const Math::Float4& color, const RenderingProperties& properties)
 	{
-		const auto& [clippingRect, blendMode, modelMatrix, shader] = properties;
+		const auto& [clippingRect, blendMode, modelMatrix, shader, isFillEnabled, isStrokeEnabled] = properties;
 		const auto [left, top, width, height] = boundary;
 		const std::array corners = {
 			modelMatrix.TransformPoint(Math::Float2{ left,         top          }),

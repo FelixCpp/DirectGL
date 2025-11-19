@@ -46,6 +46,8 @@ void NormalEnemy::Show() const
 
 	PushStyle();
 	{
+		const Math::BorderRadius radius = Math::BorderRadius::All(5.0f);
+	
 		Translate(Position.X, Position.Y);
 		Scale(scale, scale);
 		SetFillColorDisabled();
@@ -55,12 +57,12 @@ void NormalEnemy::Show() const
 		SetStrokeWeight(8.0f);
 		SetFillColor({ COLOR_RED, alpha });
 		SetStrokeColor({ COLOR_RED, 1.0f });
-		Rect(0.0f, 0.0f, Size.X, Size.Y);
+		RoundedRect(0.0f, 0.0f, Size.X, Size.Y, radius);
 
 		// Draw white rectangle as "foreground layer"
-		SetStrokeWeight(2.0f);
+		SetStrokeWeight(4.0f);
 		SetStrokeColor({ COLOR_WHITE, 1.0f });
-		Rect(0.0f, 0.0f, Size.X, Size.Y);
+		RoundedRect(0.0f, 0.0f, Size.X, Size.Y, radius);
 	}
 	
 	PopStyle();

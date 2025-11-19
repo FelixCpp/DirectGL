@@ -155,7 +155,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform1i(location, value);
+			glProgramUniform1i(m_ShaderId, location, value);
 		}
 	}
 
@@ -163,7 +163,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform2i(location, value1, value2);
+			glProgramUniform2i(m_ShaderId, location, value1, value2);
 		}
 	}
 
@@ -171,7 +171,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform3i(location, value1, value2, value3);
+			glProgramUniform3i(m_ShaderId, location, value1, value2, value3);
 		}
 	}
 
@@ -179,7 +179,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform4i(location, value1, value2, value3, value4);
+			glProgramUniform4i(m_ShaderId, location, value1, value2, value3, value4);
 		}
 	}
 
@@ -187,7 +187,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform1f(location, value);
+			glProgramUniform1f(m_ShaderId, location, value);
 		}
 	}
 
@@ -195,7 +195,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform2f(location, value1, value2);
+			glProgramUniform2f(m_ShaderId, location, value1, value2);
 		}
 	}
 
@@ -203,7 +203,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform3f(location, value1, value2, value3);
+			glProgramUniform3f(m_ShaderId, location, value1, value2, value3);
 		}
 	}
 
@@ -211,7 +211,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniform4f(location, value1, value2, value3, value4);
+			glProgramUniform4f(m_ShaderId, location, value1, value2, value3, value4);
 		}
 	}
 
@@ -219,7 +219,7 @@ namespace DGL
 	{
 		if (const GLint location = GetUniformLocation(name); location != -1)
 		{
-			glUniformMatrix4fv(location, 1, GL_FALSE, matrixData);
+			glProgramUniformMatrix4fv(m_ShaderId, location, 1, GL_FALSE, matrixData);
 		}
 	}
 

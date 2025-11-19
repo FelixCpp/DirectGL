@@ -12,11 +12,13 @@ namespace DGL
 {
 	RenderingProperties StyleToRenderingProperties(const RenderStyle& style)
 	{
-		return {
-			.ClippingRect	= style.ClipRect,
-			.BlendMode		= style.BlendMode,
-			.ModelMatrix	= style.MatrixStack.PeekMatrix(),
-			.Shader			= style.Shader
+		return RenderingProperties {
+			.ClippingRect		= style.ClipRect,
+			.BlendMode			= style.BlendMode,
+			.ModelMatrix		= style.MatrixStack.PeekMatrix(),
+			.Shader				= style.Shader,
+			.IsFillEnabled		= style.IsFillEnabled,
+			.IsStrokeEnabled	= style.IsStrokeEnabled,
 		};
 	}
 
@@ -290,28 +292,11 @@ namespace DGL
 			return;
 		}
 
-		const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock();
-		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
-		const size_t segmentCount = 32; // Fixed segment count for rounded corners
-		const RenderingProperties properties = StyleToRenderingProperties(style);
-
-		renderer->RenderRoundedRectangle(
-			boundary,
-			borderRadius,
-			style.FillColor,
-			style.StrokeColor,
-			style.StrokeWeight,
-			properties
-		);
-
-		if (style.IsFillEnabled)
+		if (const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock())
 		{
-			//renderer->FillRoundedRectangle(boundary, borderRadius, style.FillColor, segmentCount, properties);
-		}
-
-		if (style.IsStrokeEnabled)
-		{
-			//renderer->DrawRoundedRectangle(boundary, borderRadius, style.StrokeWeight, style.StrokeColor, segmentCount, properties);
+			const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
+			const RenderingProperties properties = StyleToRenderingProperties(style);
+			renderer->RenderRoundedRectangle(boundary, borderRadius, style.FillColor, style.StrokeColor, style.StrokeWeight, properties);
 		}
 	}
 
@@ -330,20 +315,9 @@ namespace DGL
 		const Math::FloatBoundary boundary = style.EllipseMode(x1, y1, x2, y2);
 		const Math::Radius radius = Math::Radius::Elliptical(boundary.Width / 2.0f, boundary.Height / 2.0f);
 		const Math::Float2 center = boundary.Center();
-		const size_t segmentCount = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
 		const RenderingProperties properties = StyleToRenderingProperties(style);
 
 		renderer->RenderEllipse(center, radius, style.FillColor, style.StrokeColor, style.StrokeWeight, properties);
-
-		if (style.IsFillEnabled)
-		{
-			//renderer->FillEllipse(center, radius, style.FillColor, segmentCount, properties);
-		}
-
-		if (style.IsStrokeEnabled)
-		{
-			//renderer->DrawEllipse(center, radius, style.StrokeWeight, style.StrokeColor, segmentCount, properties);
-		}
 	}
 
 	void MainGraphicsLayer::Point(const float x, const float y)
@@ -352,7 +326,11 @@ namespace DGL
 		{
 			const RenderStyle& style = PeekStyle();
 			const Math::Radius radius = Math::Radius::Circular(style.StrokeWeight / 2.0f);
-			const size_t segments = style.EllipseSegmentsMode(radius, Math::Degrees(360.0f));
+
+			RenderingProperties properties = StyleToRenderingProperties(style);
+			properties.IsStrokeEnabled = false;
+
+			renderer->RenderEllipse({ x, y }, radius, style.StrokeColor, { 0.0f, 0.0f, 0.0f, 0.0f }, 0.0f, properties);
 
 			//renderer->FillEllipse(Math::Float2{ x, y }, radius, style.StrokeColor, segments, StyleToRenderingProperties(style));
 		}
