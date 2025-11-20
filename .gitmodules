@@ -1,3 +1,6 @@
 [submodule "Libraries/Freetype"]
 	path = Libraries/Freetype
 	url = https://github.com/FelixCpp/freetype.git
+[submodule "Libraries/libtess2"]
+	path = Libraries/libtess2
+	url = https://github.com/memononen/libtess2.git

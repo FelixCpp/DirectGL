@@ -10,7 +10,7 @@ import :MainGraphicsLayer;
 
 namespace DGL
 {
-	RenderingProperties StyleToRenderingProperties(const RenderStyle& style)
+	[[nodiscard]] RenderingProperties StyleToRenderingProperties(const RenderStyle& style)
 	{
 		return RenderingProperties {
 			.ClippingRect		= style.ClipRect,
@@ -22,7 +22,18 @@ namespace DGL
 		};
 	}
 
-	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<HybridRenderer>& renderer, const Math::FloatBoundary& viewport):
+	[[nodiscard]] StrokeProperties StyleToStrokeProperties(const RenderStyle& style)
+	{
+		return StrokeProperties {
+			.MiterLimit		= 10.0f,
+			.Alignment		= style.StrokeAlignment,
+			.StrokeJoin		= style.JoinStyle,
+			.StrokeCap		= StrokeCap::Round,
+			.IsClosed		= false,
+		};
+	}
+
+	MainGraphicsLayer::MainGraphicsLayer(const std::weak_ptr<Renderer>& renderer, const Math::FloatBoundary& viewport):
 		m_Renderer(renderer),
 		m_RenderTarget(viewport)
 	{
@@ -167,6 +178,12 @@ namespace DGL
 		style.StrokeCap = strokeCap;
 	}
 
+	void MainGraphicsLayer::SetStrokeAlignment(const StrokeAlignment alignment)
+	{
+		RenderStyle& style = PeekStyle();
+		style.StrokeAlignment = alignment;
+	}
+
 	void MainGraphicsLayer::SetBlendMode(const BlendMode& mode)
 	{
 		RenderStyle& style = PeekStyle();
@@ -247,15 +264,20 @@ namespace DGL
 
 	void MainGraphicsLayer::Background(const color_t color)
 	{
-		if (const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock())
+		if (const std::shared_ptr<Renderer> renderer = m_Renderer.lock())
 		{
 			constexpr RenderingProperties properties = {
 				.ClippingRect = ClipRect::Unclipped(),
 				.BlendMode = BlendMode::Alpha,
 				.ModelMatrix = Math::Matrix4x4::Identity,
+				.IsFillEnabled = true,
+				.IsStrokeEnabled = false,
 			};
 
-			renderer->FillRectangle(GetViewport(), color, properties);
+			// Can skip stroke properties for background fill
+			constexpr StrokeProperties strokeProperties = {};
+
+			renderer->RenderRectangle(m_RenderTarget.GetViewport(), color, {}, 0.0f, strokeProperties, properties);
 		}
 	}
 
@@ -269,17 +291,13 @@ namespace DGL
 			return;
 		}
 
-		const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock();
-		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
-
-		if (style.IsFillEnabled)
+		if (const std::shared_ptr<Renderer> renderer = m_Renderer.lock())
 		{
-			renderer->FillRectangle(boundary, style.FillColor, StyleToRenderingProperties(style));
-		}
+			const RenderingProperties properties = StyleToRenderingProperties(style);
+			const StrokeProperties strokeProperties = StyleToStrokeProperties(style);
+			const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
 
-		if (style.IsStrokeEnabled)
-		{
-			//renderer->DrawRectangle(boundary, style.StrokeColor, style.StrokeWeight, StyleToRenderingProperties(style));
+			renderer->RenderRectangle(boundary, style.FillColor, style.StrokeColor, style.StrokeWeight, strokeProperties, properties);
 		}
 	}
 
@@ -292,7 +310,7 @@ namespace DGL
 			return;
 		}
 
-		if (const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock())
+		if (const std::shared_ptr<Renderer> renderer = m_Renderer.lock())
 		{
 			const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
 			const RenderingProperties properties = StyleToRenderingProperties(style);
@@ -310,7 +328,7 @@ namespace DGL
 			return;
 		}
 
-		const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock();
+		const std::shared_ptr<Renderer> renderer = m_Renderer.lock();
 
 		const Math::FloatBoundary boundary = style.EllipseMode(x1, y1, x2, y2);
 		const Math::Radius radius = Math::Radius::Elliptical(boundary.Width / 2.0f, boundary.Height / 2.0f);
@@ -322,7 +340,7 @@ namespace DGL
 
 	void MainGraphicsLayer::Point(const float x, const float y)
 	{
-		if (const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock())
+		if (const std::shared_ptr<Renderer> renderer = m_Renderer.lock())
 		{
 			const RenderStyle& style = PeekStyle();
 			const Math::Radius radius = Math::Radius::Circular(style.StrokeWeight / 2.0f);
@@ -338,7 +356,7 @@ namespace DGL
 
 	void MainGraphicsLayer::Line(const float x1, const float y1, const float x2, const float y2)
 	{
-		if (const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock())
+		if (const std::shared_ptr<Renderer> renderer = m_Renderer.lock())
 		{
 			const Math::Float2 start = { x1, y1 };
 			const Math::Float2 end = { x2, y2 };
@@ -360,28 +378,19 @@ namespace DGL
 			return;
 		}
 
-		const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock();
+		const std::shared_ptr<Renderer> renderer = m_Renderer.lock();
 		const RenderingProperties properties = StyleToRenderingProperties(style);
 
 		const Math::Float2 p1{ x1, y1 };
 		const Math::Float2 p2{ x2, y2 };
 		const Math::Float2 p3{ x3, y3 };
 
-		if (style.IsFillEnabled)
-		{
-			renderer->FillTriangle(p1, p2, p3, style.FillColor, properties);
-		}
-
-		if (style.IsStrokeEnabled)
-		{
-			//renderer->DrawTriangle(p1, p2, p3, style.StrokeWeight, style.StrokeColor, properties);
-		}
 	}
 
 	void MainGraphicsLayer::Text(const std::string_view text, const float x, const float y)
 	{
 		const RenderStyle& style = PeekStyle();
-		const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock();
+		const std::shared_ptr<Renderer> renderer = m_Renderer.lock();
 
 		//renderer->Text(text, *style.Font, Math::Float2{ x, y }, style.TextSize, style.FillColor, style.TextAlign, StyleToRenderingProperties(style));
 	}
@@ -391,7 +400,7 @@ namespace DGL
 		const RenderStyle& style = PeekStyle();
 		const Math::FloatBoundary boundary = style.RectMode(x1, y1, x2, y2);
 		const Math::FloatBoundary sourceBoundary = Math::FloatBoundary::FromLTWH(sourceLeft, sourceTop, sourceWidth, sourceHeight);
-		const std::shared_ptr<HybridRenderer> renderer = m_Renderer.lock();
+		const std::shared_ptr<Renderer> renderer = m_Renderer.lock();
 
 		//renderer->Image(boundary, sourceBoundary, image, style.ImageSampler, style.ImageTint, StyleToRenderingProperties(style));
 	}

@@ -35,6 +35,7 @@ export namespace DGL::Math
 		constexpr T DistanceSquared(const Value2& other) const;
 
 		constexpr T Dot(const Value2& other) const;
+		constexpr T Cross(const Value2& other) const;
 
 		Angle Heading() const;
 		Angle AngleBetween(const Value2& other) const;
@@ -124,6 +125,7 @@ namespace DGL::Math
 	template <typename T> constexpr T Value2<T>::DistanceSquared(const Value2& other) const { return (*this - other).LengthSquared(); }
 
 	template <typename T> constexpr T Value2<T>::Dot(const Value2& other) const { return X * other.X + Y * other.Y; }
+	template <typename T> constexpr T Value2<T>::Cross(const Value2& other) const { return X * other.Y - Y * other.X; }
 
 	template <typename T> Angle Value2<T>::Heading() const { return Radians(std::atan2(Y, X)); }
 	template <typename T> Angle Value2<T>::AngleBetween(const Value2& other) const

@@ -9,6 +9,7 @@ module;
 #include <cstdint>
 #include <vector>
 #include <unordered_map>
+#include <span>
 
 export module DirectGL:HybridRenderer;
 
@@ -17,6 +18,7 @@ import DirectGL.Math;
 import :RenderingProperties;
 import :DepthProvider;
 import :Shader;
+import :Stroker;
 
 namespace DGL
 {
@@ -35,19 +37,6 @@ namespace DGL
 		Math::Float3 Position;	//!< The position of the vertex in 3D space.
 		Math::Float4 Color;		//!< The color of the vertex.
 	};
-
-	/// @brief This structure represents a vertex used for textured rendering in the HybridRenderer.
-	///
-	/// All shapes using textured rendering in the HybridRenderer will use this format.
-	/// These shapes include:
-	/// 	- Images
-	///		- Text
-	//struct HybridRendererTexturedVertex
-	//{
-	//	Math::Float3 Position;	//!< The position of the vertex in 3D space.
-	//	Math::Float2 TexCoord;	//!< The texture coordinates of the vertex.
-	//	Math::Float4 Color;		//!< The color of the vertex.
-	//};
 
 	/// @brief This structure represents a vertex used for SDF circle rendering in the HybridRenderer.
 	///
@@ -191,31 +180,41 @@ namespace DGL
 		/// @param viewport The viewport to set for the renderer.
 		void SetViewport(const Math::FloatBoundary& viewport);
 
+		/// @brief Begin a new drawing session.
+		///
+		/// This function prepares the renderer for a new drawing session.
+		/// It clears any previous state and sets up necessary
+		/// configurations for rendering.
+		/// 
+		/// @note An OpenGL context must be active when calling this function.
 		void BeginDraw();
+
+		/// @brief End the current drawing session.
+		///
+		/// This function finalizes the current drawing session.
+		/// It flushes any pending draw calls and resets
+		/// the renderer state.
+		///
+		/// @note An OpenGL context must be active when calling this function.
 		void EndDraw();
 
-		/// @brief Fill a rectangle with the specified color and rendering properties.
-		///
-		/// This function fills a rectangle defined by the given boundary
-		/// with the specified color, using the provided rendering properties.
-		///
-		/// The rectangle is being rendered using traditional geometry-based methods.
-		/// This involves tessellating the rectangle into two triangles
-		/// and submitting them to the graphics pipeline for rendering.
-		/// 
-		/// @param boundary The boundary of the rectangle to fill.
-		/// @param color The color to fill the rectangle with.
-		/// @param properties The rendering properties to use for this operation.
-		void FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const RenderingProperties& properties);
+		/// @brief Renders a rectangle with the specified parameters.
+		/// @param boundary The boundary of the rectangle.
+		/// @param fillColor The fill color of the rectangle.
+		/// @param strokeColor The stroke color of the rectangle.
+		/// @param strokeWeight The weight of the stroke around the rectangle.
+		/// @param strokeProperties The stroke properties to use for this rectangle.
+		/// @param properties Additional rendering properties to use for this operation.
+		void RenderRectangle(const Math::FloatBoundary& boundary, const Math::Float4& fillColor, const Math::Float4& strokeColor, float strokeWeight, const StrokeProperties& strokeProperties, const RenderingProperties& properties);
 
-		void RenderRoundedRectangle(
-			const Math::FloatBoundary& boundary,
-			const Math::BorderRadius& cornerRadii,
-			const Math::Float4& fillColor,
-			const Math::Float4& strokeColor,
-			float strokeWeight,
-			const RenderingProperties& properties
-		);
+		/// @brief Renders a rounded rectangle with the specified parameters.
+		/// @param boundary The boundary of the rounded rectangle.
+		/// @param cornerRadii The corner radii for each corner of the rounded rectangle.
+		/// @param fillColor The fill color of the rounded rectangle.
+		/// @param strokeColor The stroke color of the rounded rectangle.
+		/// @param strokeWeight The weight of the stroke around the rounded rectangle.
+		/// @param properties Additional rendering properties to use for this operation.
+		void RenderRoundedRectangle(const Math::FloatBoundary& boundary, const Math::BorderRadius& cornerRadii, const Math::Float4& fillColor, const Math::Float4& strokeColor, float strokeWeight, const RenderingProperties& properties);
 
 		/// @brief Render an ellipse with the specified parameters.
 		///
@@ -232,29 +231,7 @@ namespace DGL
 		/// @param strokeColor The stroke color of the ellipse.
 		/// @param strokeWeight The weight of the stroke around the ellipse.
 		/// @param properties The rendering properties to use for this operation.
-		void RenderEllipse(
-			const Math::Float2& center,
-			const Math::Radius& radius,
-			const Math::Float4& fillColor,
-			const Math::Float4& strokeColor,
-			float strokeWeight,
-			const RenderingProperties& properties
-		);
-
-		/// @brief Fill a triangle with the specified color and rendering properties.
-		///
-		/// This function fills a triangle defined by the three given points
-		/// with the specified color, using the provided rendering properties.
-		///
-		/// The triangle is being rendered using traditional geometry-based methods.
-		/// This involves submitting the triangle vertices to the graphics pipeline for rendering.
-		///
-		/// @param p1 The first point of the triangle.
-		/// @param p2 The second point of the triangle.
-		/// @param p3 The third point of the triangle.
-		/// @param color The color to fill the triangle with.
-		/// @param properties The rendering properties to use for this operation.
-		void FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const RenderingProperties& properties);
+		void RenderEllipse(const Math::Float2& center, const Math::Radius& radius, const Math::Float4& fillColor, const Math::Float4& strokeColor, float strokeWeight, const RenderingProperties& properties);
 
 	private:
 
@@ -362,8 +339,11 @@ namespace DGL
 			SDFRoundedRectRenderingProperties&& sdfRoundedRectProperties
 		);
 
-		void Flush();
+		/// Flush all pending batches to the GPU for rendering.
+		/// These function iterates over all stored batches of shapes
+		/// and submits them to the GPU for rendering.
 
+		void Flush();
 		void FlushGenericBatch();
 		void FlushSDFCircleBatch();
 		void FlushSDFRoundedRectBatch();
@@ -398,6 +378,8 @@ namespace DGL
 
 		Math::Matrix4x4		m_ProjectionMatrix;
 		Math::FloatBoundary	m_Viewport;
+
+		PolygonStroker m_Stroker;
 
 	};
 }

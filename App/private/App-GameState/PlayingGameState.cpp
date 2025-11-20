@@ -35,7 +35,14 @@ void PlayingGameState::Show() const
 {
 	DGL::Background({ 0.1f, 0.1f, 0.1f, 1.0f });
 
-	m_Tower.Show();
-	m_Weapon.Show();
-	m_Spawner.Show();
+	//DGL::SetFillColor({ 1.0f, 0.0f, 0.0f, 1.0f });
+	//DGL::SetFillColorDisabled();
+	DGL::SetFillColor({ 0.0f, 0.0f, 1.0f, 1.0f });
+	DGL::SetStrokeColor({ 1.0f, 0.0f, 0.0f, 1.0f });
+	DGL::SetStrokeWeight(25.0f);
+	DGL::Rect(100.0f, 100.0f, 300.0f, 300.0f);
+
+	//m_Tower.Show();
+	//m_Weapon.Show();
+	//m_Spawner.Show();
 }

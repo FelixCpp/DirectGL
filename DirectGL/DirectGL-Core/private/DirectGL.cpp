@@ -258,6 +258,7 @@ namespace DGL
 	void SetStrokeWeight(const float weight) { PeekLayer().SetStrokeWeight(weight); }
 	void SetStrokeJoin(const StrokeJoin joinStyle) { PeekLayer().SetStrokeJoin(joinStyle); }
 	void SetStrokeCap(const StrokeCap strokeCap) { PeekLayer().SetStrokeCap(strokeCap); }
+	void SetStrokeAlignment(const StrokeAlignment alignment) { PeekLayer().SetStrokeAlignment(alignment); }
 
 	void SetBlendMode(const BlendMode& blendMode) { PeekLayer().SetBlendMode(blendMode); }
 	void SetClipRectMode(const RectMode& mode) { PeekLayer().SetClipRectMode(mode); }

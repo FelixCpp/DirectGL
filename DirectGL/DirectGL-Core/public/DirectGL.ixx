@@ -127,6 +127,7 @@ export import :RenderStyle;
 export import :ShapeMode;
 export import :StrokeCap;
 export import :StrokeJoin;
+export import :StrokeAlignment;
 export import :RectMode;
 export import :EllipseMode;
 export import :EllipseSegmentsMode;
@@ -173,6 +174,7 @@ export namespace DGL
 	void SetStrokeWeight(float weight);
 	void SetStrokeCap(StrokeCap strokeCap);
 	void SetStrokeJoin(StrokeJoin joinStyle);
+	void SetStrokeAlignment(StrokeAlignment alignment);
 
 	void SetBlendMode(const BlendMode& blendMode);
 	void SetClipRectMode(const RectMode& mode);

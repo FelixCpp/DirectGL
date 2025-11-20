@@ -36,13 +36,15 @@ project("DirectGL-Core")
         -- Third-Party
         "Freetype",
         "Glad",
-        "Stb"
+        "Stb",
+        "Libtess2",
     })
 
     includedirs({
         "%{wks.location}/Libraries/FreeType/include",
         "%{wks.location}/Libraries/Glad/include",
         "%{wks.location}/Libraries/Stb/include",
+        "%{wks.location}/Libraries/Libtess2/Include",
     })
 
     filter("files:**.ixx")

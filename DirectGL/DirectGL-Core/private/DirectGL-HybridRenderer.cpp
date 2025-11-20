@@ -6,6 +6,9 @@
 #include <span>
 #include <optional>
 #include <chrono>
+#include <array>
+
+#include <tesselator.h>
 
 module DirectGL;
 
@@ -285,12 +288,12 @@ namespace DGL
 	[[nodiscard]] constexpr size_t ComputeBlendModeHash(const BlendMode& blendMode)
 	{
 		size_t hash = 0;
-		hash ^= static_cast<size_t>(blendMode.SourceColorFactor)			+ 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		hash ^= static_cast<size_t>(blendMode.DestinationColorFactor)		+ 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		hash ^= static_cast<size_t>(blendMode.SourceAlphaFactor)			+ 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		hash ^= static_cast<size_t>(blendMode.DestinationAlphaFactor)		+ 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		hash ^= static_cast<size_t>(blendMode.ColorEquation)				+ 0x9e3779b9 + (hash << 6) + (hash >> 2);
-		hash ^= static_cast<size_t>(blendMode.AlphaEquation)				+ 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(blendMode.SourceColorFactor) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(blendMode.DestinationColorFactor) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(blendMode.SourceAlphaFactor) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(blendMode.DestinationAlphaFactor) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(blendMode.ColorEquation) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= static_cast<size_t>(blendMode.AlphaEquation) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		return hash;
 	}
 
@@ -322,7 +325,7 @@ namespace DGL
 	}
 
 	template <typename Vertex>
-	[[nodiscard]] static HybridRendererBatchKey ComputeBatchKey(const HybridRendererBatch<Vertex>& batch)
+	[[nodiscard]] constexpr HybridRendererBatchKey ComputeBatchKey(const HybridRendererBatch<Vertex>& batch)
 	{
 		size_t hash = 0;
 		hash ^= ComputeBlendModeHash(batch.BlendMode) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
@@ -331,7 +334,7 @@ namespace DGL
 	}
 
 	template <typename SDFVertex>
-	[[nodiscard]] static HybridRendererBatchKey ComputeBatchKey(const HybridSDFRendererBatch<SDFVertex>& batch)
+	[[nodiscard]] constexpr HybridRendererBatchKey ComputeBatchKey(const HybridSDFRendererBatch<SDFVertex>& batch)
 	{
 		size_t hash = 0;
 		hash ^= ComputeBlendModeHash(batch.BlendMode) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
@@ -340,7 +343,7 @@ namespace DGL
 		hash ^= static_cast<size_t>(batch.IsStrokeEnabled) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
 		return hash;
 	}
-	
+
 	template <typename Batch>
 	void MergeOrCreateBatch(std::unordered_map<HybridRendererBatchKey, Batch>& batchMap, const Batch& submission)
 	{
@@ -368,7 +371,7 @@ namespace DGL
 	{
 		using VertexType = std::add_const_t<typename Batch::VertexType>;
 
-		const Batch*				Original;
+		const Batch* Original;
 		std::span<VertexType>		Vertices;
 		std::span<const uint32_t>	Indices;
 	};
@@ -384,21 +387,21 @@ namespace DGL
 		{
 			const size_t totalVertices = batch.Vertices.size();
 			const size_t totalIndices = batch.Indices.size();
-		
+
 			size_t vertexOffset = 0;
 			size_t indexOffset = 0;
-		
+
 			while (indexOffset < totalIndices)
 			{
 				const size_t verticesInThisChunk = std::min(totalVertices - vertexOffset, vertexCapacity);
 				const size_t indicesInThisChunk = std::min(totalIndices - indexOffset, indexCapacity);
-		
-				ReadOnlyChunk<Batch> chunk {
-					.Original		= &batch,
-					.Vertices		= std::span(&batch.Vertices[vertexOffset], verticesInThisChunk),
-					.Indices		= std::span(&batch.Indices[indexOffset], indicesInThisChunk),
+
+				ReadOnlyChunk<Batch> chunk{
+					.Original = &batch,
+					.Vertices = std::span(&batch.Vertices[vertexOffset], verticesInThisChunk),
+					.Indices = std::span(&batch.Indices[indexOffset], indicesInThisChunk),
 				};
-		
+
 				callback(std::move(chunk));
 				vertexOffset += verticesInThisChunk;
 				indexOffset += indicesInThisChunk;
@@ -407,9 +410,9 @@ namespace DGL
 	}
 
 	static constexpr auto blendFactorToGlId = [](const BlendMode::Factor blendFactor) -> GLenum
-	{
-		switch (blendFactor)
 		{
+			switch (blendFactor)
+			{
 			case BlendMode::Factor::Zero:					return GL_ZERO;
 			case BlendMode::Factor::One:					return GL_ONE;
 			case BlendMode::Factor::SrcColor:				return GL_SRC_COLOR;
@@ -426,41 +429,38 @@ namespace DGL
 			case BlendMode::Factor::OneMinusConstantAlpha:	return GL_ONE_MINUS_CONSTANT_ALPHA;
 			case BlendMode::Factor::SrcAlphaSaturate:		return GL_SRC_ALPHA_SATURATE;
 			default:										ThrowError("Unknown BlendMode::Factor");
-		}
-	};
+			}
+		};
 
 	static constexpr auto blendEquationToGlId = [](const BlendMode::Equation blendEquation)->GLenum
-	{
-		switch (blendEquation)
 		{
+			switch (blendEquation)
+			{
 			case BlendMode::Equation::Add:					return GL_FUNC_ADD;
 			case BlendMode::Equation::Subtract:				return GL_FUNC_SUBTRACT;
 			case BlendMode::Equation::ReverseSubtract:		return GL_FUNC_REVERSE_SUBTRACT;
 			case BlendMode::Equation::Min:					return GL_MIN;
 			case BlendMode::Equation::Max:					return GL_MAX;
 			default:										ThrowError("Unknown BlendMode::Equation");
-		}
-	};
+			}
+		};
 
 	auto& GetBlendModeActivator()
 	{
-		static auto activator = [currentBlendMode = std::optional<BlendMode>{}](const BlendMode& blendMode) mutable  {
+		static auto activator = [currentBlendMode = std::optional<BlendMode>{}](const BlendMode& blendMode) mutable {
 			if (currentBlendMode != blendMode) {
-				Info("Activated new BlendMode");
 				glBlendFuncSeparate(blendFactorToGlId(blendMode.SourceColorFactor), blendFactorToGlId(blendMode.DestinationColorFactor), blendFactorToGlId(blendMode.SourceAlphaFactor), blendFactorToGlId(blendMode.DestinationAlphaFactor));
 				glBlendEquationSeparate(blendEquationToGlId(blendMode.ColorEquation), blendEquationToGlId(blendMode.AlphaEquation));
 				currentBlendMode = blendMode;
 			}
-		};
+			};
 
 		return activator;
 	}
 
-	auto GetClipRectActivator()
+	auto& GetClipRectActivator()
 	{
-		std::optional<ClipRect> currentClipRect;
-
-		return [&currentClipRect](const ClipRect& clipRect) {
+		static auto activator = [currentClipRect = std::optional<ClipRect>{}](const ClipRect& clipRect) {
 			if (currentClipRect != clipRect)
 			{
 				if (clipRect.IsClipped())
@@ -474,7 +474,9 @@ namespace DGL
 					glDisable(GL_SCISSOR_TEST);
 				}
 			}
-		};
+			};
+
+		return activator;
 	}
 
 	std::unique_ptr<HybridRenderer> HybridRenderer::Create()
@@ -501,7 +503,7 @@ namespace DGL
 
 	void HybridRenderer::BeginDraw()
 	{
-		glClear(GL_DEPTH_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 		glEnable(GL_BLEND);
 
 		m_DepthProvider.Reset();
@@ -512,40 +514,61 @@ namespace DGL
 		Flush();
 	}
 
-	void HybridRenderer::FillRectangle(const Math::FloatBoundary& boundary, const Math::Float4& color, const RenderingProperties& properties)
+	void HybridRenderer::RenderRectangle(const Math::FloatBoundary& boundary, const Math::Float4& fillColor, const Math::Float4& strokeColor, const float strokeWeight, const StrokeProperties& strokeProperties, const RenderingProperties& properties)
 	{
-		// Create a generic batch submission for the rectangle
 		HybridRendererBatch<HybridRendererGenericVertex> submission = {
 			.BlendMode = properties.BlendMode,
 			.ClipRect = properties.ClippingRect,
 		};
 
-		// Get the depth for this shape
-		const float depth = m_DepthProvider.GetAndIncrement();
-
-		// Define the four corners of the rectangle
-		// Transform the rectangle corners using the model matrix
 		auto [left, top, width, height] = boundary;
 		left = std::min(left, left + width);
 		top = std::min(top, top + height);
 		width = std::abs(width);
 		height = std::abs(height);
 
-		const Math::Float3 topLeft = properties.ModelMatrix.TransformPoint(Math::Float3{ left, top, depth });
-		const Math::Float3 topRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top, depth });
-		const Math::Float3 bottomRight = properties.ModelMatrix.TransformPoint(Math::Float3{ left + width, top + height, depth });
-		const Math::Float3 bottomLeft = properties.ModelMatrix.TransformPoint(Math::Float3{ left, top + height, depth });
+		const std::array points = { Math::Float2{ left, top }, Math::Float2{ left + width, top }, Math::Float2{ left + width, top + height }, Math::Float2{ left, top + height }, };
+		const std::array colors = { strokeColor, strokeColor, strokeColor, strokeColor };
 
-		// Create vertices for the rectangle
-		submission.Vertices = {
-			HybridRendererGenericVertex{ .Position = topLeft,		.Color = color },
-			HybridRendererGenericVertex{ .Position = topRight,		.Color = color },
-			HybridRendererGenericVertex{ .Position = bottomRight,	.Color = color },
-			HybridRendererGenericVertex{ .Position = bottomLeft,	.Color = color },
-		};
+		// Generate fill vertices & indices
+		if (properties.IsFillEnabled)
+		{
+			const float fillDepth = m_DepthProvider.GetAndIncrement();
+			for (const Math::Float2& point : points)
+			{
+				submission.Vertices.emplace_back(HybridRendererGenericVertex{
+					.Position = properties.ModelMatrix.TransformPoint(Math::Float3{ point.X, point.Y, fillDepth }),
+					.Color = fillColor,
+				});
+			}
+		
+			submission.Indices = { 0, 1, 2, 2, 3, 0 };
+		}
 
-		// Define the indices for two triangles that make up the rectangle
-		submission.Indices = { 0, 1, 2, 2, 3, 0 };
+		// Generate stroke vertices
+		if (properties.IsStrokeEnabled)
+		{
+			const float strokeDepth = m_DepthProvider.GetAndIncrement();
+			const Stroke stroke = m_Stroker.GenerateStroke(points, colors, strokeWeight, strokeProperties.MiterLimit, strokeProperties.Alignment, strokeProperties.StrokeCap, strokeProperties.StrokeJoin, strokeProperties.IsClosed);
+
+			const size_t baseIndex = submission.Vertices.size();
+			// Convert the outline to vertices and indices
+			for (const auto& [position, color] : stroke.Vertices)
+			{
+				submission.Vertices.emplace_back(HybridRendererGenericVertex{
+					.Position = Math::Float3{ position.X, position.Y, strokeDepth },
+					.Color = color,
+				});
+			}
+
+			for (const uint32_t index : stroke.Indices)
+			{
+				submission.Indices.emplace_back(baseIndex + index);
+			}
+		}
+
+		// Print out the number of vertices and indices for debugging
+		Info(std::format("Rectangle Submission: Vertices = {}, Indices = {}", submission.Vertices.size(), submission.Indices.size()));
 
 		// Submit the batch
 		SubmitBatch(submission);
@@ -578,10 +601,10 @@ namespace DGL
 
 		// Create vertices for the rounded rectangle
 		submission.Vertices = {
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = topLeft,		.LocalPosition = { -1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.TopLeft, },
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = topRight,		.LocalPosition = {  1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.TopRight },
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = bottomRight,	.LocalPosition = {  1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.BottomRight },
-			HybridRendererSDFRoundedRectVertex{ .WorldPosition = bottomLeft,	.LocalPosition = { -1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.BottomLeft },
+			HybridRendererSDFRoundedRectVertex{.WorldPosition = topLeft,		.LocalPosition = { -1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.TopLeft, },
+			HybridRendererSDFRoundedRectVertex{.WorldPosition = topRight,		.LocalPosition = {  1.0f, -1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.TopRight },
+			HybridRendererSDFRoundedRectVertex{.WorldPosition = bottomRight,	.LocalPosition = {  1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.BottomRight },
+			HybridRendererSDFRoundedRectVertex{.WorldPosition = bottomLeft,		.LocalPosition = { -1.0f,  1.0f },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .RectSize = { width, height }, .CornerRadius = cornerRadii.BottomLeft },
 		};
 
 		// Define the indices for two triangles that make up the rounded rectangle
@@ -609,53 +632,23 @@ namespace DGL
 		transformedRadius.Y = std::abs(transformedRadius.Y);
 
 		// Transform the center point using the model matrix
-		const Math::Float3 transformedCenter	= properties.ModelMatrix.TransformPoint(Math::Float3{ center.X, center.Y, depth });
+		const Math::Float3 transformedCenter = properties.ModelMatrix.TransformPoint(Math::Float3{ center.X, center.Y, depth });
 
-		const Math::Float2 localTopLeft			= { -transformedRadius.X, -transformedRadius.Y };
-		const Math::Float2 localTopRight		= {  transformedRadius.X, -transformedRadius.Y };
-		const Math::Float2 localBottomRight		= {  transformedRadius.X,  transformedRadius.Y };
-		const Math::Float2 localBottomLeft		= { -transformedRadius.X,  transformedRadius.Y };
+		const Math::Float2 localTopLeft = { -transformedRadius.X, -transformedRadius.Y };
+		const Math::Float2 localTopRight = { transformedRadius.X, -transformedRadius.Y };
+		const Math::Float2 localBottomRight = { transformedRadius.X,  transformedRadius.Y };
+		const Math::Float2 localBottomLeft = { -transformedRadius.X,  transformedRadius.Y };
 
 		// Create vertices for the circle quad
 		submission.Vertices = {
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localTopLeft, 0.0f },		.LocalPosition = { -1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localTopRight, 0.0f },	.LocalPosition = {  1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localBottomRight, 0.0f },	.LocalPosition = {  1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
-			HybridRendererSDFCircleVertex{ .WorldPosition = transformedCenter + Math::Float3{ localBottomLeft, 0.0f },	.LocalPosition = { -1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{.WorldPosition = transformedCenter + Math::Float3{ localTopLeft, 0.0f },		.LocalPosition = { -1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{.WorldPosition = transformedCenter + Math::Float3{ localTopRight, 0.0f },	.LocalPosition = {  1.0f, -1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{.WorldPosition = transformedCenter + Math::Float3{ localBottomRight, 0.0f },	.LocalPosition = {  1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
+			HybridRendererSDFCircleVertex{.WorldPosition = transformedCenter + Math::Float3{ localBottomLeft, 0.0f },	.LocalPosition = { -1.0f,  1.0f, },	.FillColor = fillColor, .StrokeColor = strokeColor, .StrokeWeight = strokeWeight, .CircleSize = { transformedRadius.X * 2.0f, transformedRadius.Y * 2.0f }, },
 		};
 
 		// Define the indices for two triangles that make up the quad
 		submission.Indices = { 0, 1, 2, 2, 3, 0 };
-
-		// Submit the batch
-		SubmitBatch(submission);
-	}
-
-	void HybridRenderer::FillTriangle(const Math::Float2& p1, const Math::Float2& p2, const Math::Float2& p3, const Math::Float4& color, const RenderingProperties& properties)
-	{
-		// Create a generic batch submission for the triangle
-		HybridRendererBatch<HybridRendererGenericVertex> submission = {
-			.BlendMode = properties.BlendMode,
-			.ClipRect = properties.ClippingRect,
-		};
-
-		// Get the depth for this shape
-		const float depth = m_DepthProvider.GetAndIncrement();
-
-		// Transform the triangle points using the model matrix
-		const Math::Float3 tp1 = properties.ModelMatrix.TransformPoint(Math::Float3{ p1.X, p1.Y, depth });
-		const Math::Float3 tp2 = properties.ModelMatrix.TransformPoint(Math::Float3{ p2.X, p2.Y, depth });
-		const Math::Float3 tp3 = properties.ModelMatrix.TransformPoint(Math::Float3{ p3.X, p3.Y, depth });
-
-		// Create vertices for the triangle
-		submission.Vertices = {
-			HybridRendererGenericVertex{ .Position = tp1, .Color = color },
-			HybridRendererGenericVertex{ .Position = tp2, .Color = color },
-			HybridRendererGenericVertex{ .Position = tp3, .Color = color },
-		};
-
-		// Define the indices for the triangle
-		submission.Indices = { 0, 1, 2 };
 
 		// Submit the batch
 		SubmitBatch(submission);
@@ -841,14 +834,13 @@ namespace DGL
 		m_GenericProperties.Shader->UploadFloatMatrix4x4("u_ProjectionMatrix", m_ProjectionMatrix.GetData());
 
 		static auto& activateBlendMode = GetBlendModeActivator();
-		static const auto activateClipRect = GetClipRectActivator();
+		static auto& activateClipRect = GetClipRectActivator();
 
-		int iterations = 0;
 		Chunked(
 			m_GenericBatches,
 			m_GenericProperties.VertexBufferCapacity,
 			m_GenericProperties.ElementBufferCapacity,
-			[this, &iterations](ReadOnlyChunk<HybridRendererBatch<HybridRendererGenericVertex>>&& chunk)
+			[this](ReadOnlyChunk<HybridRendererBatch<HybridRendererGenericVertex>>&& chunk)
 			{
 				// Maybe we can do this once at the start?
 				activateBlendMode(chunk.Original->BlendMode);
@@ -860,10 +852,9 @@ namespace DGL
 
 				// Draw the chunk
 				glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(chunk.Indices.size()), GL_UNSIGNED_INT, nullptr); //!< Maybe get offset pointer correct?
-				++iterations;
 			}
 		);
-		
+
 		// Clear all generic batches after flushing
 		m_GenericBatches.clear();
 	}
@@ -877,7 +868,7 @@ namespace DGL
 		}
 
 		static auto& blendModeActivator = GetBlendModeActivator();
-		static const auto clipRectActivator = GetClipRectActivator();
+		static auto& clipRectActivator = GetClipRectActivator();
 
 		// Unfortunately, we can not assume that the batches are small enough to fit into the
 		// vertex buffers / element buffers. In order to submit all data correctly, we need to
@@ -898,8 +889,6 @@ namespace DGL
 
 				m_SDFCircleProperties.Shader->UploadInt1("u_IsFillEnabled", static_cast<int>(chunk.Original->IsFillEnabled));
 				m_SDFCircleProperties.Shader->UploadInt1("u_IsStrokeEnabled", static_cast<int>(chunk.Original->IsStrokeEnabled));
-				//m_SDFCircleProperties.Shader->UploadInt1("u_IsFillEnabled", true);
-				//m_SDFCircleProperties.Shader->UploadInt1("u_IsStrokeEnabled", true);
 
 				// Upload the data to the GPU
 				glNamedBufferSubData(m_SDFCircleProperties.VertexBufferId, 0, chunk.Vertices.size_bytes(), chunk.Vertices.data());
@@ -945,8 +934,6 @@ namespace DGL
 
 				m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsFillEnabled", static_cast<int>(chunk.Original->IsFillEnabled));
 				m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsStrokeEnabled", static_cast<int>(chunk.Original->IsStrokeEnabled));
-				//m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsFillEnabled", true);
-				//m_SDFRoundedRectProperties.Shader->UploadInt1("u_IsStrokeEnabled", true);
 
 				// Upload the data to the GPU
 				glNamedBufferSubData(m_SDFRoundedRectProperties.VertexBufferId, 0, chunk.Vertices.size_bytes(), chunk.Vertices.data());

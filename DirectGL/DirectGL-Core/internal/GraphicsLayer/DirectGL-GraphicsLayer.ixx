@@ -52,6 +52,7 @@ namespace DGL
 		virtual void SetStrokeWeight(float weight) = 0;
 		virtual void SetStrokeJoin(StrokeJoin joinStyle) = 0;
 		virtual void SetStrokeCap(StrokeCap strokeCap) = 0;
+		virtual void SetStrokeAlignment(StrokeAlignment alignment) = 0;
 
 		virtual void SetBlendMode(const BlendMode& mode) = 0;
 		virtual void SetClipRectMode(const RectMode& mode) = 0;

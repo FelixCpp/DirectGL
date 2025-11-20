@@ -8,6 +8,7 @@ export module DirectGL:RenderStyle;
 import :Color;
 import :StrokeJoin;
 import :StrokeCap;
+import :StrokeAlignment;
 import :RectMode;
 import :EllipseMode;
 import :EllipseSegmentsMode;
@@ -42,8 +43,9 @@ export namespace DGL
 
 		Shader*	Shader = nullptr;
 
-		StrokeJoin	JoinStyle = StrokeJoin::Miter;
-		StrokeCap	StrokeCap = StrokeCap::Round;
+		StrokeJoin		JoinStyle		= StrokeJoin::Miter;
+		StrokeCap		StrokeCap		= StrokeCap::Round;
+		StrokeAlignment StrokeAlignment	= StrokeAlignment::Center;
 
 		ClipRect	ClipRect = ClipRect::Unclipped();
 

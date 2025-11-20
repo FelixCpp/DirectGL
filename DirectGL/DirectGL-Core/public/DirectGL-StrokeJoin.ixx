@@ -10,5 +10,7 @@ export namespace DGL
 	enum class StrokeJoin
 	{
 		Miter,
+		Bevel,
+		Round
 	};
 }

@@ -21,6 +21,7 @@ workspace("DirectGL")
         include("Libraries/Freetype/Build-FreeType.lua")
         include("Libraries/Glad/Build-Glad.lua")
         include("Libraries/Stb/Build-Stb.lua")
+        include("Libraries/Build-Libtess2.lua")
 
     group("DirectGL")
         include("DirectGL/DirectGL-Core/Build-Core.lua")

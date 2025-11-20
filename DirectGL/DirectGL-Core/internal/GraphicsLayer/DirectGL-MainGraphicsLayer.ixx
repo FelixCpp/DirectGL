@@ -19,10 +19,14 @@ namespace DGL
 {
 	class MainGraphicsLayer : public GraphicsLayer
 	{
+	private:
+
+		using Renderer = HybridRenderer;
+
 	public:
 
 		explicit MainGraphicsLayer(
-			const std::weak_ptr<HybridRenderer>& renderer,
+			const std::weak_ptr<Renderer>& renderer,
 			const Math::FloatBoundary& viewport
 		);
 
@@ -57,6 +61,7 @@ namespace DGL
 		void SetStrokeWeight(float weight) override;
 		void SetStrokeJoin(StrokeJoin joinStyle) override;
 		void SetStrokeCap(StrokeCap strokeCap) override;
+		void SetStrokeAlignment(StrokeAlignment alignment) override;
 
 		void SetBlendMode(const BlendMode& mode) override;
 		void SetClipRectMode(const RectMode& mode) override;
@@ -90,7 +95,7 @@ namespace DGL
 	private:
 
 		RenderStyleStack m_RenderStyleStack;
-		std::weak_ptr<HybridRenderer> m_Renderer;
+		std::weak_ptr<Renderer> m_Renderer;
 		MainRenderTarget m_RenderTarget;
 
 	};
